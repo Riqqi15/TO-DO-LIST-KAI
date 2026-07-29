@@ -2,13 +2,17 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Establish the approved lightweight feature-first structure with real, used files instead of empty scaffold directories.
+**Goal:** Establish the approved lightweight feature-first structure, including Git-tracked scaffold directories explicitly requested by the user.
 
 **Architecture:** Laravel keeps HTTP adapters in its conventional folders while Todo domain vocabulary lives under `app/Domain/Todo`. The Inertia Page remains a thin entry point; feature UI stays under `resources/js/features/todo`, reusable page framing lives in `resources/js/layouts`, and folders are created only when they contain code.
 
 **Tech Stack:** PHP 8.2 enums, Laravel 12, Inertia Laravel 3, Vue 3 Composition API, Vite 7, Tailwind CSS 4.
 
 ---
+
+> **Follow-up decision:** The user explicitly selected the complete folder tree.
+> Directories without implementation use `.gitkeep` until their first real file
+> is added.
 
 ### Task 1: Establish Todo domain vocabulary
 

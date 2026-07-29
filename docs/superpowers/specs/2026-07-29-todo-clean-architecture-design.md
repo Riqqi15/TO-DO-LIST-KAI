@@ -48,8 +48,10 @@ Tanggung jawab setiap bagian:
 - `Http/Requests/Todo`: validasi serta otorisasi input.
 - `Notifications/Todo`: email reminder yang bergantung pada fasilitas Laravel.
 
-Folder hanya dibuat ketika memiliki implementasi nyata. Struktur tidak diisi
-dengan `.gitkeep`, repository interface, DTO, atau service generik.
+Folder utama dibuat sejak awal sesuai struktur yang disetujui. Folder yang belum
+memiliki implementasi menggunakan `.gitkeep` agar tetap tercatat di Git. Marker
+tersebut dihapus ketika file implementasi pertama ditambahkan. Repository
+interface, DTO, atau service generik tetap tidak dibuat sebelum dibutuhkan.
 
 ## Struktur Frontend
 
@@ -117,10 +119,9 @@ mengoordinasikan request dan response; aturan perubahan data berada di action.
 
 ## Batas Scope Perapian
 
-Tahap perapian hanya menetapkan batas folder dan memindahkan kode yang sudah
-ada. Tahap ini tidak membuat CRUD, migration Todo, autentikasi, pengiriman
-email, atau UI final. Folder untuk bagian tersebut baru dibuat ketika fiturnya
-diimplementasikan.
+Tahap perapian menetapkan batas folder, membuat scaffold yang telah disetujui,
+dan menempatkan kode yang sudah ada. Tahap ini tidak membuat CRUD, migration
+Todo, autentikasi, pengiriman email, atau UI final.
 
 ## Verifikasi
 
@@ -129,4 +130,3 @@ diimplementasikan.
 - Build Vite berhasil setelah setiap pemindahan frontend.
 - Route Laravel yang ada tetap dapat dimuat.
 - Tidak ada import yang menunjuk ke lokasi lama.
-
