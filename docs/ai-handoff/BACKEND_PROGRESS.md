@@ -125,7 +125,7 @@ Status: **Selesai, disetujui pengguna, dan di-commit**.
 
 ### Implementation plan autentikasi
 
-Status: **Selesai ditulis; belum dieksekusi**.
+Status: **Selesai ditulis dan sudah dieksekusi**.
 
 - Plan: `docs/superpowers/plans/2026-07-31-backend-authentication.md`.
 - Scope: Fortify, register, login, logout, verifikasi email, reset password,
@@ -133,13 +133,32 @@ Status: **Selesai ditulis; belum dieksekusi**.
 - Workspace personal dipindahkan ke plan Workspace agar boundary subsistem
   tetap jelas.
 
+### Autentikasi demo lokal
+
+Status: **Backend dan functional Inertia shell selesai**.
+
+- Laravel Fortify `v1.37.3` terpasang.
+- Register, login, logout, verifikasi email, resend verification, dan reset
+  password tersedia.
+- Login dibatasi lima percobaan per menit untuk kombinasi email dan IP.
+- Route `/app` dilindungi middleware `auth` dan `verified`.
+- Auth Page Inertia fungsional tersedia tanpa Bootstrap; visual shadcn-vue
+  tetap menjadi fase UI.
+- Fitur 2FA dan passkeys dinonaktifkan. Kolom 2FA dipertahankan untuk hardening
+  mendatang, sedangkan migration passkeys tidak digunakan.
+
+Bukti checkpoint:
+
+- `artisan test tests/Feature/Auth`: 17 test, 89 assertion, seluruhnya lulus.
+- `npm.cmd run build`: 608 module berhasil dibangun.
+- Migration `2026_07_30_204527_add_two_factor_columns_to_users_table`: `Ran`.
+- Mailpit UI tetap merespons HTTP 200.
+
 ## 5. Yang Belum Diimplementasikan
 
 Status seluruh item berikut: **Disetujui, belum diimplementasikan**, kecuali
 disebut berbeda.
 
-- Laravel Fortify dan seluruh route autentikasi.
-- Verifikasi email dan password reset melalui Mailpit.
 - Workspace personal, workspace tim, dan membership.
 - Kapasitas tim default 5 dan opsi 10 orang, termasuk owner.
 - Kode bergabung tim yang aktif 5 menit dan dapat dipakai banyak pengguna.
@@ -155,12 +174,11 @@ disebut berbeda.
 - Test bisnis, policy, concurrency, dan reminder.
 - UI final berbasis shadcn-vue.
 
-Route list pada snapshot hanya berisi route root, route internal Inertia
-DevTools, route storage, dan health check. Belum ada route login, workspace,
-task CRUD, sticky note, reminder, atau kalender.
+Route autentikasi Fortify dan route Todo terproteksi sudah tersedia. Belum ada
+route workspace, task CRUD, sticky note, reminder, atau kalender.
 
-Migration yang tersedia baru migration bawaan users, cache, dan jobs. Belum ada
-migration domain Todo atau Workspace.
+Migration bawaan users, cache, jobs, dan kolom 2FA-future-support sudah tersedia.
+Belum ada migration domain Todo atau Workspace.
 
 ## 6. Ketidaksesuaian Scaffold yang Harus Diperbaiki Saat Implementasi
 
@@ -273,7 +291,8 @@ Status: **Selesai**.
 
 ### Fase 1 - Autentikasi demo lokal
 
-Status: **Plan siap; implementasi belum dimulai**.
+Status: **Selesai secara otomatis; smoke test browser final menunggu checkpoint
+integrasi**.
 
 - Pasang dan konfigurasi Fortify untuk Inertia.
 - Buat UI/backend register, login, logout, verifikasi email, dan reset password.
@@ -365,15 +384,15 @@ ke database bersama tanpa memastikan target database.
 Kemudian:
 
 1. Baca backend design spec secara penuh.
-2. Baca `docs/superpowers/plans/2026-07-31-backend-authentication.md`.
-3. Jalankan plan autentikasi task-by-task dengan TDD dan checkpoint.
-4. Jangan memulai Workspace sebelum completion gate autentikasi terpenuhi.
+2. Autentikasi sudah selesai; lanjutkan dari Workspace dan Membership.
+3. Pertahankan pola TDD, policy, transaction, dan update handoff per fase.
+4. Jangan menandai backend lengkap sebelum seluruh completion gate akhir lulus.
 
 Prompt ringkas untuk melanjutkan:
 
 > Baca `AGENTS.md`, `docs/ai-handoff/BACKEND_PROGRESS.md`, dan backend design
 > spec. Verifikasi repository serta runtime. Lanjutkan dari fase yang berstatus
-> sedang berjalan menggunakan authentication implementation plan, jangan
+> sedang berjalan dari Workspace dan Membership, jangan
 > menganggap item desain sudah terimplementasi, dan perbarui handoff setelah
 > menyelesaikan satu fase.
 
