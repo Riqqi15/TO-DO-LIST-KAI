@@ -1,412 +1,179 @@
 # Backend Progress and AI Handoff
 
-Dokumen ini adalah titik masuk utama untuk melanjutkan backend To Do List KAI
-tanpa bergantung pada riwayat percakapan. Selalu verifikasi kondisi aktual
-repository karena status Git, Docker, database, dan dependency dapat berubah.
-
-**Snapshot pemeriksaan:** 31 Juli 2026, Asia/Jakarta.
-
-## 1. Tujuan Produk
-
-Aplikasi internal To Do List untuk pekerjaan personal dan kolaborasi tim.
-Target awal sekitar 20-30 pengguna. Fitur utama yang sudah disepakati:
-
-- Workspace personal dan banyak workspace tim.
-- CRUD task/activity dan tracking status.
-- Kategori bawaan dan kategori custom.
-- Reminder email otomatis serta manual.
-- Kalender berbasis deadline task.
-- Sticky note yang dapat dikonversi menjadi task.
-- Activity log permanen.
-- Autentikasi email dan password dengan verifikasi email.
-
-Desain lengkap dan aturan bisnis resmi berada di:
-
-`docs/superpowers/specs/2026-07-29-todo-backend-design.md`
-
-## 2. Arti Status dalam Dokumen Ini
-
-- **Selesai:** file atau konfigurasi sudah ada dan diverifikasi di repository.
-- **Disetujui, belum diimplementasikan:** keputusan desain sudah dikunci, tetapi
-  migration, model, route, action, atau test belum dibuat.
-- **Belum dimulai:** belum ada implementasi maupun verifikasi.
-- **Ditunda:** sengaja tidak dikerjakan pada demo lokal, tetapi tidak boleh
-  dilupakan sebelum staging atau produksi.
-- **Runtime belum aktif:** konfigurasi tersedia, tetapi service tidak dapat
-  diverifikasi sedang berjalan pada snapshot ini.
-
-## 3. Stack yang Sudah Ada
-
-Status: **Selesai**.
-
-- PHP `^8.2` dan Laravel `^12.0`.
-- Inertia Laravel `^3.2`.
-- Vue `^3.5`, Vite `^7`, dan Tailwind CSS `^4`.
-- Satu aplikasi Laravel-Inertia; route web merender Page Vue.
-- Root route saat ini hanya merender `Todo/Index`.
-- MySQL 8.4, phpMyAdmin, dan Mailpit didefinisikan di `compose.yaml`.
-- Queue, cache, dan session dikonfigurasi menggunakan database pada
-  `.env.example`.
-- Alias frontend `@` mengarah ke `resources/js` tanpa `baseUrl` deprecated.
-
-Endpoint development yang direncanakan oleh konfigurasi:
-
-- Laravel: `http://127.0.0.1:8000` setelah server dijalankan.
-- MySQL host: `127.0.0.1:3307`.
-- phpMyAdmin: `http://127.0.0.1:8080`.
-- Mailpit UI: `http://127.0.0.1:8025`.
-- Mailpit SMTP: `127.0.0.1:1025`.
-
-Jangan menyalin nilai dari `.env` ke dokumentasi. `.env.example` adalah contoh
-lokal yang dapat dilihat, sedangkan `.env` tetap diabaikan Git.
-
-## 4. Pekerjaan yang Sudah Dilakukan
-
-### Fondasi project
-
-Status: **Selesai**.
-
-- Laravel, Inertia, Vue, Vite, dan Tailwind tersedia.
-- Struktur awal clean architecture ringan dibuat.
-- `resources/js/Pages/Todo/Index.vue` menjadi entry Inertia.
-- Feature frontend Todo dan layout dasar tersedia.
-- Bootstrap tidak digunakan.
-
-Commit terkait:
-
-- `8aa97a3` - initialize Laravel Inertia project.
-- `3941bd3` - define clean architecture structure.
-- `27d8ca7` - establish Todo feature architecture.
-- `499064d` - complete Todo architecture scaffold.
-
-### Infrastruktur backend lokal
-
-Status file: **Selesai**.
-
-- `compose.yaml` menyediakan MySQL, phpMyAdmin, dan Mailpit.
-- `.env.example` mengarah ke MySQL port 3307 dan Mailpit port 1025.
-- Compose configuration lolos parsing pada pemeriksaan 31 Juli 2026.
-
-Commit terkait:
-
-- `2e978cb` - add Docker backend services.
-
-Status runtime snapshot terbaru 31 Juli 2026: **Aktif dan terverifikasi
-sebagian**.
-
-- Pengguna mengonfirmasi Docker sudah dinyalakan.
-- Laravel berhasil terhubung ke MySQL `127.0.0.1:3307`.
-- Tiga migration bawaan users, cache, dan jobs berstatus `Ran`.
-- phpMyAdmin di port 8080 dan Mailpit di port 8025 mengembalikan HTTP 200.
-- `docker compose ps` tidak dapat dibaca dari sesi Codex karena permission ke
-  Docker API ditolak. Ini keterbatasan inspeksi sesi, bukan bukti service mati.
-
-### Konfigurasi editor
-
-Status: **Selesai**.
-
-- `baseUrl` deprecated dihapus dari `jsconfig.json`.
-- Alias menggunakan `./resources/js/*`.
-- Source frontend dibatasi melalui `include`; `vendor`, `public`, dan
-  `node_modules` dikecualikan.
-
-Commit terkait:
-
-- `4fd6b29` - fix deprecated jsconfig alias setup.
-
-### Desain backend
-
-Status: **Selesai, disetujui pengguna, dan di-commit**.
-
-- Pendekatan: modular monolith dengan clean architecture ringan.
-- Dokumen: `docs/superpowers/specs/2026-07-29-todo-backend-design.md`.
-- Commit lokal: `e6d8528` - define todo backend architecture.
-- Commit ini belum berada di `origin/main` pada snapshot awal handoff.
-
-### Implementation plan autentikasi
-
-Status: **Selesai ditulis dan sudah dieksekusi**.
-
-- Plan: `docs/superpowers/plans/2026-07-31-backend-authentication.md`.
-- Scope: Fortify, register, login, logout, verifikasi email, reset password,
-  throttling, Mailpit, dan route Todo terproteksi.
-- Workspace personal dipindahkan ke plan Workspace agar boundary subsistem
-  tetap jelas.
-
-### Autentikasi demo lokal
-
-Status: **Backend dan functional Inertia shell selesai**.
-
-- Laravel Fortify `v1.37.3` terpasang.
-- Register, login, logout, verifikasi email, resend verification, dan reset
-  password tersedia.
-- Login dibatasi lima percobaan per menit untuk kombinasi email dan IP.
-- Route `/app` dilindungi middleware `auth` dan `verified`.
-- Auth Page Inertia fungsional tersedia tanpa Bootstrap; visual shadcn-vue
-  tetap menjadi fase UI.
-- Fitur 2FA dan passkeys dinonaktifkan. Kolom 2FA dipertahankan untuk hardening
-  mendatang, sedangkan migration passkeys tidak digunakan.
-
-Bukti checkpoint:
-
-- `artisan test tests/Feature/Auth`: 17 test, 89 assertion, seluruhnya lulus.
-- `npm.cmd run build`: 608 module berhasil dibangun.
-- Migration `2026_07_30_204527_add_two_factor_columns_to_users_table`: `Ran`.
-- Mailpit UI tetap merespons HTTP 200.
-
-## 5. Yang Belum Diimplementasikan
-
-Status seluruh item berikut: **Disetujui, belum diimplementasikan**, kecuali
-disebut berbeda.
-
-- Workspace personal, workspace tim, dan membership.
-- Kapasitas tim default 5 dan opsi 10 orang, termasuk owner.
-- Kode bergabung tim yang aktif 5 menit dan dapat dipakai banyak pengguna.
-- Transfer ownership sebelum owner keluar.
-- Migration, model, policy, request, controller, dan action untuk workspace.
-- Migration serta CRUD kategori.
-- Migration serta CRUD task/activity.
-- Activity log immutable.
-- Sticky note dan konversi menjadi task.
-- Reminder H-7, H-3, dan beberapa reminder manual.
-- Scheduler, queue job, notification email, dan delivery tracking.
-- Query kalender berbasis deadline.
-- Test bisnis, policy, concurrency, dan reminder.
-- UI final berbasis shadcn-vue.
-
-Route autentikasi Fortify dan route Todo terproteksi sudah tersedia. Belum ada
-route workspace, task CRUD, sticky note, reminder, atau kalender.
-
-Migration bawaan users, cache, jobs, dan kolom 2FA-future-support sudah tersedia.
-Belum ada migration domain Todo atau Workspace.
-
-## 6. Ketidaksesuaian Scaffold yang Harus Diperbaiki Saat Implementasi
-
-File berikut berasal dari scaffold lama dan tidak lagi sesuai keputusan final:
-
-- `app/Domain/Todo/Enums/TodoStatus.php` masih berisi `Pending`,
-  `BelumSelesai`, dan `Selesai`.
-- Status final harus menjadi `belum_dikerjakan`, `sedang_dikerjakan`, dan
-  `selesai`.
-- `app/Domain/Todo/Enums/TodoPriority.php` masih ada, sedangkan priority sudah
-  dikeluarkan dari scope awal.
-
-Jangan menganggap enum lama sebagai requirement. Perbaikannya dilakukan dalam
-fase implementasi Todo dan harus disertai test.
-
-## 7. Keputusan Backend yang Sudah Dikunci
-
-### Workspace dan tim
-
-- Setiap user terverifikasi memperoleh satu workspace personal.
-- User dapat bergabung ke banyak tim.
-- Task tim tidak memiliki assignee dan berlaku untuk seluruh anggota.
-- Semua anggota boleh membuat, melihat, mengedit, dan mengubah status.
-- Hanya pembuat atau owner yang boleh menghapus task dan sticky note.
-- Owner wajib memindahkan ownership sebelum keluar.
-- Jika owner satu-satunya anggota, owner dapat mengundang anggota atau menghapus
-  tim.
-- Penghapusan tim dikonfirmasi dengan mengetik
-  `konfirmasi hapus tim <nama tim>`, tanpa konfirmasi password tambahan.
-- Data operasional dihapus permanen; activity log tetap disimpan sebagai arsip.
-
-### Kode tim dan kapasitas
-
-- Hanya satu kode aktif per tim.
-- Membuat kode baru mencabut kode lama.
-- Kode disimpan sebagai hash dan berlaku lima menit.
-- Kode yang sama dapat dipakai banyak user sampai kedaluwarsa, dicabut, atau
-  kapasitas penuh.
-- Kapasitas default lima orang dan dapat dinaikkan menjadi sepuluh.
-- Owner termasuk dalam hitungan kapasitas.
-- Claim membership harus transactional agar kursi terakhir tidak diklaim lebih
-  dari batas.
-
-### Task
-
-- Field utama: judul, deskripsi opsional, status, kategori, deadline,
-  workspace, dan pembuat.
-- Tidak ada priority pada scope awal.
-- Tidak ada assignee pada task tim.
-- Status: Belum Dikerjakan, Sedang Dikerjakan, dan Selesai.
-- Semua anggota dapat menyelesaikan atau membuka kembali task.
-- Deadline wajib berupa tanggal, jam, dan menit dalam WIB.
-- Deadline minimal lima menit dari waktu penyimpanan.
-- Database menyimpan waktu dalam UTC.
-- Penghapusan bersifat permanen.
-
-### Kategori dan sticky note
-
-- Kategori bawaan: Meeting, Report Progress, dan Lainnya.
-- Workspace dapat membuat kategori custom.
-- Kategori custom tidak dapat dihapus saat masih digunakan task.
-- Sticky note bersifat bebas, memiliki warna, dan dapat dikonversi menjadi task.
-- Konversi tetap meminta kategori dan deadline karena keduanya wajib.
-- Note tetap disimpan setelah dikonversi.
-
-### Reminder dan kalender
-
-- Reminder otomatis dibuat pada H-7 dan H-3 jika waktunya masih di masa depan.
-- Reminder manual dapat dibuat lebih dari satu.
-- Jika H-7 dan H-3 sudah lewat, minimal satu reminder manual wajib diisi.
-- Reminder tim dikirim kepada semua anggota aktif dengan email terverifikasi.
-- Status Selesai menghentikan reminder; membuka kembali task mengaktifkan jadwal
-  masa depan yang masih valid.
-- Kalender tidak memiliki tabel event; kalender membaca `deadline_at` task.
-
-### Autentikasi demo
-
-- Email dan password dengan verifikasi email.
-- Laravel Fortify menjadi backend autentikasi.
-- Email development masuk ke Mailpit.
-- Route aplikasi menggunakan middleware `auth` dan `verified`.
-- Login throttling, hashing, session regeneration, logout invalidation, dan CSRF
-  tetap diterapkan pada demo lokal.
-
-## 8. Catatan Keamanan yang Ditunda, Bukan Dibatalkan
-
-Status: **Ditunda sampai staging/produksi**.
-
-- 2FA TOTP dan recovery code.
-- Password minimum 12 karakter dan pemeriksaan password bocor.
-- HTTPS serta cookie Secure, HttpOnly, dan SameSite yang sesuai.
-- SMTP atau email provider sungguhan sebagai pengganti Mailpit.
-- Pencabutan session perangkat lain setelah reset atau perubahan password.
-- Response autentikasi generik agar keberadaan email tidak bocor.
-- Process supervisor untuk queue dan scheduler.
-- Backup database, monitoring, dan failed-job handling.
-
-Jangan menyatakan aplikasi siap produksi sebelum seluruh item ini diverifikasi.
-
-## 9. Urutan Pekerjaan Berikutnya
-
-### Fase 0 - Review dan planning
-
-Status: **Selesai**.
-
-1. Pengguna sudah menyetujui backend design spec.
-2. Skill `writing-plans` digunakan untuk memecah implementasi per subsistem.
-3. Plan autentikasi terperinci sudah dibuat dengan checkpoint dan test.
-4. Eksekusi menunggu pilihan mode pelaksanaan pengguna.
-
-### Fase 1 - Autentikasi demo lokal
-
-Status: **Selesai secara otomatis; smoke test browser final menunggu checkpoint
-integrasi**.
-
-- Pasang dan konfigurasi Fortify untuk Inertia.
-- Buat UI/backend register, login, logout, verifikasi email, dan reset password.
-- Hubungkan email autentikasi ke Mailpit.
-- Buat personal workspace setelah verifikasi email.
-- Tambahkan test autentikasi dan lifecycle session.
-
-Kriteria selesai: user dapat register, memverifikasi email melalui Mailpit,
-login, logout, reset password, dan mengakses route terproteksi.
-
-### Fase 2 - Workspace dan membership
-
-- Buat migration, model, enum, policy, request, controller, dan actions.
-- Implementasikan tim, kapasitas 5/10, kode 5 menit, join, remove member,
-  transfer owner, leave, dan delete team.
-- Tambahkan transaction, lock, rate limiting, dan test concurrency.
-
-Kriteria selesai: pemisahan workspace terbukti melalui test dan tidak ada user
-yang dapat membaca data workspace lain.
-
-### Fase 3 - Kategori dan Todo CRUD
-
-- Ganti enum status lama dengan tiga status final.
-- Hapus enum priority dari scope implementasi.
-- Implementasikan kategori bawaan dan custom.
-- Implementasikan task CRUD, deadline wajib, policy kolaboratif, dan reopen.
-
-Kriteria selesai: personal dan tim dapat mengelola task sesuai policy serta
-semua validasi deadline lulus test.
-
-### Fase 4 - Activity log
-
-- Buat log immutable dengan snapshot aman.
-- Pastikan hard delete subject tidak menghapus log.
-- Catat perubahan workspace, task, kategori, sticky note, dan keamanan penting.
-
-Kriteria selesai: operasi domain gagal secara atomik jika log wajib tidak dapat
-disimpan, dan log tetap ada setelah subject dihapus.
-
-### Fase 5 - Sticky note
-
-- Implementasikan CRUD, warna, policy, dan konversi menjadi task.
-- Pertahankan note serta relasi konversinya setelah task dibuat.
-
-Kriteria selesai: konversi menghasilkan task valid tanpa menghapus note asal.
-
-### Fase 6 - Reminder dan email
-
-- Implementasikan jadwal H-7, H-3, dan manual.
-- Implementasikan scheduler, queued notification, delivery tracking, retry, dan
-  idempotensi.
-- Hitung penerima tim pada waktu pengiriman.
-
-Kriteria selesai: Mailpit menerima email yang tepat tanpa delivery ganda dan
-failed delivery dapat dicoba ulang.
-
-### Fase 7 - Kalender
-
-- Buat query task berdasarkan rentang deadline dan workspace aktif.
-- Konversikan UTC ke Asia/Jakarta pada boundary presentasi.
-
-Kriteria selesai: kalender hanya menampilkan task dari workspace aktif pada
-tanggal dan waktu WIB yang benar.
-
-### Fase 8 - Integrasi dan hardening
-
-- Jalankan seluruh feature/unit test dan build frontend.
-- Verifikasi migration dari database kosong.
-- Audit policy, index, transaction, queue, dan scheduler.
-- Kerjakan checklist keamanan staging sebelum deployment nyata.
-
-## 10. Titik Mulai untuk AI Berikutnya
-
-Lakukan langkah berikut sebelum mengubah kode:
+Dokumen ini adalah sumber status utama backend To Do List KAI. Verifikasi ulang
+Git, Docker, migration, queue, dan test sebelum melanjutkan karena runtime dapat
+berubah setelah snapshot ini.
+
+**Snapshot:** 31 Juli 2026, Asia/Jakarta
+
+**Branch kerja:** `feat/backend-complete`
+
+**Target saat ini:** demo lokal, belum dinyatakan siap produksi
+
+## Status ringkas
+
+| Fase | Status | Bukti utama |
+|---|---|---|
+| Fondasi Laravel/Inertia | Selesai | Laravel 12, Inertia 3, Vue 3, Tailwind 4 |
+| Auth email/password | Selesai | Fortify, verified middleware, reset password |
+| Workspace personal/tim | Selesai | Policy/action/transaction dan feature test |
+| Kategori dan Todo | Selesai | CRUD, 3 status, deadline wajib, tanpa priority |
+| Activity log | Selesai | Snapshot, actor nullable, mutation model ditolak |
+| Sticky note | Selesai | CRUD kolaboratif dan konversi ke Todo |
+| Reminder email | Selesai untuk demo | H-7/H-3/manual, queue job, delivery tracking/retry |
+| Kalender | Selesai | Query diturunkan dari `todos.deadline_at` |
+| Visualisasi DB | Selesai | ERD Mermaid dan panduan phpMyAdmin/DBeaver |
+| UI shadcn-vue final | Belum dimulai | Backend props dan route sudah tersedia |
+
+## Kontrak produk yang sudah diimplementasikan
+
+- Setiap user mendapat workspace personal secara idempoten setelah email
+  terverifikasi dan dapat menjadi anggota banyak tim.
+- Task tim tidak memiliki assignee. Semua anggota tim dapat membuat, membaca,
+  mengedit, dan mengubah status task.
+- Hanya pembuat task/sticky note atau owner tim yang dapat menghapusnya.
+- Owner wajib memindahkan ownership sebelum keluar dari tim.
+- Kapasitas tim default 5 dan dapat dipilih 10, owner ikut dihitung.
+- Kode tim disimpan sebagai SHA-256, hanya satu kode aktif, reusable selama
+  lima menit, dan join memakai transaction serta row lock.
+- Penghapusan tim membutuhkan teks persis
+  `konfirmasi hapus tim <nama tim>` dan menghapus data operasional permanen.
+- Status task hanya `belum_dikerjakan`, `sedang_dikerjakan`, dan `selesai`.
+- Tidak ada priority dan tidak ada tabel calendar event.
+- Kategori sistem: Meeting, Report Progress, Lainnya. Kategori custom yang
+  dipakai task tidak dapat dihapus.
+- Deadline wajib minimal lima menit dari saat penyimpanan. Input WIB dikonversi
+  ke UTC; payload tampilan menyertakan `deadline_wib`.
+- Reminder otomatis H-7 dan H-3 hanya dibuat bila jadwalnya belum lewat.
+  Jika keduanya lewat, reminder manual wajib. Waktu manual fleksibel sampai
+  menit, harus di masa depan dan sebelum deadline.
+- Menyelesaikan task membatalkan reminder; task dapat dibuka lagi. Bila tidak
+  ada jadwal masa depan, request reopen dapat mengirim `manual_reminder_at`.
+- Reminder tim menghitung semua anggota aktif yang emailnya terverifikasi pada
+  waktu pengiriman, bukan pada waktu reminder dibuat.
+- Sticky note tetap tersimpan setelah dikonversi dan menyimpan link ke Todo.
+- Activity log tidak memiliki endpoint update/delete dan model menolak mutasi.
+  Snapshot tetap ada ketika subject atau workspace operasional dihapus.
+
+Spesifikasi keputusan asli tetap berada di
+`docs/superpowers/specs/2026-07-29-todo-backend-design.md`.
+
+## Struktur implementasi penting
+
+- `app/Domain/Workspace`: enum, model, dan action workspace/tim.
+- `app/Domain/Category`: model dan action kategori.
+- `app/Domain/Todo`: status, model, dan action CRUD/status.
+- `app/Domain/Reminder`: model, enum, automatic/manual scheduling, delivery.
+- `app/Domain/StickyNote`: model dan action CRUD/konversi.
+- `app/Domain/ActivityLog`: model immutable dan pencatatan snapshot.
+- `app/Http/Requests`: validasi boundary HTTP.
+- `app/Http/Controllers`: adapter tipis untuk Inertia/web route.
+- `app/Policies`: isolasi akses workspace dan content.
+- `app/Jobs/ProcessDueReminders.php`: queued reminder processor.
+- `app/Notifications/Todo/TodoReminderNotification.php`: email reminder.
+- `routes/console.php`: scheduler reminder setiap menit.
+- `app/Http/Controllers/Todo/TodoPageController.php`: props dashboard dan
+  calendar JSON untuk widget Inertia.
+
+Migration domain:
+
+1. `2026_07_31_000001_create_workspace_tables.php`
+2. `2026_07_31_000002_create_todo_tables.php`
+3. `2026_07_31_000003_create_collaboration_tables.php`
+
+Ketiganya sudah berstatus `Ran` pada MySQL Docker, batch 3, pada snapshot ini.
+
+## Route aplikasi
+
+Semua route domain berada di middleware `auth` dan `verified`:
+
+- Tim: create, join, invite, capacity, transfer ownership, remove member,
+  leave, delete.
+- Kategori: create, update, delete.
+- Todo: create, update, change status, delete.
+- Reminder manual: create, delete.
+- Sticky note: create, update, delete, convert.
+- Kalender: `GET /workspaces/{workspace}/calendar`.
+- Dashboard Inertia: `GET /app` dengan workspace, kategori, todo, sticky note,
+  activity, dan timezone props.
+
+Gunakan `php artisan route:list --except-vendor` untuk daftar aktual. Snapshot
+terakhir menampilkan 24 route non-vendor.
+
+## Verifikasi terakhir
+
+Hasil sebelum final commit pada 31 Juli 2026:
+
+- `php artisan test`: **41 test lulus, 187 assertion**.
+- `php artisan route:list --except-vendor`: **24 route**.
+- `php artisan schedule:list`: job `process-due-todo-reminders` setiap menit.
+- `php artisan migrate --force`: tiga migration domain berhasil dijalankan.
+- `php artisan migrate:status`: seluruh migration berstatus `Ran`.
+- `vendor/bin/pint --test`: lulus tanpa perubahan format.
+- `composer validate --no-check-publish`: valid; constraint Fortify dipatok ke
+  `^1.37` dan `composer update --lock` melaporkan tidak ada advisory keamanan.
+- `npm.cmd run build`: berhasil, **608 module** ditransformasi.
+
+Test mencakup auth, isolasi workspace, kode reusable/expired, kapasitas,
+transfer owner, exact delete confirmation, kategori terpakai, Todo/status,
+deadline dekat, reopen, policy delete, sticky conversion, email recipient,
+idempotensi delivery, kalender, dan immutability activity log.
+
+## Menjalankan demo lokal
 
 ```powershell
-git status -sb
-git log -5 --oneline
-php artisan route:list
-docker compose config --quiet
-docker compose ps
-php artisan migrate:status
+docker compose up -d
+php artisan migrate
+npm run build
+php artisan serve
 ```
 
-Jika Docker belum aktif, laporkan kondisi tersebut dan nyalakan hanya setelah
-memastikan Docker Desktop pengguna tersedia. Jangan menjalankan migration baru
-ke database bersama tanpa memastikan target database.
+Jalankan dua terminal background:
 
-Kemudian:
+```powershell
+php artisan queue:work --tries=3
+php artisan schedule:work
+```
 
-1. Baca backend design spec secara penuh.
-2. Autentikasi sudah selesai; lanjutkan dari Workspace dan Membership.
-3. Pertahankan pola TDD, policy, transaction, dan update handoff per fase.
-4. Jangan menandai backend lengkap sebelum seluruh completion gate akhir lulus.
+- Aplikasi: `http://127.0.0.1:8000`
+- phpMyAdmin: `http://127.0.0.1:8080`
+- Mailpit: `http://127.0.0.1:8025`
 
-Prompt ringkas untuk melanjutkan:
+Daftar melalui UI, lalu klik link verifikasi di Mailpit. Jangan menambahkan
+akun demo dengan password lemah ke seeder. `DatabaseSeeder` sengaja tidak
+membuat akun.
 
-> Baca `AGENTS.md`, `docs/ai-handoff/BACKEND_PROGRESS.md`, dan backend design
-> spec. Verifikasi repository serta runtime. Lanjutkan dari fase yang berstatus
-> sedang berjalan dari Workspace dan Membership, jangan
-> menganggap item desain sudah terimplementasi, dan perbarui handoff setelah
-> menyelesaikan satu fase.
+## Visualisasi database
 
-## 11. Protokol Update Dokumentasi
+- ERD: `docs/database/ERD.md`.
+- Langkah phpMyAdmin/DBeaver: `docs/database/VISUALIZATION.md`.
+- phpMyAdmin login menggunakan `DB_USERNAME` dan `DB_PASSWORD` dari `.env`;
+  jangan menyalin secret ke dokumen atau commit.
 
-Setelah setiap sesi implementasi, AI yang mengerjakan wajib memperbarui dokumen
-ini:
+## Batas demo dan pekerjaan berikutnya
 
-1. Ubah status fase yang benar-benar selesai.
-2. Cantumkan file dan migration yang ditambahkan.
-3. Cantumkan command verifikasi beserta hasilnya secara ringkas.
-4. Catat error atau blocker yang belum selesai.
-5. Catat commit lokal dan apakah sudah dipush.
-6. Tentukan satu next action yang konkret.
+Backend feature scope yang disetujui sudah diimplementasikan. Pekerjaan utama
+berikutnya adalah UI final menggunakan shadcn-vue dan menghubungkan form/kanban/
+kalender ke route backend yang tersedia.
 
-Jangan menandai fase selesai hanya karena file sudah dibuat. Fase selesai jika
-kriteria selesai dan test relevan sudah terverifikasi.
+Sebelum staging/produksi, kerjakan dan verifikasi:
+
+- HTTPS, cookie secure, `APP_DEBUG=false`, secret rotation.
+- SMTP/provider email sungguhan dan domain email terverifikasi.
+- Process supervisor untuk queue/scheduler dan monitoring failed jobs.
+- Backup/restore database, logging/alerting, dan retention activity log.
+- 2FA, recovery codes, kebijakan password produksi, dan session management.
+- Load/concurrency test MySQL untuk kursi terakhir tim dan worker reminder.
+- Security review serta UAT; keberhasilan demo lokal bukan bukti production
+  readiness.
+
+## Protokol untuk AI berikutnya
+
+1. Baca `AGENTS.md`, dokumen ini, dan backend design spec.
+2. Jalankan `git status -sb`, `git log -5 --oneline`, `artisan test`,
+   `migrate:status`, `route:list`, dan `schedule:list`.
+3. Jangan membuat REST frontend terpisah; tetap Laravel + Inertia + Vue.
+4. Jangan menambah priority, assignee, atau calendar event table tanpa keputusan
+   baru dari pengguna.
+5. Update dokumen ini setelah progress material, dengan hasil verifikasi nyata.
+6. Jangan pernah memasukkan isi `.env` atau password database ke dokumentasi.

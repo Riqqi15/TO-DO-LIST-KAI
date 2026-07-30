@@ -2,9 +2,12 @@
 
 namespace App\Models;
 
+use App\Domain\Workspace\Models\Workspace;
 use Database\Factories\UserFactory;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -45,5 +48,16 @@ class User extends Authenticatable implements MustVerifyEmail
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    public function workspaces(): BelongsToMany
+    {
+        return $this->belongsToMany(Workspace::class, 'workspace_members')
+            ->withPivot(['role', 'joined_at'])->withTimestamps();
+    }
+
+    public function createdWorkspaces(): HasMany
+    {
+        return $this->hasMany(Workspace::class, 'created_by');
     }
 }

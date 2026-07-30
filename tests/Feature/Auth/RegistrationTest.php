@@ -15,7 +15,7 @@ class RegistrationTest extends TestCase
 
     public function test_user_model_requires_email_verification(): void
     {
-        $this->assertInstanceOf(MustVerifyEmail::class, new User());
+        $this->assertInstanceOf(MustVerifyEmail::class, new User);
     }
 
     public function test_new_user_can_register_and_receives_verification_email(): void
