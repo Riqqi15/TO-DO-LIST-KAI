@@ -91,13 +91,15 @@ Commit terkait:
 
 - `2e978cb` - add Docker backend services.
 
-Status runtime snapshot 31 Juli 2026: **Runtime belum aktif**.
+Status runtime snapshot terbaru 31 Juli 2026: **Aktif dan terverifikasi
+sebagian**.
 
-- Docker daemon tidak dapat diakses dari sesi pemeriksaan.
-- Koneksi MySQL `127.0.0.1:3307` ditolak.
-- `php artisan migrate:status` belum dapat memverifikasi database aktif.
-- Jangan menyimpulkan migration belum pernah dijalankan; nyalakan Docker lalu
-  periksa ulang status migration.
+- Pengguna mengonfirmasi Docker sudah dinyalakan.
+- Laravel berhasil terhubung ke MySQL `127.0.0.1:3307`.
+- Tiga migration bawaan users, cache, dan jobs berstatus `Ran`.
+- phpMyAdmin di port 8080 dan Mailpit di port 8025 mengembalikan HTTP 200.
+- `docker compose ps` tidak dapat dibaca dari sesi Codex karena permission ke
+  Docker API ditolak. Ini keterbatasan inspeksi sesi, bukan bukti service mati.
 
 ### Konfigurasi editor
 
@@ -114,12 +116,22 @@ Commit terkait:
 
 ### Desain backend
 
-Status: **Selesai ditulis dan di-commit; menunggu review akhir pengguna**.
+Status: **Selesai, disetujui pengguna, dan di-commit**.
 
 - Pendekatan: modular monolith dengan clean architecture ringan.
 - Dokumen: `docs/superpowers/specs/2026-07-29-todo-backend-design.md`.
 - Commit lokal: `e6d8528` - define todo backend architecture.
 - Commit ini belum berada di `origin/main` pada snapshot awal handoff.
+
+### Implementation plan autentikasi
+
+Status: **Selesai ditulis; belum dieksekusi**.
+
+- Plan: `docs/superpowers/plans/2026-07-31-backend-authentication.md`.
+- Scope: Fortify, register, login, logout, verifikasi email, reset password,
+  throttling, Mailpit, dan route Todo terproteksi.
+- Workspace personal dipindahkan ke plan Workspace agar boundary subsistem
+  tetap jelas.
 
 ## 5. Yang Belum Diimplementasikan
 
@@ -252,14 +264,16 @@ Jangan menyatakan aplikasi siap produksi sebelum seluruh item ini diverifikasi.
 
 ### Fase 0 - Review dan planning
 
-Status: **Sedang berjalan**.
+Status: **Selesai**.
 
-1. Pengguna meninjau backend design spec.
-2. Setelah pengguna menyetujui spec, gunakan skill `writing-plans`.
-3. Buat implementation plan terperinci dengan checkpoint dan test.
-4. Jangan mulai implementasi fitur sebelum plan disetujui.
+1. Pengguna sudah menyetujui backend design spec.
+2. Skill `writing-plans` digunakan untuk memecah implementasi per subsistem.
+3. Plan autentikasi terperinci sudah dibuat dengan checkpoint dan test.
+4. Eksekusi menunggu pilihan mode pelaksanaan pengguna.
 
 ### Fase 1 - Autentikasi demo lokal
+
+Status: **Plan siap; implementasi belum dimulai**.
 
 - Pasang dan konfigurasi Fortify untuk Inertia.
 - Buat UI/backend register, login, logout, verifikasi email, dan reset password.
@@ -351,17 +365,17 @@ ke database bersama tanpa memastikan target database.
 Kemudian:
 
 1. Baca backend design spec secara penuh.
-2. Pastikan pengguna sudah menyetujui spec.
-3. Susun implementation plan; jangan langsung membuat migration atau memasang
-   package.
-4. Mulai dari fase autentikasi setelah plan disetujui.
+2. Baca `docs/superpowers/plans/2026-07-31-backend-authentication.md`.
+3. Jalankan plan autentikasi task-by-task dengan TDD dan checkpoint.
+4. Jangan memulai Workspace sebelum completion gate autentikasi terpenuhi.
 
 Prompt ringkas untuk melanjutkan:
 
 > Baca `AGENTS.md`, `docs/ai-handoff/BACKEND_PROGRESS.md`, dan backend design
 > spec. Verifikasi repository serta runtime. Lanjutkan dari fase yang berstatus
-> sedang berjalan, jangan menganggap item desain sudah terimplementasi, dan
-> perbarui handoff setelah menyelesaikan satu fase.
+> sedang berjalan menggunakan authentication implementation plan, jangan
+> menganggap item desain sudah terimplementasi, dan perbarui handoff setelah
+> menyelesaikan satu fase.
 
 ## 11. Protokol Update Dokumentasi
 
