@@ -10,6 +10,9 @@ berubah setelah snapshot ini.
 
 **Target saat ini:** demo lokal, belum dinyatakan siap produksi
 
+**Commit implementasi backend:** `4c5d03c` -
+`feat: complete collaborative todo backend` (lokal, belum dipush pada snapshot).
+
 ## Status ringkas
 
 | Fase | Status | Bukti utama |
