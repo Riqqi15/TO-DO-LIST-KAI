@@ -1,5 +1,20 @@
 name: todo-list-kai
 
+x-laravel-service: &laravel-service
+  image: todo-list-kai-laravel:local
+  build:
+    context: .
+    dockerfile: Dockerfile
+  working_dir: /var/www/html
+  env_file:
+    - .env
+  environment:
+    DB_HOST: mysql
+    DB_PORT: 3306
+    MAIL_HOST: mailpit
+    MAIL_PORT: 1025
+  restart: unless-stopped
+
 services:
   mysql:
     image: mysql:8.4
@@ -43,6 +58,51 @@ services:
       - "8025:8025"
     environment:
       MP_MAX_MESSAGES: 1000
+
+  migrate:
+    <<: *laravel-service
+    command: php artisan migrate --force
+    restart: "no"
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  app:
+    <<: *laravel-service
+    command: php artisan serve --host=0.0.0.0 --port=8000
+    ports:
+      - "8000:8000"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      mailpit:
+        condition: service_started
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - curl --fail --silent http://127.0.0.1:8000/login > /dev/null
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  queue:
+    <<: *laravel-service
+    command: php artisan queue:work --tries=3 --timeout=60 --sleep=1
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      mailpit:
+        condition: service_started
+
+  scheduler:
+    <<: *laravel-service
+    command: php artisan schedule:work
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      mailpit:
+        condition: service_started
 
 volumes:
   mysql_data:

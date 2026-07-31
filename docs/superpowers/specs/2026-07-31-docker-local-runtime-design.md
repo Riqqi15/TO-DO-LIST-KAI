@@ -1,7 +1,7 @@
 # Docker Local Runtime Design
 
 **Tanggal:** 31 Juli 2026  
-**Status:** Disetujui untuk implementasi  
+**Status:** Diimplementasikan dan diverifikasi
 **Target:** Demo dan testing backend lokal
 
 ## Tujuan
@@ -34,9 +34,11 @@ ada.
 
 ## Source dan Dependency
 
-Repository di-bind-mount ke `/var/www/html` agar perubahan backend lokal langsung
-terbaca tanpa rebuild image. Folder `vendor` dan hasil build frontend yang sudah
-ada digunakan dari workspace.
+Source aplikasi, dependency Composer, dan hasil build frontend disalin ke image
+agar performa filesystem Laravel tetap cepat pada Docker Desktop Windows.
+Perubahan source diterapkan dengan menjalankan ulang
+`docker compose up -d --build`; layer dependency tetap memakai cache selama
+manifest dependency tidak berubah.
 
 Image tidak menyalin `.env`. Compose membaca `.env` lokal saat runtime, lalu
 menimpa alamat antarkontainer berikut:
@@ -56,9 +58,9 @@ Port host tetap:
 
 ## Frontend
 
-Vite tidak ditambahkan sebagai container pada fase ini. Laravel menyajikan aset
-dari `public/build`. Setelah mengubah Vue atau CSS, jalankan `npm run build` di
-host. Batas ini menjaga runtime Docker ringan dan fokus pada testing backend.
+Vite tidak dijalankan sebagai container jangka panjang. Build image memiliki
+stage Node yang menjalankan `npm run build`, lalu Laravel menyajikan hasilnya
+dari `public/build`. Batas ini menjaga runtime tetap fokus pada testing backend.
 
 ## Operasional
 

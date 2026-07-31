@@ -116,6 +116,15 @@ Hasil sebelum final commit pada 31 Juli 2026:
 - `composer validate --no-check-publish`: valid; constraint Fortify dipatok ke
   `^1.37` dan `composer update --lock` melaporkan tidak ada advisory keamanan.
 - `npm.cmd run build`: berhasil, **608 module** ditransformasi.
+- Runtime Docker lokal: `app` healthy, `mysql` dan `mailpit` healthy,
+  `migrate` selesai dengan exit code `0`, serta `queue` dan `scheduler`
+  berstatus running.
+- `GET /login` melalui Docker: HTTP **200** sekitar **0,03 detik** pada
+  verifikasi akhir.
+- Scheduler Docker menjalankan `process-due-todo-reminders` setiap menit;
+  queue memproses job verifikasi sekitar **19 ms** dan `queue:failed`
+  melaporkan tidak ada failed job.
+- Mailpit melalui Docker: HTTP **200**.
 
 Test mencakup auth, isolasi workspace, kode reusable/expired, kapasitas,
 transfer owner, exact delete confirmation, kategori terpakai, Todo/status,
@@ -125,18 +134,34 @@ idempotensi delivery, kalender, dan immutability activity log.
 ## Menjalankan demo lokal
 
 ```powershell
-docker compose up -d
-php artisan migrate
-npm run build
-php artisan serve
+docker compose up -d --build
 ```
 
-Jalankan dua terminal background:
+Perintah tersebut otomatis menjalankan:
+
+- migration satu kali setelah MySQL sehat;
+- Laravel web pada port `8000`;
+- database queue worker dengan tiga percobaan;
+- scheduler reminder setiap menit;
+- MySQL, phpMyAdmin, dan Mailpit.
+
+Laravel, dependency Composer, dan hasil build Vue berada di image
+`todo-list-kai-laravel:local`. Setelah mengubah source, jalankan kembali
+`docker compose up -d --build`. Build berikutnya menggunakan cache selama file
+dependency tidak berubah. Pendekatan image self-contained dipakai karena bind
+mount seluruh `vendor` dari Windows membuat request Laravel sangat lambat.
+
+Periksa kondisi runtime:
 
 ```powershell
-php artisan queue:work --tries=3
-php artisan schedule:work
+docker compose ps -a
+docker compose logs app queue scheduler
 ```
+
+`migrate` yang berstatus `Exited (0)` adalah kondisi normal karena service itu
+memang one-shot. Jangan menjalankan `php artisan serve`, `queue:work`, atau
+`schedule:work` lagi di Windows saat stack Docker aktif agar port dan reminder
+tidak diproses ganda.
 
 - Aplikasi: `http://127.0.0.1:8000`
 - phpMyAdmin: `http://127.0.0.1:8080`

@@ -1,0 +1,11 @@
+.env
+.git
+.github
+.idea
+.vscode
+node_modules
+vendor
+storage/logs/*
+public/hot
+laravel-server*.log
+npm-debug.log*
