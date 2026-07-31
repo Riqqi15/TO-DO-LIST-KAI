@@ -1,11 +1,5 @@
 export const TODO_STATUSES = [
-    { value: 'pending', label: 'Pending' },
-    { value: 'belum_selesai', label: 'Belum Selesai' },
+    { value: 'belum_dikerjakan', label: 'Belum Dikerjakan' },
+    { value: 'sedang_dikerjakan', label: 'Sedang Dikerjakan' },
     { value: 'selesai', label: 'Selesai' },
-];
-
-export const TODO_PRIORITIES = [
-    { value: 'rendah', label: 'Rendah' },
-    { value: 'sedang', label: 'Sedang' },
-    { value: 'tinggi', label: 'Tinggi' },
 ];

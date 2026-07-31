@@ -45,6 +45,12 @@ class HandleInertiaRequests extends Middleware
                     'email_verified_at',
                 ]),
             ],
+            'flash' => [
+                'success' => fn () => $request->session()->get('success'),
+                'workspace_id' => fn () => $request->session()->get('workspace_id'),
+                'team_invite' => fn () => $request->session()->get('team_invite'),
+                'todo_id' => fn () => $request->session()->get('todo_id'),
+            ],
         ];
     }
 }
