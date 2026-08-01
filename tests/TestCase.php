@@ -12,7 +12,7 @@ abstract class TestCase extends BaseTestCase
 
         $this->withoutVite();
 
-        config()->set('inertia.testing.page_paths', [
+        config()->set('inertia.pages.paths', [
             resource_path('js/Pages'),
         ]);
     }
