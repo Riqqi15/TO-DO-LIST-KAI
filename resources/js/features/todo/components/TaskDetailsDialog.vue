@@ -8,25 +8,61 @@ import { Label } from '@/components/ui/label';
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
 import { Separator } from '@/components/ui/separator';
 import { TODO_STATUSES } from '@/features/todo/constants/todo-options';
-import { deadlineMeta, formatDateTime, reminderKindLabel, reminderStatusLabel } from '@/features/todo/utils/todo-formatters';
+import { deadlineMeta, formatDateTime, reminderKindLabel, reminderStatusLabel, statusDateInput, toWibDateTimeInput } from '@/features/todo/utils/todo-formatters';
 import { router, useForm } from '@inertiajs/vue3';
 import { Bell, CalendarClock, LoaderCircle, Pencil, Trash2, UserRound } from '@lucide/vue';
-import { ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 
-const props = defineProps({ open: { type: Boolean, default: false }, todo: { type: Object, default: null } });
-const emit = defineEmits(['update:open', 'edit', 'delete']);
+const props = defineProps({
+    open: { type: Boolean, default: false },
+    todo: { type: Object, default: null },
+    initialStatus: { type: String, default: null },
+});
+const emit = defineEmits(['update:open', 'edit', 'delete', 'status-saved']);
 const status = ref('');
-const reopenReminder = ref('');
+const statusAt = ref('');
 const reminderForm = useForm({ scheduled_at: '' });
 const statusErrors = ref({});
 const statusProcessing = ref(false);
-watch(() => props.todo, (todo) => { status.value = todo?.status ?? ''; reopenReminder.value = ''; statusErrors.value = {}; });
+const statusDateLabel = computed(() => ({
+    belum_dikerjakan: 'Deadline baru',
+    sedang_dikerjakan: 'Tanggal mulai',
+    selesai: 'Tanggal selesai',
+}[status.value] ?? 'Tanggal status'));
+const statusDateHelp = computed(() => ({
+    belum_dikerjakan: 'Deadline baru minimal lima menit dari sekarang.',
+    sedang_dikerjakan: 'Waktu ketika task mulai dikerjakan.',
+    selesai: 'Waktu ketika task dinyatakan selesai.',
+}[status.value] ?? 'Pilih tanggal dan waktu status.'));
+const statusChanged = computed(() => {
+    if (!props.todo || !statusAt.value) return false;
+    return status.value !== props.todo.status || statusAt.value !== statusDateInput(props.todo, status.value);
+});
+
+const defaultDateForStatus = (nextStatus) => {
+    if (nextStatus === 'belum_dikerjakan') return statusDateInput(props.todo, nextStatus);
+    if (nextStatus === props.todo?.status) return statusDateInput(props.todo, nextStatus) || toWibDateTimeInput();
+    return toWibDateTimeInput();
+};
+const selectStatus = (nextStatus) => {
+    status.value = nextStatus;
+    statusAt.value = defaultDateForStatus(nextStatus);
+    statusErrors.value = {};
+};
+
+watch(() => [props.todo, props.initialStatus, props.open], ([todo, initialStatus, open]) => {
+    if (!todo || !open) return;
+    status.value = initialStatus ?? todo.status;
+    statusAt.value = defaultDateForStatus(status.value);
+    statusErrors.value = {};
+}, { immediate: true });
 
 const changeStatus = () => {
-    if (!props.todo || status.value === props.todo.status) return;
+    if (!props.todo || !statusChanged.value) return;
     statusProcessing.value = true;
-    router.patch(`/todos/${props.todo.id}/status`, { status: status.value, manual_reminder_at: reopenReminder.value || null }, {
+    router.patch(`/todos/${props.todo.id}/status`, { status: status.value, status_at: statusAt.value }, {
         preserveScroll: true,
+        onSuccess: () => emit('status-saved'),
         onError: (errors) => { statusErrors.value = errors; },
         onFinish: () => { statusProcessing.value = false; },
     });
@@ -52,12 +88,13 @@ const deleteReminder = (reminder) => router.delete(`/reminders/${reminder.id}`, 
             <section class="rounded-2xl border p-4">
                 <h3 class="text-sm font-extrabold">Ubah status</h3>
                 <div class="mt-3 grid gap-3 sm:grid-cols-[1fr_1fr_auto]">
-                    <NativeSelect v-model="status" class="h-10 w-full"><NativeSelectOption v-for="option in TODO_STATUSES" :key="option.value" :value="option.value">{{ option.label }}</NativeSelectOption></NativeSelect>
-                    <Input v-model="reopenReminder" type="datetime-local" class="h-10 font-mono text-xs" title="Reminder saat membuka kembali task selesai" />
-                    <Button :disabled="statusProcessing || status === todo.status" @click="changeStatus"><LoaderCircle v-if="statusProcessing" class="size-4 animate-spin" />Simpan</Button>
+                    <NativeSelect :model-value="status" class="h-10 w-full" @change="selectStatus($event.target.value)"><NativeSelectOption v-for="option in TODO_STATUSES" :key="option.value" :value="option.value">{{ option.label }}</NativeSelectOption></NativeSelect>
+                    <div><Label for="status-at" class="sr-only">{{ statusDateLabel }}</Label><Input id="status-at" v-model="statusAt" type="datetime-local" class="h-10 font-mono text-xs" :title="statusDateLabel" :aria-invalid="Boolean(statusErrors.status_at)" /></div>
+                    <Button :disabled="statusProcessing || !statusChanged" @click="changeStatus"><LoaderCircle v-if="statusProcessing" class="size-4 animate-spin" />Simpan</Button>
                 </div>
-                <p class="mt-2 text-xs text-muted-foreground">Isi reminder hanya saat membuka kembali task selesai yang tidak memiliki jadwal mendatang.</p>
+                <p class="mt-2 text-xs text-muted-foreground"><span class="font-semibold text-foreground">{{ statusDateLabel }}:</span> {{ statusDateHelp }}</p>
                 <FieldError :message="statusErrors.status" />
+                <FieldError :message="statusErrors.status_at" />
             </section>
 
             <section>

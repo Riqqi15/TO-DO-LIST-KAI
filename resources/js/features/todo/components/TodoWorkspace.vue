@@ -41,6 +41,7 @@ const formOpen = ref(false);
 const formTodo = ref(null);
 const detailOpen = ref(false);
 const selectedTodo = ref(null);
+const detailInitialStatus = ref(null);
 const deleteOpen = ref(false);
 
 const filteredTodos = computed(() => todos.value.filter((todo) => {
@@ -73,18 +74,13 @@ const setView = (mode) => {
 const switchWorkspace = (id) => router.get('/app', { workspace: id }, { preserveScroll: false, preserveState: false });
 const createTodo = () => { formTodo.value = null; formOpen.value = true; };
 const editTodo = (todo) => { selectedTodo.value = todo; detailOpen.value = false; formTodo.value = todo; formOpen.value = true; };
-const openTodo = (todo) => { selectedTodo.value = todo; detailOpen.value = true; };
+const openTodo = (todo) => { selectedTodo.value = todo; detailInitialStatus.value = null; detailOpen.value = true; };
 const askDeleteTodo = (todo) => { selectedTodo.value = todo; detailOpen.value = false; deleteOpen.value = true; };
 const deleteTodo = () => router.delete(`/todos/${selectedTodo.value.id}`, { preserveScroll: true, onSuccess: () => { deleteOpen.value = false; selectedTodo.value = null; } });
 const changeStatus = (todo, nextStatus) => {
-    if (todo.status === nextStatus) return;
-    router.patch(`/todos/${todo.id}/status`, { status: nextStatus, manual_reminder_at: null }, {
-        preserveScroll: true,
-        onError: (errors) => {
-            toast.error(errors.status ?? 'Status task tidak dapat diubah.');
-            if (todo.status === 'selesai') openTodo(todo);
-        },
-    });
+    selectedTodo.value = todo;
+    detailInitialStatus.value = nextStatus;
+    detailOpen.value = true;
 };
 
 watch(flash, (value) => {
@@ -142,11 +138,11 @@ watch(todos, (items) => {
         </template>
 
         <TaskCalendar v-else-if="activeSection === 'calendar'" :workspace-id="activeWorkspace.id" :todos="todos" @open="openTodo" />
-        <StickyNotesPanel v-else-if="activeSection === 'notes'" :notes="stickyNotes" :categories="categories" :workspace-id="activeWorkspace.id" />
+        <StickyNotesPanel v-else-if="activeSection === 'notes'" :notes="stickyNotes" :workspace-id="activeWorkspace.id" />
         <ActivityPanel v-else-if="activeSection === 'activity'" :activities="activities" />
 
         <TaskFormSheet v-if="activeWorkspace" v-model:open="formOpen" :todo="formTodo" :workspace-id="activeWorkspace.id" :categories="categories" />
-        <TaskDetailsDialog v-model:open="detailOpen" :todo="selectedTodo" @edit="editTodo" @delete="askDeleteTodo" />
+        <TaskDetailsDialog v-model:open="detailOpen" :todo="selectedTodo" :initial-status="detailInitialStatus" @edit="editTodo" @delete="askDeleteTodo" @status-saved="detailInitialStatus = null" />
         <AlertDialog v-model:open="deleteOpen"><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>Hapus task “{{ selectedTodo?.title }}”?</AlertDialogTitle><AlertDialogDescription>Task dan reminder terkait akan dihapus permanen. Tindakan ini tidak dapat dibatalkan.</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>Batal</AlertDialogCancel><AlertDialogAction class="bg-destructive text-white hover:bg-destructive/90" @click="deleteTodo">Hapus permanen</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>
     </AppLayout>
 </template>
