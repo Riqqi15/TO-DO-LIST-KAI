@@ -1,7 +1,11 @@
 <script setup>
 import FieldError from '@/components/shared/FieldError.vue';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import AuthLayout from '@/layouts/AuthLayout.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
+import { ArrowLeft, LoaderCircle, Mail } from '@lucide/vue';
 
 defineProps({ status: { type: String, default: '' } });
 const form = useForm({ email: '' });
@@ -10,12 +14,12 @@ const submit = () => form.post('/forgot-password');
 
 <template>
     <Head title="Lupa password" />
-    <AuthLayout title="Lupa password" description="Kami akan mengirim tautan reset ke Mailpit.">
-        <p v-if="status" class="mb-4 text-sm text-green-700">{{ status }}</p>
-        <form class="space-y-4" @submit.prevent="submit">
-            <label class="block text-sm font-medium">Email<input v-model="form.email" type="email" required autofocus class="mt-1 w-full rounded-lg border px-3 py-2" /><FieldError :message="form.errors.email" /></label>
-            <button class="w-full rounded-lg bg-blue-700 px-4 py-2 font-semibold text-white disabled:opacity-50" :disabled="form.processing">Kirim tautan reset</button>
+    <AuthLayout title="Atur ulang password" description="Masukkan email akun. Kami akan mengirim tautan untuk membuat password baru.">
+        <div v-if="status" class="mb-5 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm font-medium text-emerald-800">{{ status }}</div>
+        <form class="space-y-5" @submit.prevent="submit">
+            <div class="space-y-2"><Label for="email">Email</Label><Input id="email" v-model="form.email" type="email" autocomplete="username" placeholder="nama@contoh.com" required autofocus class="h-11" :aria-invalid="Boolean(form.errors.email)" /><FieldError :message="form.errors.email" /></div>
+            <Button class="h-11 w-full font-bold" :disabled="form.processing"><LoaderCircle v-if="form.processing" class="size-4 animate-spin" /><Mail v-else class="size-4" />Kirim tautan reset</Button>
         </form>
-        <Link href="/login" class="mt-4 block text-center text-sm text-blue-700">Kembali ke login</Link>
+        <Button variant="ghost" class="mt-5 w-full text-muted-foreground" as-child><Link href="/login"><ArrowLeft class="size-4" />Kembali ke halaman masuk</Link></Button>
     </AuthLayout>
 </template>
