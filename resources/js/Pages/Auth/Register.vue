@@ -1,7 +1,11 @@
 <script setup>
 import FieldError from '@/components/shared/FieldError.vue';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import AuthLayout from '@/layouts/AuthLayout.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
+import { ArrowRight, LoaderCircle } from '@lucide/vue';
 
 const form = useForm({ name: '', email: '', password: '', password_confirmation: '' });
 const submit = () => form.post('/register', { onFinish: () => form.reset('password', 'password_confirmation') });
@@ -9,14 +13,14 @@ const submit = () => form.post('/register', { onFinish: () => form.reset('passwo
 
 <template>
     <Head title="Daftar" />
-    <AuthLayout title="Buat akun" description="Verifikasi email diperlukan sebelum memakai aplikasi.">
+    <AuthLayout title="Buat akun baru" description="Verifikasi email Anda untuk mengaktifkan workspace personal.">
         <form class="space-y-4" @submit.prevent="submit">
-            <label class="block text-sm font-medium">Nama<input v-model="form.name" required autofocus class="mt-1 w-full rounded-lg border px-3 py-2" /><FieldError :message="form.errors.name" /></label>
-            <label class="block text-sm font-medium">Email<input v-model="form.email" type="email" required class="mt-1 w-full rounded-lg border px-3 py-2" /><FieldError :message="form.errors.email" /></label>
-            <label class="block text-sm font-medium">Password<input v-model="form.password" type="password" required class="mt-1 w-full rounded-lg border px-3 py-2" /><FieldError :message="form.errors.password" /></label>
-            <label class="block text-sm font-medium">Konfirmasi password<input v-model="form.password_confirmation" type="password" required class="mt-1 w-full rounded-lg border px-3 py-2" /></label>
-            <button class="w-full rounded-lg bg-blue-700 px-4 py-2 font-semibold text-white disabled:opacity-50" :disabled="form.processing">Daftar</button>
+            <div class="space-y-2"><Label for="name">Nama lengkap</Label><Input id="name" v-model="form.name" autocomplete="name" placeholder="Nama Anda" required autofocus class="h-11" :aria-invalid="Boolean(form.errors.name)" /><FieldError :message="form.errors.name" /></div>
+            <div class="space-y-2"><Label for="email">Email</Label><Input id="email" v-model="form.email" type="email" autocomplete="username" placeholder="nama@contoh.com" required class="h-11" :aria-invalid="Boolean(form.errors.email)" /><FieldError :message="form.errors.email" /></div>
+            <div class="space-y-2"><Label for="password">Password</Label><Input id="password" v-model="form.password" type="password" autocomplete="new-password" required class="h-11" :aria-invalid="Boolean(form.errors.password)" /><FieldError :message="form.errors.password" /></div>
+            <div class="space-y-2"><Label for="password-confirmation">Konfirmasi password</Label><Input id="password-confirmation" v-model="form.password_confirmation" type="password" autocomplete="new-password" required class="h-11" /></div>
+            <Button class="mt-2 h-11 w-full font-bold" :disabled="form.processing"><LoaderCircle v-if="form.processing" class="size-4 animate-spin" />Buat akun<ArrowRight v-if="!form.processing" class="size-4" /></Button>
         </form>
-        <Link href="/login" class="mt-4 block text-center text-sm text-blue-700">Sudah punya akun?</Link>
+        <p class="mt-7 text-center text-sm text-muted-foreground">Sudah punya akun? <Link href="/login" class="font-bold text-primary hover:underline">Masuk</Link></p>
     </AuthLayout>
 </template>
