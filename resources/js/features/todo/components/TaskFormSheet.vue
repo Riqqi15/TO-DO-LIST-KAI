@@ -2,10 +2,10 @@
 import FieldError from '@/components/shared/FieldError.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
-import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Textarea } from '@/components/ui/textarea';
 import { defaultDeadline, toDateTimeInput } from '@/features/todo/utils/todo-formatters';
 import { useForm } from '@inertiajs/vue3';
@@ -54,14 +54,14 @@ const submit = () => {
 </script>
 
 <template>
-    <Sheet :open="open" @update:open="emit('update:open', $event)">
-        <SheetContent class="w-full overflow-y-auto sm:max-w-xl">
-            <SheetHeader class="text-left">
-                <SheetTitle class="text-xl font-extrabold">{{ editing ? 'Edit task' : 'Buat task baru' }}</SheetTitle>
-                <SheetDescription>{{ editing ? 'Perbarui detail task dan sinkronkan reminder.' : 'Tentukan hasil yang ingin dicapai dan kapan harus selesai.' }}</SheetDescription>
-            </SheetHeader>
+    <Dialog :open="open" @update:open="emit('update:open', $event)">
+        <DialogContent class="max-h-[85vh] gap-0 overflow-hidden p-0 sm:max-w-[760px] grid-rows-[auto_minmax(0,1fr)_auto]">
+            <DialogHeader class="border-b px-6 py-5 pr-14 text-left">
+                <DialogTitle class="text-xl font-extrabold">{{ editing ? 'Edit task' : 'Buat task baru' }}</DialogTitle>
+                <DialogDescription>{{ editing ? 'Perbarui detail task dan sinkronkan reminder.' : 'Tentukan hasil yang ingin dicapai dan kapan harus selesai.' }}</DialogDescription>
+            </DialogHeader>
 
-            <form id="task-form" class="space-y-5 px-4 pb-28" @submit.prevent="submit">
+            <form id="task-form" class="min-h-0 space-y-5 overflow-y-auto px-6 py-5" @submit.prevent="submit">
                 <div class="space-y-2"><Label for="task-title">Judul task</Label><Input id="task-title" v-model="form.title" placeholder="Contoh: Siapkan laporan mingguan" maxlength="180" required autofocus class="h-11" :aria-invalid="Boolean(form.errors.title)" /><FieldError :message="form.errors.title" /></div>
                 <div class="space-y-2"><Label for="task-description">Deskripsi <span class="font-normal text-muted-foreground">(opsional)</span></Label><Textarea id="task-description" v-model="form.description" placeholder="Tambahkan konteks, hasil akhir, atau catatan penting." class="min-h-28 resize-y" :aria-invalid="Boolean(form.errors.description)" /><FieldError :message="form.errors.description" /></div>
                 <div class="grid gap-5 sm:grid-cols-2">
@@ -78,10 +78,10 @@ const submit = () => {
                 </div>
             </form>
 
-            <SheetFooter class="fixed inset-x-0 bottom-0 border-t bg-white/95 px-4 py-4 backdrop-blur sm:left-auto sm:w-[calc(36rem-1px)]">
+            <DialogFooter class="border-t bg-background px-6 py-4">
                 <Button type="button" variant="outline" @click="emit('update:open', false)">Batal</Button>
                 <Button form="task-form" type="submit" :disabled="form.processing"><LoaderCircle v-if="form.processing" class="size-4 animate-spin" />{{ editing ? 'Simpan perubahan' : 'Buat task' }}</Button>
-            </SheetFooter>
-        </SheetContent>
-    </Sheet>
+            </DialogFooter>
+        </DialogContent>
+    </Dialog>
 </template>
