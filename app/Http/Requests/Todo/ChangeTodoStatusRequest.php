@@ -17,7 +17,7 @@ class ChangeTodoStatusRequest extends FormRequest
     {
         return [
             'status' => ['required', Rule::enum(TodoStatus::class)],
-            'manual_reminder_at' => ['nullable', 'date'],
+            'status_at' => ['required', 'date'],
         ];
     }
 }

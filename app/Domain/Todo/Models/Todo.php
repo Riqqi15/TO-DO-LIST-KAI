@@ -13,11 +13,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Todo extends Model
 {
-    protected $fillable = ['workspace_id', 'created_by', 'category_id', 'title', 'description', 'status', 'deadline_at'];
+    protected $fillable = ['workspace_id', 'created_by', 'category_id', 'title', 'description', 'status', 'deadline_at', 'started_at', 'completed_at'];
 
     protected function casts(): array
     {
-        return ['status' => TodoStatus::class, 'deadline_at' => 'datetime'];
+        return ['status' => TodoStatus::class, 'deadline_at' => 'datetime', 'started_at' => 'datetime', 'completed_at' => 'datetime'];
     }
 
     public function workspace(): BelongsTo

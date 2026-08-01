@@ -41,7 +41,12 @@ class TodoPageController extends Controller
                 $todosQuery->where('category_id', $request->integer('category'));
             }
             $todos = $todosQuery->get()->map(fn (Todo $todo) => $this->todoPayload($todo));
-            $notes = StickyNote::where('workspace_id', $workspace->id)->with('creator:id,name')->latest()->get();
+            $notes = StickyNote::where('workspace_id', $workspace->id)
+                ->with('creator:id,name')
+                ->orderByRaw('CASE WHEN pinned_at IS NULL THEN 1 ELSE 0 END')
+                ->orderBy('pin_order')
+                ->orderByDesc('created_at')
+                ->get();
             $activities = ActivityLog::where('workspace_id', $workspace->id)->with('actor:id,name')->latest('created_at')->limit(100)->get();
         }
 
@@ -86,6 +91,8 @@ class TodoPageController extends Controller
             'status' => $todo->status->value,
             'deadline_at' => $todo->deadline_at->toIso8601String(),
             'deadline_wib' => $todo->deadline_at->copy()->timezone('Asia/Jakarta')->format('Y-m-d H:i'),
+            'started_at' => $todo->started_at?->toIso8601String(),
+            'completed_at' => $todo->completed_at?->toIso8601String(),
         ];
     }
 }
