@@ -1,8 +1,9 @@
 <script setup>
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
+import SidebarWorkspaceTools from '@/features/todo/components/SidebarWorkspaceTools.vue';
 import { Link } from '@inertiajs/vue3';
 import {
     Activity,
@@ -10,14 +11,14 @@ import {
     CheckCheck,
     LayoutDashboard,
     LogOut,
-    Settings2,
     StickyNote,
-    Users,
 } from '@lucide/vue';
 
 const props = defineProps({
     workspaces: { type: Array, default: () => [] },
     activeWorkspace: { type: Object, default: null },
+    categories: { type: Array, default: () => [] },
+    invite: { type: Object, default: null },
     activeSection: { type: String, default: 'tasks' },
     user: { type: Object, default: null },
 });
@@ -25,11 +26,10 @@ const props = defineProps({
 const emit = defineEmits(['navigate', 'switch-workspace', 'close']);
 
 const navigation = [
-    { id: 'tasks', label: 'Tasks', icon: LayoutDashboard },
+    { id: 'tasks', label: 'Tugas', icon: LayoutDashboard },
     { id: 'calendar', label: 'Kalender', icon: CalendarDays },
-    { id: 'notes', label: 'Sticky Notes', icon: StickyNote },
-    { id: 'activity', label: 'Activity', icon: Activity },
-    { id: 'settings', label: 'Pengaturan', icon: Settings2 },
+    { id: 'notes', label: 'Catatan', icon: StickyNote },
+    { id: 'activity', label: 'Aktivitas', icon: Activity },
 ];
 
 const initials = (name) => (name || 'KAI')
@@ -41,6 +41,11 @@ const initials = (name) => (name || 'KAI')
 
 const navigate = (section) => {
     emit('navigate', section);
+    emit('close');
+};
+
+const switchWorkspace = (workspaceId) => {
+    emit('switch-workspace', workspaceId);
     emit('close');
 };
 </script>
@@ -57,47 +62,35 @@ const navigate = (section) => {
             </div>
         </div>
 
-        <div class="px-4 pb-4">
-            <label class="mb-2 block text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground" for="workspace-switcher">
-                Workspace aktif
-            </label>
-            <NativeSelect
-                id="workspace-switcher"
-                class="h-11 w-full bg-white font-semibold"
-                :model-value="activeWorkspace?.id ?? ''"
-                @change="emit('switch-workspace', $event.target.value)"
-            >
-                <NativeSelectOption
-                    v-for="workspace in workspaces"
-                    :key="workspace.id"
-                    :value="workspace.id"
-                >
-                    {{ workspace.name }}
-                </NativeSelectOption>
-            </NativeSelect>
-            <div v-if="activeWorkspace" class="mt-2 flex items-center gap-2 px-1 text-xs text-muted-foreground">
-                <Users class="size-3.5" />
-                <span>
-                    {{ activeWorkspace.type === 'team' ? `${activeWorkspace.membership_rows_count ?? 1} anggota` : 'Workspace personal' }}
-                </span>
+        <ScrollArea class="min-h-0 flex-1">
+            <div class="px-3 pb-3">
+                <SidebarWorkspaceTools
+                    :workspaces="workspaces"
+                    :active-workspace="activeWorkspace"
+                    :categories="categories"
+                    :user="user"
+                    :invite="invite"
+                    @switch-workspace="switchWorkspace"
+                />
             </div>
-        </div>
 
-        <Separator />
+            <Separator />
 
-        <nav class="flex-1 space-y-1.5 p-3" aria-label="Navigasi utama">
-            <Button
-                v-for="item in navigation"
-                :key="item.id"
-                :variant="activeSection === item.id ? 'secondary' : 'ghost'"
-                class="h-10 w-full justify-start gap-3 px-3"
-                :class="activeSection === item.id ? 'font-bold text-primary' : 'font-medium text-muted-foreground'"
-                @click="navigate(item.id)"
-            >
-                <component :is="item.icon" class="size-4.5" />
-                {{ item.label }}
-            </Button>
-        </nav>
+            <nav class="space-y-1.5 p-3" aria-label="Navigasi utama">
+                <p class="mb-2 px-1 text-[10px] font-bold uppercase tracking-[0.15em] text-muted-foreground">Navigasi</p>
+                <Button
+                    v-for="item in navigation"
+                    :key="item.id"
+                    :variant="activeSection === item.id ? 'secondary' : 'ghost'"
+                    class="h-10 w-full justify-start gap-3 px-3"
+                    :class="activeSection === item.id ? 'font-bold text-primary' : 'font-medium text-muted-foreground'"
+                    @click="navigate(item.id)"
+                >
+                    <component :is="item.icon" class="size-4.5" />
+                    {{ item.label }}
+                </Button>
+            </nav>
+        </ScrollArea>
 
         <div class="mt-auto p-3">
             <Separator class="mb-3" />

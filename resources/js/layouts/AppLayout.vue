@@ -13,6 +13,8 @@ defineProps({
     eyebrow: { type: String, default: '' },
     workspaces: { type: Array, default: () => [] },
     activeWorkspace: { type: Object, default: null },
+    categories: { type: Array, default: () => [] },
+    invite: { type: Object, default: null },
     activeSection: { type: String, default: 'tasks' },
     user: { type: Object, default: null },
 });
@@ -28,6 +30,8 @@ const mobileOpen = ref(false);
                 <AppSidebar
                     :workspaces="workspaces"
                     :active-workspace="activeWorkspace"
+                    :categories="categories"
+                    :invite="invite"
                     :active-section="activeSection"
                     :user="user"
                     @navigate="emit('navigate', $event)"
@@ -49,6 +53,8 @@ const mobileOpen = ref(false);
                                 <AppSidebar
                                     :workspaces="workspaces"
                                     :active-workspace="activeWorkspace"
+                                    :categories="categories"
+                                    :invite="invite"
                                     :active-section="activeSection"
                                     :user="user"
                                     @close="mobileOpen = false"

@@ -13,7 +13,6 @@ import TaskCalendar from '@/features/todo/components/TaskCalendar.vue';
 import TaskDetailsDialog from '@/features/todo/components/TaskDetailsDialog.vue';
 import TaskFormSheet from '@/features/todo/components/TaskFormSheet.vue';
 import TaskList from '@/features/todo/components/TaskList.vue';
-import WorkspaceSettings from '@/features/todo/components/WorkspaceSettings.vue';
 import { TODO_STATUSES } from '@/features/todo/constants/todo-options';
 import { deadlineMeta } from '@/features/todo/utils/todo-formatters';
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -34,7 +33,7 @@ const flash = computed(() => props.value.flash ?? {});
 const user = computed(() => props.value.auth?.user ?? null);
 
 const activeSection = ref('tasks');
-const viewMode = ref('kanban');
+const viewMode = ref('board');
 const search = ref('');
 const categoryFilter = ref('');
 const statusFilter = ref('');
@@ -62,17 +61,14 @@ const header = computed(() => ({
     calendar: { eyebrow: 'Jadwal kerja', title: 'Kalender deadline', description: 'Lihat ritme kerja berdasarkan deadline task' },
     notes: { eyebrow: 'Ruang ide', title: 'Sticky Notes', description: `${stickyNotes.value.length} catatan di workspace ini` },
     activity: { eyebrow: 'Jejak perubahan', title: 'Activity', description: 'Riwayat permanen workspace' },
-    settings: { eyebrow: 'Kontrol workspace', title: 'Pengaturan', description: 'Kelola kategori dan kolaborasi tim' },
 }[activeSection.value]));
 
 const navigate = (section) => {
     activeSection.value = section;
-    if (section === 'calendar') viewMode.value = 'calendar';
     window.scrollTo({ top: 0, behavior: 'smooth' });
 };
 const setView = (mode) => {
     viewMode.value = mode;
-    activeSection.value = mode === 'calendar' ? 'calendar' : 'tasks';
 };
 const switchWorkspace = (id) => router.get('/app', { workspace: id }, { preserveScroll: false, preserveState: false });
 const createTodo = () => { formTodo.value = null; formOpen.value = true; };
@@ -109,6 +105,8 @@ watch(todos, (items) => {
         :eyebrow="header.eyebrow"
         :workspaces="workspaces"
         :active-workspace="activeWorkspace"
+        :categories="categories"
+        :invite="flash.team_invite"
         :active-section="activeSection"
         :user="user"
         @navigate="navigate"
@@ -120,7 +118,7 @@ watch(todos, (items) => {
 
         <div v-if="!activeWorkspace" class="grid min-h-[65vh] place-items-center"><Card class="max-w-md border-dashed p-9 text-center shadow-none"><div class="mx-auto grid size-12 place-items-center rounded-2xl bg-secondary text-primary"><Sparkles class="size-5" /></div><h2 class="mt-4 text-lg font-extrabold">Workspace belum tersedia</h2><p class="mt-2 text-sm leading-6 text-muted-foreground">Verifikasi email untuk membuat workspace personal, lalu muat ulang halaman.</p></Card></div>
 
-        <template v-else-if="['tasks', 'calendar'].includes(activeSection)">
+        <template v-else-if="activeSection === 'tasks'">
             <div class="mb-5 grid grid-cols-2 gap-3 xl:grid-cols-4">
                 <Card class="border-border/80 p-4 shadow-none"><div class="flex items-center justify-between"><p class="text-xs font-bold text-muted-foreground">Semua task</p><LayoutGrid class="size-4 text-primary" /></div><p class="mt-3 font-mono text-2xl font-semibold">{{ counts.total }}</p></Card>
                 <Card class="border-border/80 p-4 shadow-none"><div class="flex items-center justify-between"><p class="text-xs font-bold text-muted-foreground">Sedang dikerjakan</p><CircleDot class="size-4 text-blue-600" /></div><p class="mt-3 font-mono text-2xl font-semibold">{{ counts.ongoing }}</p></Card>
@@ -134,19 +132,18 @@ watch(todos, (items) => {
                         <div class="relative min-w-0 flex-1 sm:max-w-md"><Search class="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" /><Input v-model="search" class="h-10 pl-9" placeholder="Cari judul atau deskripsi..." /></div>
                         <div class="flex gap-2"><NativeSelect v-model="categoryFilter" aria-label="Filter kategori" class="h-10 min-w-40 flex-1"><NativeSelectOption value="">Semua kategori</NativeSelectOption><NativeSelectOption v-for="category in categories" :key="category.id" :value="category.id">{{ category.name }}</NativeSelectOption></NativeSelect><NativeSelect v-model="statusFilter" aria-label="Filter status" class="h-10 min-w-40 flex-1"><NativeSelectOption value="">Semua status</NativeSelectOption><NativeSelectOption v-for="status in TODO_STATUSES" :key="status.value" :value="status.value">{{ status.label }}</NativeSelectOption></NativeSelect></div>
                     </div>
-                    <Tabs :model-value="viewMode" @update:model-value="setView"><TabsList class="grid h-10 w-full grid-cols-3 xl:w-auto"><TabsTrigger value="kanban" aria-label="Kanban"><LayoutGrid class="size-4" /><span class="hidden sm:inline">Kanban</span></TabsTrigger><TabsTrigger value="list" aria-label="Daftar"><List class="size-4" /><span class="hidden sm:inline">Daftar</span></TabsTrigger><TabsTrigger value="calendar" aria-label="Kalender"><CalendarDays class="size-4" /><span class="hidden sm:inline">Kalender</span></TabsTrigger></TabsList></Tabs>
+                    <Tabs :model-value="viewMode" @update:model-value="setView"><TabsList class="grid h-10 w-full grid-cols-2 xl:w-auto"><TabsTrigger value="board" aria-label="Board"><LayoutGrid class="size-4" /><span class="hidden sm:inline">Board</span></TabsTrigger><TabsTrigger value="list" aria-label="Daftar"><List class="size-4" /><span class="hidden sm:inline">Daftar</span></TabsTrigger></TabsList></Tabs>
                 </div>
                 <div v-if="search || categoryFilter || statusFilter" class="mt-3 flex items-center gap-2 border-t pt-3 text-xs text-muted-foreground"><SlidersHorizontal class="size-3.5" /><span>Menampilkan {{ filteredTodos.length }} dari {{ todos.length }} task</span><Button variant="link" size="xs" class="ml-auto h-auto p-0 text-xs" @click="search = ''; categoryFilter = ''; statusFilter = ''">Reset filter</Button></div>
             </Card>
 
-            <div v-if="viewMode === 'kanban'" class="overflow-x-auto pb-3"><TaskBoard :todos="filteredTodos" @open="openTodo" @edit="editTodo" @delete="askDeleteTodo" @status="changeStatus" /></div>
-            <TaskList v-else-if="viewMode === 'list'" :todos="filteredTodos" @open="openTodo" @status="changeStatus" />
-            <TaskCalendar v-else :workspace-id="activeWorkspace.id" :todos="todos" @open="openTodo" />
+            <div v-if="viewMode === 'board'" class="overflow-x-auto pb-3"><TaskBoard :todos="filteredTodos" @open="openTodo" @edit="editTodo" @delete="askDeleteTodo" @status="changeStatus" /></div>
+            <TaskList v-else :todos="filteredTodos" @open="openTodo" @status="changeStatus" />
         </template>
 
+        <TaskCalendar v-else-if="activeSection === 'calendar'" :workspace-id="activeWorkspace.id" :todos="todos" @open="openTodo" />
         <StickyNotesPanel v-else-if="activeSection === 'notes'" :notes="stickyNotes" :categories="categories" :workspace-id="activeWorkspace.id" />
         <ActivityPanel v-else-if="activeSection === 'activity'" :activities="activities" />
-        <WorkspaceSettings v-else-if="activeSection === 'settings'" :workspace="activeWorkspace" :categories="categories" :user="user" :invite="flash.team_invite" />
 
         <TaskFormSheet v-if="activeWorkspace" v-model:open="formOpen" :todo="formTodo" :workspace-id="activeWorkspace.id" :categories="categories" />
         <TaskDetailsDialog v-model:open="detailOpen" :todo="selectedTodo" @edit="editTodo" @delete="askDeleteTodo" />
