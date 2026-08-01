@@ -5,13 +5,14 @@ import { Card, CardContent } from '@/components/ui/card';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
 import { TODO_STATUSES } from '@/features/todo/constants/todo-options';
-import { deadlineMeta, formatShortDate, statusTone } from '@/features/todo/utils/todo-formatters';
+import { deadlineMeta, formatShortDate, statusDateMeta, statusTone } from '@/features/todo/utils/todo-formatters';
 import { Bell, CalendarClock, MoreHorizontal, Pencil, Trash2 } from '@lucide/vue';
 import { computed } from 'vue';
 
 const props = defineProps({ todo: { type: Object, required: true } });
 const emit = defineEmits(['open', 'edit', 'delete', 'status']);
 const deadline = computed(() => deadlineMeta(props.todo));
+const statusDate = computed(() => statusDateMeta(props.todo));
 </script>
 
 <template>
@@ -40,9 +41,11 @@ const deadline = computed(() => deadlineMeta(props.todo));
             <h3 class="mt-3 line-clamp-2 text-[15px] font-extrabold leading-5 tracking-[-0.015em]">{{ todo.title }}</h3>
             <p v-if="todo.description" class="mt-2 line-clamp-2 text-xs leading-5 text-muted-foreground">{{ todo.description }}</p>
 
-            <div class="mt-4 flex items-center gap-2 text-xs" :class="deadline.tone">
+            <div class="mt-4 flex items-center gap-2 text-xs" :class="statusDate.tone">
                 <CalendarClock class="size-3.5" />
-                <span class="font-mono font-medium">{{ formatShortDate(todo.deadline_at) }}</span>
+                <span class="font-semibold">{{ statusDate.label }}</span>
+                <span class="text-current/45">·</span>
+                <span class="font-mono font-medium">{{ statusDate.value ? formatShortDate(statusDate.value) : 'Belum tercatat' }}</span>
             </div>
 
             <div class="mt-4 flex items-center justify-between gap-3 border-t border-border/70 pt-3" @click.stop>

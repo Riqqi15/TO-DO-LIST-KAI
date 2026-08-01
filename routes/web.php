@@ -38,6 +38,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::post('/workspaces/{workspace}/sticky-notes', [StickyNoteController::class, 'store'])->name('sticky-notes.store');
     Route::patch('/sticky-notes/{note}', [StickyNoteController::class, 'update'])->name('sticky-notes.update');
+    Route::patch('/sticky-notes/{note}/pin', [StickyNoteController::class, 'togglePin'])->name('sticky-notes.pin');
+    Route::patch('/workspaces/{workspace}/sticky-notes/reorder', [StickyNoteController::class, 'reorder'])->name('sticky-notes.reorder');
     Route::delete('/sticky-notes/{note}', [StickyNoteController::class, 'destroy'])->name('sticky-notes.destroy');
-    Route::post('/sticky-notes/{note}/convert', [StickyNoteController::class, 'convert'])->name('sticky-notes.convert');
 });

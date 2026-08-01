@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class StickyNote extends Model
 {
-    protected $fillable = ['workspace_id', 'created_by', 'converted_to_todo_id', 'content', 'color', 'converted_at'];
+    protected $fillable = ['workspace_id', 'created_by', 'converted_to_todo_id', 'content', 'color', 'pinned_at', 'pin_order', 'converted_at'];
 
     protected function casts(): array
     {
-        return ['converted_at' => 'datetime'];
+        return ['pinned_at' => 'datetime', 'converted_at' => 'datetime'];
     }
 
     public function workspace(): BelongsTo

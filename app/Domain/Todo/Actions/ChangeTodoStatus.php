@@ -3,7 +3,6 @@
 namespace App\Domain\Todo\Actions;
 
 use App\Domain\ActivityLog\Actions\RecordActivity;
-use App\Domain\Reminder\Actions\CreateManualReminder;
 use App\Domain\Reminder\Actions\SyncAutomaticReminders;
 use App\Domain\Reminder\Enums\ReminderKind;
 use App\Domain\Reminder\Enums\ReminderStatus;
@@ -17,32 +16,81 @@ use Illuminate\Validation\ValidationException;
 
 class ChangeTodoStatus
 {
-    public function __construct(private SyncAutomaticReminders $automatic, private CreateManualReminder $manual, private RecordActivity $activity) {}
+    public function __construct(private SyncAutomaticReminders $automatic, private RecordActivity $activity) {}
 
-    public function handle(Todo $todo, User $actor, TodoStatus $status, ?Carbon $manualReminderAt = null): Todo
+    public function handle(Todo $todo, User $actor, TodoStatus $status, Carbon $statusAt): Todo
     {
         if (! $actor->can('update', $todo)) {
             throw new AuthorizationException;
         }
 
-        return DB::transaction(function () use ($todo, $actor, $status, $manualReminderAt) {
-            $old = $todo->status;
-            $todo->update(['status' => $status]);
+        $now = now();
+        if ($status === TodoStatus::BelumDikerjakan && $statusAt->lt($now->copy()->addMinutes(5))) {
+            throw ValidationException::withMessages(['status_at' => 'Deadline minimal 5 menit dari sekarang.']);
+        }
+        if ($status !== TodoStatus::BelumDikerjakan && $statusAt->gt($now)) {
+            throw ValidationException::withMessages(['status_at' => 'Tanggal status tidak boleh berada di masa depan.']);
+        }
+        if ($status === TodoStatus::Selesai && $todo->started_at && $statusAt->lt($todo->started_at)) {
+            throw ValidationException::withMessages(['status_at' => 'Tanggal selesai tidak boleh lebih awal dari tanggal mulai.']);
+        }
+
+        return DB::transaction(function () use ($todo, $actor, $status, $statusAt) {
+            $oldStatus = $todo->status;
+            $old = $this->dateSnapshot($todo);
+
+            if ($status === TodoStatus::BelumDikerjakan) {
+                $todo->update([
+                    'status' => $status,
+                    'deadline_at' => $statusAt,
+                    'started_at' => null,
+                    'completed_at' => null,
+                ]);
+                $todo->reminders()
+                    ->where('kind', ReminderKind::Manual->value)
+                    ->where('scheduled_at', '>=', $statusAt)
+                    ->update(['status' => ReminderStatus::Cancelled->value, 'cancelled_at' => now()]);
+                $this->automatic->handle($todo);
+                $this->reactivateValidManualReminders($todo);
+            } elseif ($status === TodoStatus::SedangDikerjakan) {
+                $todo->update(['status' => $status, 'started_at' => $statusAt, 'completed_at' => null]);
+                if ($oldStatus === TodoStatus::Selesai) {
+                    $this->automatic->handle($todo);
+                    $this->reactivateValidManualReminders($todo);
+                }
+            } else {
+                $todo->update(['status' => $status, 'completed_at' => $statusAt]);
+            }
+
             if ($status === TodoStatus::Selesai) {
                 $todo->reminders()->whereIn('status', [ReminderStatus::Scheduled->value, ReminderStatus::Failed->value])->update(['status' => ReminderStatus::Cancelled->value, 'cancelled_at' => now()]);
-            } elseif ($old === TodoStatus::Selesai) {
-                $this->automatic->handle($todo);
-                $todo->reminders()->where('kind', ReminderKind::Manual->value)->where('scheduled_at', '>', now())->update(['status' => ReminderStatus::Scheduled->value, 'cancelled_at' => null]);
-                if ($manualReminderAt) {
-                    $this->manual->handle($todo, $actor, $manualReminderAt);
-                }
-                if (! $todo->reminders()->where('status', ReminderStatus::Scheduled->value)->where('scheduled_at', '>', now())->exists()) {
-                    throw ValidationException::withMessages(['status' => 'Task dibuka kembali tetapi tidak memiliki reminder mendatang. Tambahkan reminder manual terlebih dahulu.']);
-                }
             }
-            $this->activity->handle($todo->workspace, $actor, 'todo.status_changed', $todo, null, ['status' => ['old' => $old->value, 'new' => $status->value]]);
+
+            $todo->refresh();
+            $this->activity->handle($todo->workspace, $actor, 'todo.status_changed', $todo, null, [
+                'old' => ['status' => $oldStatus->value, ...$old],
+                'new' => ['status' => $status->value, ...$this->dateSnapshot($todo)],
+            ]);
 
             return $todo->load('reminders');
         });
+    }
+
+    private function reactivateValidManualReminders(Todo $todo): void
+    {
+        $todo->reminders()
+            ->where('kind', ReminderKind::Manual->value)
+            ->where('scheduled_at', '>', now())
+            ->where('scheduled_at', '<', $todo->deadline_at)
+            ->update(['status' => ReminderStatus::Scheduled->value, 'cancelled_at' => null]);
+    }
+
+    private function dateSnapshot(Todo $todo): array
+    {
+        return [
+            'deadline_at' => $todo->deadline_at?->toIso8601String(),
+            'started_at' => $todo->started_at?->toIso8601String(),
+            'completed_at' => $todo->completed_at?->toIso8601String(),
+        ];
     }
 }

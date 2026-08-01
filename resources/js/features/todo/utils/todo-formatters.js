@@ -34,6 +34,38 @@ export const formatShortDate = (value) => {
     }).format(date).replace('.', ':');
 };
 
+export const toWibDateTimeInput = (value = new Date()) => {
+    const date = value instanceof Date ? value : new Date(value);
+    if (Number.isNaN(date.getTime())) return '';
+    const parts = Object.fromEntries(new Intl.DateTimeFormat('en-CA', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        hourCycle: 'h23',
+        timeZone: 'Asia/Jakarta',
+    }).formatToParts(date).map(({ type, value: part }) => [type, part]));
+    return `${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}`;
+};
+
+export const statusDateMeta = (todo) => {
+    if (todo.status === 'sedang_dikerjakan') {
+        return { label: 'Mulai', value: todo.started_at, tone: 'text-blue-700' };
+    }
+    if (todo.status === 'selesai') {
+        return { label: 'Selesai', value: todo.completed_at, tone: 'text-emerald-700' };
+    }
+    return { label: 'Deadline', value: todo.deadline_at, tone: deadlineMeta(todo).tone };
+};
+
+export const statusDateInput = (todo, status) => {
+    if (!todo) return '';
+    if (status === 'belum_dikerjakan') return todo.deadline_wib?.replace(' ', 'T') ?? toWibDateTimeInput(todo.deadline_at);
+    if (status === 'sedang_dikerjakan') return toWibDateTimeInput(todo.started_at);
+    return toWibDateTimeInput(todo.completed_at);
+};
+
 export const deadlineMeta = (todo) => {
     if (todo.status === 'selesai') {
         return { label: 'Selesai', color: '#12806a', tone: 'text-emerald-700', icon: 'check' };
@@ -80,7 +112,9 @@ export const activityLabel = (action) => ({
     'sticky_note.created': 'Sticky note dibuat',
     'sticky_note.updated': 'Sticky note diperbarui',
     'sticky_note.deleted': 'Sticky note dihapus',
-    'sticky_note.converted': 'Sticky note dijadikan task',
+    'sticky_note.pinned': 'Sticky note dipin',
+    'sticky_note.unpinned': 'Pin sticky note dilepas',
+    'sticky_note.pins_reordered': 'Urutan pin diperbarui',
     'team.created': 'Tim dibuat',
     'team.joined': 'Anggota bergabung',
     'team.left': 'Anggota keluar',
