@@ -22,7 +22,7 @@ berubah setelah snapshot ini.
 | Workspace personal/tim | Selesai | Policy/action/transaction dan feature test |
 | Kategori dan Todo | Selesai | CRUD, 3 status, deadline wajib, tanpa priority |
 | Activity log | Selesai | Snapshot, actor nullable, mutation model ditolak |
-| Sticky note | Selesai | CRUD kolaboratif dan konversi ke Todo |
+| Sticky note | Selesai | CRUD kolaboratif, pin, dan urutan pin persistent |
 | Reminder email | Selesai untuk demo | H-7/H-3/manual, queue job, delivery tracking/retry |
 | Kalender | Selesai | Query diturunkan dari `todos.deadline_at` |
 | Visualisasi DB | Selesai | ERD Mermaid dan panduan phpMyAdmin/DBeaver |
@@ -42,6 +42,9 @@ berubah setelah snapshot ini.
 - Penghapusan tim membutuhkan teks persis
   `konfirmasi hapus tim <nama tim>` dan menghapus data operasional permanen.
 - Status task hanya `belum_dikerjakan`, `sedang_dikerjakan`, dan `selesai`.
+- Task menyimpan `started_at` dan `completed_at`. Form perubahan status memakai
+  `status_at`, sedangkan `deadline_at` berubah saat task kembali ke
+  `belum_dikerjakan`.
 - Tidak ada priority dan tidak ada tabel calendar event.
 - Kategori sistem: Meeting, Report Progress, Lainnya. Kategori custom yang
   dipakai task tidak dapat dihapus.
@@ -50,11 +53,13 @@ berubah setelah snapshot ini.
 - Reminder otomatis H-7 dan H-3 hanya dibuat bila jadwalnya belum lewat.
   Jika keduanya lewat, reminder manual wajib. Waktu manual fleksibel sampai
   menit, harus di masa depan dan sebelum deadline.
-- Menyelesaikan task membatalkan reminder; task dapat dibuka lagi. Bila tidak
-  ada jadwal masa depan, request reopen dapat mengirim `manual_reminder_at`.
+- Menyelesaikan task membatalkan reminder; task dapat dibuka lagi tanpa
+  membuat reminder melalui form status. Reminder manual tetap dikelola pada
+  bagian Reminder.
 - Reminder tim menghitung semua anggota aktif yang emailnya terverifikasi pada
   waktu pengiriman, bukan pada waktu reminder dibuat.
-- Sticky note tetap tersimpan setelah dikonversi dan menyimpan link ke Todo.
+- Sticky note dapat dipin, dilepas pinnya, dan diurutkan secara manual. Data
+  konversi lama tetap tersimpan, tetapi fitur konversi tidak lagi aktif.
 - Activity log tidak memiliki endpoint update/delete dan model menolak mutasi.
   Snapshot tetap ada ketika subject atau workspace operasional dihapus.
 
@@ -83,8 +88,9 @@ Migration domain:
 1. `2026_07_31_000001_create_workspace_tables.php`
 2. `2026_07_31_000002_create_todo_tables.php`
 3. `2026_07_31_000003_create_collaboration_tables.php`
+4. `2026_08_01_000004_add_status_dates_and_pin_order.php`
 
-Ketiganya sudah berstatus `Ran` pada MySQL Docker, batch 3, pada snapshot ini.
+Seluruh migration domain berstatus `Ran` pada MySQL Docker pada snapshot ini.
 
 ## Route aplikasi
 
@@ -95,7 +101,7 @@ Semua route domain berada di middleware `auth` dan `verified`:
 - Kategori: create, update, delete.
 - Todo: create, update, change status, delete.
 - Reminder manual: create, delete.
-- Sticky note: create, update, delete, convert.
+- Sticky note: create, update, delete, toggle pin, dan reorder pin.
 - Kalender: `GET /workspaces/{workspace}/calendar`.
 - Dashboard Inertia: `GET /app` dengan workspace, kategori, todo, sticky note,
   activity, dan timezone props.
@@ -130,28 +136,47 @@ Checkpoint frontend pada 1 Agustus 2026:
 
 - UI final memakai shadcn-vue, Lucide, Tailwind CSS 4, Plus Jakarta Sans, dan
   IBM Plex Mono.
-- Dashboard menyediakan Kanban, Daftar, Kalender, pencarian lokal, filter,
+- Dashboard menyediakan Board, Daftar, Kalender, pencarian lokal, filter,
   task detail, task create/edit, status, dan reminder.
-- Sticky note, konversi note, activity timeline, kategori, pembuatan/join tim,
+- Sticky note, pin note, activity timeline, kategori, pembuatan/join tim,
   kode undangan, kapasitas, keluar tim, dan hapus tim tersedia di UI.
 - Halaman login, registrasi, lupa/reset password, dan verifikasi email memakai
   visual system yang sama.
+Checkpoint dashboard awal sebelum penambahan tanggal status dan pin:
+
 - `npm run build`: berhasil; halaman Inertia dipecah menjadi chunk terpisah dan
   chunk dashboard sekitar **200,88 kB** sebelum gzip.
 - `php artisan test`: **41 test lulus, 187 assertion**.
-- Browser QA berhasil untuk registrasi, verifikasi email, create task dengan
-  reminder, perubahan status, Daftar, Kalender, sticky note, Activity,
-  kategori custom, task detail, drawer mobile, dan viewport desktop/mobile.
+- Browser QA desktop berhasil untuk registrasi, verifikasi email, create task
+  dengan reminder, perubahan status, Daftar, Kalender, sticky note, Activity,
+  kategori custom, dan task detail.
 - Browser console tidak melaporkan warning/error dan layout tidak memiliki
   horizontal overflow pada body.
-- `git diff -- app routes database config tests` kosong; backend tidak berubah.
 - Transfer ownership dan pengeluaran anggota belum dirender karena props
   Inertia belum memuat identitas anggota. UI sengaja tidak meminta ID internal
   atau menebak anggota.
 
+Checkpoint status date dan pinned note pada 1 Agustus 2026:
+
+- Board menampilkan Deadline, Mulai, atau Selesai sesuai status aktif.
+- Pemilihan status dari kartu membuka dialog agar pengguna mengonfirmasi
+  tanggal status sebelum menyimpan.
+- Status form tidak lagi membuat reminder. Backend memvalidasi deadline,
+  tanggal mulai, dan tanggal selesai secara terpisah.
+- Sticky note memakai Pin, PinOff, dan GripVertical. Pinned notes tampil pada
+  grup teratas dan urutannya disimpan melalui SortableJS serta endpoint reorder.
+- `php artisan test`: **45 test lulus, 230 assertion**.
+- `npm run build`: **3.089 module** ditransformasi dan build produksi berhasil.
+- `php artisan route:list --except-vendor`: **25 route**.
+- Migration status date dan pin berstatus `Ran` pada MySQL lokal.
+- Browser QA desktop berhasil untuk create task, perubahan status berurutan,
+  label tanggal Board, create note, pin, kontrol drag aktif, dan console tanpa
+  error. Unpin dan persistence reorder diverifikasi melalui feature test backend.
+
 Test mencakup auth, isolasi workspace, kode reusable/expired, kapasitas,
 transfer owner, exact delete confirmation, kategori terpakai, Todo/status,
-deadline dekat, reopen, policy delete, sticky conversion, email recipient,
+tanggal status, deadline dekat, reopen, policy delete, pin/reorder sticky note,
+email recipient,
 idempotensi delivery, kalender, dan immutability activity log.
 
 ## Menjalankan demo lokal
