@@ -4,7 +4,7 @@ Dokumen ini adalah sumber status utama backend To Do List KAI. Verifikasi ulang
 Git, Docker, migration, queue, dan test sebelum melanjutkan karena runtime dapat
 berubah setelah snapshot ini.
 
-**Snapshot:** 31 Juli 2026, Asia/Jakarta
+**Snapshot:** 1 Agustus 2026, Asia/Jakarta
 
 **Branch kerja:** `feat/backend-complete`
 
@@ -26,7 +26,7 @@ berubah setelah snapshot ini.
 | Reminder email | Selesai untuk demo | H-7/H-3/manual, queue job, delivery tracking/retry |
 | Kalender | Selesai | Query diturunkan dari `todos.deadline_at` |
 | Visualisasi DB | Selesai | ERD Mermaid dan panduan phpMyAdmin/DBeaver |
-| UI shadcn-vue final | Belum dimulai | Backend props dan route sudah tersedia |
+| UI shadcn-vue final | Selesai | Dashboard responsif, auth, Kanban/Daftar/Kalender, dan browser QA |
 
 ## Kontrak produk yang sudah diimplementasikan
 
@@ -126,6 +126,29 @@ Hasil sebelum final commit pada 31 Juli 2026:
   melaporkan tidak ada failed job.
 - Mailpit melalui Docker: HTTP **200**.
 
+Checkpoint frontend pada 1 Agustus 2026:
+
+- UI final memakai shadcn-vue, Lucide, Tailwind CSS 4, Plus Jakarta Sans, dan
+  IBM Plex Mono.
+- Dashboard menyediakan Kanban, Daftar, Kalender, pencarian lokal, filter,
+  task detail, task create/edit, status, dan reminder.
+- Sticky note, konversi note, activity timeline, kategori, pembuatan/join tim,
+  kode undangan, kapasitas, keluar tim, dan hapus tim tersedia di UI.
+- Halaman login, registrasi, lupa/reset password, dan verifikasi email memakai
+  visual system yang sama.
+- `npm run build`: berhasil; halaman Inertia dipecah menjadi chunk terpisah dan
+  chunk dashboard sekitar **200,88 kB** sebelum gzip.
+- `php artisan test`: **41 test lulus, 187 assertion**.
+- Browser QA berhasil untuk registrasi, verifikasi email, create task dengan
+  reminder, perubahan status, Daftar, Kalender, sticky note, Activity,
+  kategori custom, task detail, drawer mobile, dan viewport desktop/mobile.
+- Browser console tidak melaporkan warning/error dan layout tidak memiliki
+  horizontal overflow pada body.
+- `git diff -- app routes database config tests` kosong; backend tidak berubah.
+- Transfer ownership dan pengeluaran anggota belum dirender karena props
+  Inertia belum memuat identitas anggota. UI sengaja tidak meminta ID internal
+  atau menebak anggota.
+
 Test mencakup auth, isolasi workspace, kode reusable/expired, kapasitas,
 transfer owner, exact delete confirmation, kategori terpakai, Todo/status,
 deadline dekat, reopen, policy delete, sticky conversion, email recipient,
@@ -180,9 +203,8 @@ membuat akun.
 
 ## Batas demo dan pekerjaan berikutnya
 
-Backend feature scope yang disetujui sudah diimplementasikan. Pekerjaan utama
-berikutnya adalah UI final menggunakan shadcn-vue dan menghubungkan form/kanban/
-kalender ke route backend yang tersedia.
+Backend feature scope dan UI shadcn-vue yang disetujui sudah diimplementasikan.
+Pekerjaan berikutnya berfokus pada UAT dan kesiapan staging/produksi.
 
 Sebelum staging/produksi, kerjakan dan verifikasi:
 

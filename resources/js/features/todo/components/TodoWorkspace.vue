@@ -1,11 +1,28 @@
 <script setup>
-import AppLayout from '@/layouts/AppLayout.vue';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import ActivityPanel from '@/features/todo/components/ActivityPanel.vue';
+import StickyNotesPanel from '@/features/todo/components/StickyNotesPanel.vue';
+import TaskBoard from '@/features/todo/components/TaskBoard.vue';
+import TaskCalendar from '@/features/todo/components/TaskCalendar.vue';
+import TaskDetailsDialog from '@/features/todo/components/TaskDetailsDialog.vue';
+import TaskFormSheet from '@/features/todo/components/TaskFormSheet.vue';
+import TaskList from '@/features/todo/components/TaskList.vue';
+import WorkspaceSettings from '@/features/todo/components/WorkspaceSettings.vue';
 import { TODO_STATUSES } from '@/features/todo/constants/todo-options';
-import { router, useForm, usePage } from '@inertiajs/vue3';
+import { deadlineMeta } from '@/features/todo/utils/todo-formatters';
+import AppLayout from '@/layouts/AppLayout.vue';
+import { router, usePage } from '@inertiajs/vue3';
+import { CalendarDays, CheckCircle2, CircleDot, LayoutGrid, List, Plus, Search, SlidersHorizontal, Sparkles } from '@lucide/vue';
 import { computed, ref, watch } from 'vue';
+import { toast } from 'vue-sonner';
 
 const page = usePage();
-
 const props = computed(() => page.props);
 const workspaces = computed(() => props.value.workspaces ?? []);
 const activeWorkspace = computed(() => props.value.activeWorkspace ?? null);
@@ -13,812 +30,126 @@ const categories = computed(() => props.value.categories ?? []);
 const todos = computed(() => props.value.todos ?? []);
 const stickyNotes = computed(() => props.value.stickyNotes ?? []);
 const activities = computed(() => props.value.activities ?? []);
-const errors = computed(() => props.value.errors ?? {});
 const flash = computed(() => props.value.flash ?? {});
 const user = computed(() => props.value.auth?.user ?? null);
 
-const editableCategories = computed(() =>
-    categories.value.filter((category) => !category.is_system),
-);
+const activeSection = ref('tasks');
+const viewMode = ref('kanban');
+const search = ref('');
+const categoryFilter = ref('');
+const statusFilter = ref('');
+const formOpen = ref(false);
+const formTodo = ref(null);
+const detailOpen = ref(false);
+const selectedTodo = ref(null);
+const deleteOpen = ref(false);
 
-const selectedWorkspaceId = ref(activeWorkspace.value?.id ?? '');
+const filteredTodos = computed(() => todos.value.filter((todo) => {
+    const needle = search.value.trim().toLowerCase();
+    const matchesSearch = !needle || `${todo.title} ${todo.description ?? ''}`.toLowerCase().includes(needle);
+    const matchesCategory = !categoryFilter.value || Number(todo.category_id) === Number(categoryFilter.value);
+    const matchesStatus = !statusFilter.value || todo.status === statusFilter.value;
+    return matchesSearch && matchesCategory && matchesStatus;
+}));
+const counts = computed(() => ({
+    total: todos.value.length,
+    ongoing: todos.value.filter((todo) => todo.status === 'sedang_dikerjakan').length,
+    done: todos.value.filter((todo) => todo.status === 'selesai').length,
+    urgent: todos.value.filter((todo) => ['Terlambat', 'Kurang dari 24 jam'].includes(deadlineMeta(todo).label)).length,
+}));
+const header = computed(() => ({
+    tasks: { eyebrow: 'Pusat produktivitas', title: activeWorkspace.value?.name ?? 'Tasks', description: `${counts.value.total} task di workspace ini` },
+    calendar: { eyebrow: 'Jadwal kerja', title: 'Kalender deadline', description: 'Lihat ritme kerja berdasarkan deadline task' },
+    notes: { eyebrow: 'Ruang ide', title: 'Sticky Notes', description: `${stickyNotes.value.length} catatan di workspace ini` },
+    activity: { eyebrow: 'Jejak perubahan', title: 'Activity', description: 'Riwayat permanen workspace' },
+    settings: { eyebrow: 'Kontrol workspace', title: 'Pengaturan', description: 'Kelola kategori dan kolaborasi tim' },
+}[activeSection.value]));
 
-watch(activeWorkspace, (workspace) => {
-    selectedWorkspaceId.value = workspace?.id ?? '';
-});
-
-const defaultDeadline = () => {
-    const date = new Date(Date.now() + 24 * 60 * 60 * 1000);
-    date.setSeconds(0, 0);
-
-    return date.toISOString().slice(0, 16);
+const navigate = (section) => {
+    activeSection.value = section;
+    if (section === 'calendar') viewMode.value = 'calendar';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 };
-
-const todoForm = useForm({
-    category_id: '',
-    title: '',
-    description: '',
-    deadline_at: defaultDeadline(),
-    manual_reminders: [],
-});
-
-const manualReminderDraft = ref('');
-
-const categoryForm = useForm({ name: '' });
-const teamForm = useForm({ name: '' });
-const joinForm = useForm({ code: '' });
-const noteForm = useForm({ content: '', color: 'yellow' });
-const reminderForms = ref({});
-const statusForms = ref({});
-const updateCategoryNames = ref({});
-const updateNoteForms = ref({});
-const convertForms = ref({});
-const capacityForm = useForm({ member_limit: 5 });
-const deleteTeamForm = useForm({ confirmation: '' });
-
-watch(categories, (items) => {
-    if (!todoForm.category_id && items.length > 0) {
-        todoForm.category_id = items[0].id;
-    }
-}, { immediate: true });
-
-watch(activeWorkspace, (workspace) => {
-    capacityForm.member_limit = workspace?.member_limit ?? 5;
-    deleteTeamForm.confirmation = '';
-});
-
-const switchWorkspace = () => {
-    if (!selectedWorkspaceId.value) {
-        return;
-    }
-
-    router.get('/app', { workspace: selectedWorkspaceId.value }, {
+const setView = (mode) => {
+    viewMode.value = mode;
+    activeSection.value = mode === 'calendar' ? 'calendar' : 'tasks';
+};
+const switchWorkspace = (id) => router.get('/app', { workspace: id }, { preserveScroll: false, preserveState: false });
+const createTodo = () => { formTodo.value = null; formOpen.value = true; };
+const editTodo = (todo) => { selectedTodo.value = todo; detailOpen.value = false; formTodo.value = todo; formOpen.value = true; };
+const openTodo = (todo) => { selectedTodo.value = todo; detailOpen.value = true; };
+const askDeleteTodo = (todo) => { selectedTodo.value = todo; detailOpen.value = false; deleteOpen.value = true; };
+const deleteTodo = () => router.delete(`/todos/${selectedTodo.value.id}`, { preserveScroll: true, onSuccess: () => { deleteOpen.value = false; selectedTodo.value = null; } });
+const changeStatus = (todo, nextStatus) => {
+    if (todo.status === nextStatus) return;
+    router.patch(`/todos/${todo.id}/status`, { status: nextStatus, manual_reminder_at: null }, {
         preserveScroll: true,
-    });
-};
-
-const addManualReminderDraft = () => {
-    if (!manualReminderDraft.value) {
-        return;
-    }
-
-    todoForm.manual_reminders.push(manualReminderDraft.value);
-    manualReminderDraft.value = '';
-};
-
-const removeManualReminderDraft = (index) => {
-    todoForm.manual_reminders.splice(index, 1);
-};
-
-const createTodo = () => {
-    if (!activeWorkspace.value) {
-        return;
-    }
-
-    todoForm.post(`/workspaces/${activeWorkspace.value.id}/todos`, {
-        preserveScroll: true,
-        onSuccess: () => {
-            todoForm.reset('title', 'description', 'manual_reminders');
-            todoForm.deadline_at = defaultDeadline();
+        onError: (errors) => {
+            toast.error(errors.status ?? 'Status task tidak dapat diubah.');
+            if (todo.status === 'selesai') openTodo(todo);
         },
     });
 };
 
-const todoStatusLabel = (status) =>
-    TODO_STATUSES.find((item) => item.value === status)?.label ?? status;
-
-const createCategory = () => {
-    if (!activeWorkspace.value) {
-        return;
-    }
-
-    categoryForm.post(`/workspaces/${activeWorkspace.value.id}/categories`, {
-        preserveScroll: true,
-        onSuccess: () => categoryForm.reset(),
-    });
-};
-
-const updateCategory = (category) => {
-    router.patch(`/categories/${category.id}`, {
-        name: updateCategoryNames.value[category.id] ?? category.name,
-    }, { preserveScroll: true });
-};
-
-const deleteCategory = (category) => {
-    if (!window.confirm(`Hapus kategori "${category.name}"?`)) {
-        return;
-    }
-
-    router.delete(`/categories/${category.id}`, { preserveScroll: true });
-};
-
-const createTeam = () => {
-    teamForm.post('/teams', {
-        preserveScroll: true,
-        onSuccess: () => teamForm.reset(),
-    });
-};
-
-const joinTeam = () => {
-    joinForm.post('/teams/join', {
-        preserveScroll: true,
-        onSuccess: () => joinForm.reset(),
-    });
-};
-
-const generateInvite = () => {
-    if (!activeWorkspace.value) {
-        return;
-    }
-
-    router.post(`/workspaces/${activeWorkspace.value.id}/invite`, {}, {
-        preserveScroll: true,
-    });
-};
-
-const updateCapacity = () => {
-    if (!activeWorkspace.value) {
-        return;
-    }
-
-    capacityForm.patch(`/workspaces/${activeWorkspace.value.id}/capacity`, {
-        preserveScroll: true,
-    });
-};
-
-const leaveTeam = () => {
-    if (!activeWorkspace.value || !window.confirm('Keluar dari tim ini?')) {
-        return;
-    }
-
-    router.delete(`/workspaces/${activeWorkspace.value.id}/leave`);
-};
-
-const deleteTeam = () => {
-    if (!activeWorkspace.value) {
-        return;
-    }
-
-    deleteTeamForm.delete(`/workspaces/${activeWorkspace.value.id}`, {
-        preserveScroll: true,
-    });
-};
-
-const createNote = () => {
-    if (!activeWorkspace.value) {
-        return;
-    }
-
-    noteForm.post(`/workspaces/${activeWorkspace.value.id}/sticky-notes`, {
-        preserveScroll: true,
-        onSuccess: () => noteForm.reset('content'),
-    });
-};
-
-const notePayload = (note) => {
-    if (!updateNoteForms.value[note.id]) {
-        updateNoteForms.value[note.id] = {
-            content: note.content,
-            color: note.color,
-        };
-    }
-
-    return updateNoteForms.value[note.id];
-};
-
-const updateNote = (note) => {
-    router.patch(`/sticky-notes/${note.id}`, notePayload(note), {
-        preserveScroll: true,
-    });
-};
-
-const deleteNote = (note) => {
-    if (!window.confirm('Hapus sticky note ini?')) {
-        return;
-    }
-
-    router.delete(`/sticky-notes/${note.id}`, { preserveScroll: true });
-};
-
-const convertForm = (note) => {
-    if (!convertForms.value[note.id]) {
-        convertForms.value[note.id] = {
-            category_id: categories.value[0]?.id ?? '',
-            title: note.content.slice(0, 80),
-            description: note.content,
-            deadline_at: defaultDeadline(),
-            manual_reminders: [],
-        };
-    }
-
-    return convertForms.value[note.id];
-};
-
-const convertNote = (note) => {
-    router.post(`/sticky-notes/${note.id}/convert`, convertForm(note), {
-        preserveScroll: true,
-    });
-};
-
-const deleteTodo = (todo) => {
-    if (!window.confirm(`Hapus task "${todo.title}"?`)) {
-        return;
-    }
-
-    router.delete(`/todos/${todo.id}`, { preserveScroll: true });
-};
-
-const statusForm = (todo) => {
-    if (!statusForms.value[todo.id]) {
-        statusForms.value[todo.id] = {
-            status: todo.status,
-            manual_reminder_at: '',
-        };
-    }
-
-    return statusForms.value[todo.id];
-};
-
-const changeStatus = (todo) => {
-    router.patch(`/todos/${todo.id}/status`, statusForm(todo), {
-        preserveScroll: true,
-    });
-};
-
-const reminderForm = (todo) => {
-    if (!reminderForms.value[todo.id]) {
-        reminderForms.value[todo.id] = { scheduled_at: '' };
-    }
-
-    return reminderForms.value[todo.id];
-};
-
-const createReminder = (todo) => {
-    router.post(`/todos/${todo.id}/reminders`, reminderForm(todo), {
-        preserveScroll: true,
-        onSuccess: () => {
-            reminderForms.value[todo.id] = { scheduled_at: '' };
-        },
-    });
-};
-
-const deleteReminder = (reminder) => {
-    router.delete(`/reminders/${reminder.id}`, { preserveScroll: true });
-};
-
-const hasErrors = computed(() => Object.keys(errors.value).length > 0);
-
-const formatPayload = (value) => {
-    if (!value) {
-        return '-';
-    }
-
-    if (typeof value === 'string') {
-        return value;
-    }
-
-    return JSON.stringify(value, null, 2);
-};
+watch(flash, (value) => {
+    if (value.success) toast.success(value.success);
+    if (value.team_invite?.code) toast.info(`Kode tim: ${value.team_invite.code}`, { description: 'Berlaku selama lima menit.' });
+}, { deep: true, immediate: true });
+watch(todos, (items) => {
+    if (!selectedTodo.value) return;
+    selectedTodo.value = items.find((todo) => todo.id === selectedTodo.value.id) ?? null;
+    if (!selectedTodo.value) detailOpen.value = false;
+});
 </script>
 
 <template>
-    <AppLayout>
-        <div class="mx-auto max-w-7xl space-y-6">
-            <header class="rounded-lg border border-slate-200 bg-white p-5">
-                <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-                    <div>
-                        <p class="text-sm font-semibold uppercase text-slate-500">
-                            UI test backend
-                        </p>
-                        <h1 class="mt-1 text-2xl font-bold text-slate-950">
-                            To Do List KAI
-                        </h1>
-                        <p class="mt-1 text-sm text-slate-600">
-                            Login sebagai {{ user?.name ?? user?.email ?? 'user' }}.
-                        </p>
-                    </div>
+    <AppLayout
+        :title="header.title"
+        :description="header.description"
+        :eyebrow="header.eyebrow"
+        :workspaces="workspaces"
+        :active-workspace="activeWorkspace"
+        :active-section="activeSection"
+        :user="user"
+        @navigate="navigate"
+        @switch-workspace="switchWorkspace"
+    >
+        <template #actions>
+            <Button v-if="activeWorkspace && ['tasks', 'calendar'].includes(activeSection)" class="font-bold shadow-sm shadow-primary/15" @click="createTodo"><Plus class="size-4" /><span class="hidden sm:inline">Buat task</span><span class="sm:hidden">Task</span></Button>
+        </template>
 
-                    <label class="grid gap-1 text-sm font-medium text-slate-700">
-                        Workspace aktif
-                        <select
-                            v-model="selectedWorkspaceId"
-                            class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 lg:w-80"
-                            @change="switchWorkspace"
-                        >
-                            <option
-                                v-for="workspace in workspaces"
-                                :key="workspace.id"
-                                :value="workspace.id"
-                            >
-                                {{ workspace.name }} ({{ workspace.type }})
-                            </option>
-                        </select>
-                    </label>
+        <div v-if="!activeWorkspace" class="grid min-h-[65vh] place-items-center"><Card class="max-w-md border-dashed p-9 text-center shadow-none"><div class="mx-auto grid size-12 place-items-center rounded-2xl bg-secondary text-primary"><Sparkles class="size-5" /></div><h2 class="mt-4 text-lg font-extrabold">Workspace belum tersedia</h2><p class="mt-2 text-sm leading-6 text-muted-foreground">Verifikasi email untuk membuat workspace personal, lalu muat ulang halaman.</p></Card></div>
+
+        <template v-else-if="['tasks', 'calendar'].includes(activeSection)">
+            <div class="mb-5 grid grid-cols-2 gap-3 xl:grid-cols-4">
+                <Card class="border-border/80 p-4 shadow-none"><div class="flex items-center justify-between"><p class="text-xs font-bold text-muted-foreground">Semua task</p><LayoutGrid class="size-4 text-primary" /></div><p class="mt-3 font-mono text-2xl font-semibold">{{ counts.total }}</p></Card>
+                <Card class="border-border/80 p-4 shadow-none"><div class="flex items-center justify-between"><p class="text-xs font-bold text-muted-foreground">Sedang dikerjakan</p><CircleDot class="size-4 text-blue-600" /></div><p class="mt-3 font-mono text-2xl font-semibold">{{ counts.ongoing }}</p></Card>
+                <Card class="border-border/80 p-4 shadow-none"><div class="flex items-center justify-between"><p class="text-xs font-bold text-muted-foreground">Mendesak</p><CalendarDays class="size-4 text-red-600" /></div><p class="mt-3 font-mono text-2xl font-semibold">{{ counts.urgent }}</p></Card>
+                <Card class="border-border/80 p-4 shadow-none"><div class="flex items-center justify-between"><p class="text-xs font-bold text-muted-foreground">Selesai</p><CheckCircle2 class="size-4 text-emerald-600" /></div><p class="mt-3 font-mono text-2xl font-semibold">{{ counts.done }}</p></Card>
+            </div>
+
+            <Card class="mb-5 border-border/80 p-3 shadow-none">
+                <div class="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+                    <div class="flex flex-1 flex-col gap-2 sm:flex-row">
+                        <div class="relative min-w-0 flex-1 sm:max-w-md"><Search class="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" /><Input v-model="search" class="h-10 pl-9" placeholder="Cari judul atau deskripsi..." /></div>
+                        <div class="flex gap-2"><NativeSelect v-model="categoryFilter" aria-label="Filter kategori" class="h-10 min-w-40 flex-1"><NativeSelectOption value="">Semua kategori</NativeSelectOption><NativeSelectOption v-for="category in categories" :key="category.id" :value="category.id">{{ category.name }}</NativeSelectOption></NativeSelect><NativeSelect v-model="statusFilter" aria-label="Filter status" class="h-10 min-w-40 flex-1"><NativeSelectOption value="">Semua status</NativeSelectOption><NativeSelectOption v-for="status in TODO_STATUSES" :key="status.value" :value="status.value">{{ status.label }}</NativeSelectOption></NativeSelect></div>
+                    </div>
+                    <Tabs :model-value="viewMode" @update:model-value="setView"><TabsList class="grid h-10 w-full grid-cols-3 xl:w-auto"><TabsTrigger value="kanban" aria-label="Kanban"><LayoutGrid class="size-4" /><span class="hidden sm:inline">Kanban</span></TabsTrigger><TabsTrigger value="list" aria-label="Daftar"><List class="size-4" /><span class="hidden sm:inline">Daftar</span></TabsTrigger><TabsTrigger value="calendar" aria-label="Kalender"><CalendarDays class="size-4" /><span class="hidden sm:inline">Kalender</span></TabsTrigger></TabsList></Tabs>
                 </div>
-            </header>
+                <div v-if="search || categoryFilter || statusFilter" class="mt-3 flex items-center gap-2 border-t pt-3 text-xs text-muted-foreground"><SlidersHorizontal class="size-3.5" /><span>Menampilkan {{ filteredTodos.length }} dari {{ todos.length }} task</span><Button variant="link" size="xs" class="ml-auto h-auto p-0 text-xs" @click="search = ''; categoryFilter = ''; statusFilter = ''">Reset filter</Button></div>
+            </Card>
 
-            <div
-                v-if="flash.success || flash.team_invite || flash.todo_id || flash.workspace_id"
-                class="rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900"
-            >
-                <p
-                    v-if="flash.success"
-                    class="font-semibold"
-                >
-                    {{ flash.success }}
-                </p>
-                <p v-if="flash.team_invite">
-                    Kode invite: <strong>{{ flash.team_invite.code }}</strong>
-                    berlaku sampai {{ flash.team_invite.expires_at }}.
-                </p>
-                <p v-if="flash.workspace_id">
-                    Workspace ID: {{ flash.workspace_id }}
-                </p>
-                <p v-if="flash.todo_id">
-                    Todo ID: {{ flash.todo_id }}
-                </p>
-            </div>
+            <div v-if="viewMode === 'kanban'" class="overflow-x-auto pb-3"><TaskBoard :todos="filteredTodos" @open="openTodo" @edit="editTodo" @delete="askDeleteTodo" @status="changeStatus" /></div>
+            <TaskList v-else-if="viewMode === 'list'" :todos="filteredTodos" @open="openTodo" @status="changeStatus" />
+            <TaskCalendar v-else :workspace-id="activeWorkspace.id" :todos="todos" @open="openTodo" />
+        </template>
 
-            <div
-                v-if="hasErrors"
-                class="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800"
-            >
-                <p class="font-semibold">Validation error</p>
-                <ul class="mt-2 list-disc space-y-1 pl-5">
-                    <li
-                        v-for="(message, field) in errors"
-                        :key="field"
-                    >
-                        {{ field }}: {{ message }}
-                    </li>
-                </ul>
-            </div>
+        <StickyNotesPanel v-else-if="activeSection === 'notes'" :notes="stickyNotes" :categories="categories" :workspace-id="activeWorkspace.id" />
+        <ActivityPanel v-else-if="activeSection === 'activity'" :activities="activities" />
+        <WorkspaceSettings v-else-if="activeSection === 'settings'" :workspace="activeWorkspace" :categories="categories" :user="user" :invite="flash.team_invite" />
 
-            <div
-                v-if="!activeWorkspace"
-                class="rounded-lg border border-slate-200 bg-white p-8 text-center text-slate-600"
-            >
-                Belum ada workspace aktif. Buat tim atau selesaikan verifikasi email agar workspace personal tersedia.
-            </div>
-
-            <template v-else>
-                <section class="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
-                    <form
-                        class="rounded-lg border border-slate-200 bg-white p-5"
-                        @submit.prevent="createTodo"
-                    >
-                        <h2 class="text-lg font-semibold text-slate-950">
-                            Buat task
-                        </h2>
-                        <div class="mt-4 grid gap-3 md:grid-cols-2">
-                            <label class="grid gap-1 text-sm font-medium text-slate-700 md:col-span-2">
-                                Judul
-                                <input
-                                    v-model="todoForm.title"
-                                    class="rounded-md border border-slate-300 px-3 py-2"
-                                    maxlength="180"
-                                    required
-                                >
-                            </label>
-                            <label class="grid gap-1 text-sm font-medium text-slate-700">
-                                Kategori
-                                <select
-                                    v-model="todoForm.category_id"
-                                    class="rounded-md border border-slate-300 px-3 py-2"
-                                    required
-                                >
-                                    <option
-                                        v-for="category in categories"
-                                        :key="category.id"
-                                        :value="category.id"
-                                    >
-                                        {{ category.name }}
-                                    </option>
-                                </select>
-                            </label>
-                            <label class="grid gap-1 text-sm font-medium text-slate-700">
-                                Deadline WIB
-                                <input
-                                    v-model="todoForm.deadline_at"
-                                    type="datetime-local"
-                                    class="rounded-md border border-slate-300 px-3 py-2"
-                                    required
-                                >
-                            </label>
-                            <label class="grid gap-1 text-sm font-medium text-slate-700 md:col-span-2">
-                                Deskripsi
-                                <textarea
-                                    v-model="todoForm.description"
-                                    class="min-h-24 rounded-md border border-slate-300 px-3 py-2"
-                                />
-                            </label>
-                        </div>
-
-                        <div class="mt-4 rounded-md border border-slate-200 p-3">
-                            <p class="text-sm font-semibold text-slate-700">
-                                Reminder manual opsional
-                            </p>
-                            <div class="mt-2 flex flex-col gap-2 sm:flex-row">
-                                <input
-                                    v-model="manualReminderDraft"
-                                    type="datetime-local"
-                                    class="rounded-md border border-slate-300 px-3 py-2"
-                                >
-                                <button
-                                    type="button"
-                                    class="rounded-md border border-slate-300 px-3 py-2 text-sm font-semibold"
-                                    @click="addManualReminderDraft"
-                                >
-                                    Tambah reminder
-                                </button>
-                            </div>
-                            <div class="mt-2 flex flex-wrap gap-2">
-                                <button
-                                    v-for="(reminder, index) in todoForm.manual_reminders"
-                                    :key="`${reminder}-${index}`"
-                                    type="button"
-                                    class="rounded-full bg-slate-100 px-3 py-1 text-xs"
-                                    @click="removeManualReminderDraft(index)"
-                                >
-                                    {{ reminder }} x
-                                </button>
-                            </div>
-                        </div>
-
-                        <button
-                            type="submit"
-                            class="mt-4 rounded-md bg-slate-950 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
-                            :disabled="todoForm.processing"
-                        >
-                            Simpan task
-                        </button>
-                    </form>
-
-                    <div class="space-y-6">
-                        <form
-                            class="rounded-lg border border-slate-200 bg-white p-5"
-                            @submit.prevent="createCategory"
-                        >
-                            <h2 class="text-lg font-semibold text-slate-950">
-                                Kategori
-                            </h2>
-                            <div class="mt-4 flex flex-col gap-2 sm:flex-row">
-                                <input
-                                    v-model="categoryForm.name"
-                                    class="rounded-md border border-slate-300 px-3 py-2"
-                                    placeholder="Nama kategori"
-                                    required
-                                >
-                                <button
-                                    type="submit"
-                                    class="rounded-md bg-slate-950 px-4 py-2 text-sm font-semibold text-white"
-                                    :disabled="categoryForm.processing"
-                                >
-                                    Buat
-                                </button>
-                            </div>
-                            <div class="mt-3 space-y-2">
-                                <div
-                                    v-for="category in editableCategories"
-                                    :key="category.id"
-                                    class="flex gap-2"
-                                >
-                                    <input
-                                        v-model="updateCategoryNames[category.id]"
-                                        class="min-w-0 flex-1 rounded-md border border-slate-300 px-3 py-2 text-sm"
-                                        :placeholder="category.name"
-                                    >
-                                    <button
-                                        type="button"
-                                        class="rounded-md border border-slate-300 px-3 py-2 text-sm"
-                                        @click="updateCategory(category)"
-                                    >
-                                        Ubah
-                                    </button>
-                                    <button
-                                        type="button"
-                                        class="rounded-md border border-red-200 px-3 py-2 text-sm text-red-700"
-                                        @click="deleteCategory(category)"
-                                    >
-                                        Hapus
-                                    </button>
-                                </div>
-                            </div>
-                        </form>
-
-                        <div class="rounded-lg border border-slate-200 bg-white p-5">
-                            <h2 class="text-lg font-semibold text-slate-950">
-                                Tim
-                            </h2>
-                            <form class="mt-4 flex flex-col gap-2 sm:flex-row" @submit.prevent="createTeam">
-                                <input
-                                    v-model="teamForm.name"
-                                    class="rounded-md border border-slate-300 px-3 py-2"
-                                    placeholder="Nama tim baru"
-                                >
-                                <button class="rounded-md bg-slate-950 px-4 py-2 text-sm font-semibold text-white">
-                                    Buat tim
-                                </button>
-                            </form>
-                            <form class="mt-3 flex flex-col gap-2 sm:flex-row" @submit.prevent="joinTeam">
-                                <input
-                                    v-model="joinForm.code"
-                                    class="rounded-md border border-slate-300 px-3 py-2 uppercase"
-                                    maxlength="8"
-                                    placeholder="Kode tim"
-                                >
-                                <button class="rounded-md border border-slate-300 px-4 py-2 text-sm font-semibold">
-                                    Join
-                                </button>
-                            </form>
-
-                            <div
-                                v-if="activeWorkspace.type === 'team'"
-                                class="mt-4 space-y-3 border-t border-slate-200 pt-4"
-                            >
-                                <button
-                                    type="button"
-                                    class="rounded-md border border-slate-300 px-3 py-2 text-sm font-semibold"
-                                    @click="generateInvite"
-                                >
-                                    Generate kode invite
-                                </button>
-                                <form class="flex gap-2" @submit.prevent="updateCapacity">
-                                    <select
-                                        v-model="capacityForm.member_limit"
-                                        class="rounded-md border border-slate-300 px-3 py-2"
-                                    >
-                                        <option :value="5">5 anggota</option>
-                                        <option :value="10">10 anggota</option>
-                                    </select>
-                                    <button class="rounded-md border border-slate-300 px-3 py-2 text-sm">
-                                        Ubah kapasitas
-                                    </button>
-                                </form>
-                                <button
-                                    type="button"
-                                    class="rounded-md border border-slate-300 px-3 py-2 text-sm"
-                                    @click="leaveTeam"
-                                >
-                                    Keluar tim
-                                </button>
-                                <form class="grid gap-2" @submit.prevent="deleteTeam">
-                                    <input
-                                        v-model="deleteTeamForm.confirmation"
-                                        class="rounded-md border border-red-200 px-3 py-2 text-sm"
-                                        :placeholder="`konfirmasi hapus tim ${activeWorkspace.name}`"
-                                    >
-                                    <button class="rounded-md bg-red-700 px-3 py-2 text-sm font-semibold text-white">
-                                        Hapus tim permanen
-                                    </button>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                <section class="rounded-lg border border-slate-200 bg-white p-5">
-                    <div class="flex items-center justify-between gap-4">
-                        <h2 class="text-lg font-semibold text-slate-950">
-                            Task
-                        </h2>
-                        <p class="text-sm text-slate-500">
-                            {{ todos.length }} item
-                        </p>
-                    </div>
-                    <div class="mt-4 grid gap-3">
-                        <article
-                            v-for="todo in todos"
-                            :key="todo.id"
-                            class="rounded-md border border-slate-200 p-4"
-                        >
-                            <div class="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-                                <div>
-                                    <p class="text-xs font-semibold uppercase text-slate-500">
-                                        {{ todo.category?.name ?? 'Tanpa kategori' }} | {{ todo.deadline_wib }}
-                                    </p>
-                                    <h3 class="mt-1 text-base font-semibold text-slate-950">
-                                        {{ todo.title }}
-                                    </h3>
-                                    <p class="mt-1 whitespace-pre-line text-sm text-slate-600">
-                                        {{ todo.description || '-' }}
-                                    </p>
-                                    <p class="mt-2 text-sm font-medium text-slate-700">
-                                        Status: {{ todoStatusLabel(todo.status) }}
-                                    </p>
-                                </div>
-                                <button
-                                    type="button"
-                                    class="rounded-md border border-red-200 px-3 py-2 text-sm font-semibold text-red-700"
-                                    @click="deleteTodo(todo)"
-                                >
-                                    Hapus task
-                                </button>
-                            </div>
-
-                            <div class="mt-4 grid gap-3 border-t border-slate-200 pt-4 lg:grid-cols-2">
-                                <form class="flex flex-col gap-2 sm:flex-row" @submit.prevent="changeStatus(todo)">
-                                    <select
-                                        v-model="statusForm(todo).status"
-                                        class="rounded-md border border-slate-300 px-3 py-2 text-sm"
-                                    >
-                                        <option
-                                            v-for="status in TODO_STATUSES"
-                                            :key="status.value"
-                                            :value="status.value"
-                                        >
-                                            {{ status.label }}
-                                        </option>
-                                    </select>
-                                    <input
-                                        v-model="statusForm(todo).manual_reminder_at"
-                                        type="datetime-local"
-                                        class="rounded-md border border-slate-300 px-3 py-2 text-sm"
-                                        title="Diisi saat reopen butuh reminder manual"
-                                    >
-                                    <button class="rounded-md bg-slate-950 px-3 py-2 text-sm font-semibold text-white">
-                                        Ubah status
-                                    </button>
-                                </form>
-
-                                <form class="flex flex-col gap-2 sm:flex-row" @submit.prevent="createReminder(todo)">
-                                    <input
-                                        v-model="reminderForm(todo).scheduled_at"
-                                        type="datetime-local"
-                                        class="rounded-md border border-slate-300 px-3 py-2 text-sm"
-                                        required
-                                    >
-                                    <button class="rounded-md border border-slate-300 px-3 py-2 text-sm font-semibold">
-                                        Tambah reminder
-                                    </button>
-                                </form>
-                            </div>
-
-                            <div class="mt-3 flex flex-wrap gap-2">
-                                <button
-                                    v-for="reminder in todo.reminders ?? []"
-                                    :key="reminder.id"
-                                    type="button"
-                                    class="rounded-full bg-slate-100 px-3 py-1 text-xs text-slate-700"
-                                    @click="deleteReminder(reminder)"
-                                >
-                                    {{ reminder.kind }} | {{ reminder.status }} | hapus
-                                </button>
-                            </div>
-                        </article>
-                        <p
-                            v-if="todos.length === 0"
-                            class="rounded-md border border-dashed border-slate-300 p-6 text-center text-sm text-slate-500"
-                        >
-                            Belum ada task di workspace ini.
-                        </p>
-                    </div>
-                </section>
-
-                <section class="grid gap-6 lg:grid-cols-[0.8fr_1.2fr]">
-                    <div class="rounded-lg border border-slate-200 bg-white p-5">
-                        <h2 class="text-lg font-semibold text-slate-950">
-                            Sticky note
-                        </h2>
-                        <form class="mt-4 grid gap-3" @submit.prevent="createNote">
-                            <textarea
-                                v-model="noteForm.content"
-                                class="min-h-24 rounded-md border border-slate-300 px-3 py-2"
-                                placeholder="Isi catatan"
-                                required
-                            />
-                            <select
-                                v-model="noteForm.color"
-                                class="rounded-md border border-slate-300 px-3 py-2"
-                            >
-                                <option value="yellow">Yellow</option>
-                                <option value="blue">Blue</option>
-                                <option value="green">Green</option>
-                                <option value="pink">Pink</option>
-                                <option value="purple">Purple</option>
-                            </select>
-                            <button class="rounded-md bg-slate-950 px-4 py-2 text-sm font-semibold text-white">
-                                Buat note
-                            </button>
-                        </form>
-
-                        <div class="mt-4 space-y-3">
-                            <article
-                                v-for="note in stickyNotes"
-                                :key="note.id"
-                                class="rounded-md border border-slate-200 p-3"
-                            >
-                                <textarea
-                                    v-model="notePayload(note).content"
-                                    class="min-h-20 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
-                                />
-                                <select
-                                    v-model="notePayload(note).color"
-                                    class="mt-2 rounded-md border border-slate-300 px-3 py-2 text-sm"
-                                >
-                                    <option value="yellow">Yellow</option>
-                                    <option value="blue">Blue</option>
-                                    <option value="green">Green</option>
-                                    <option value="pink">Pink</option>
-                                    <option value="purple">Purple</option>
-                                </select>
-                                <div class="mt-3 flex flex-wrap gap-2">
-                                    <button
-                                        type="button"
-                                        class="rounded-md border border-slate-300 px-3 py-2 text-sm"
-                                        @click="updateNote(note)"
-                                    >
-                                        Ubah
-                                    </button>
-                                    <button
-                                        type="button"
-                                        class="rounded-md border border-red-200 px-3 py-2 text-sm text-red-700"
-                                        @click="deleteNote(note)"
-                                    >
-                                        Hapus
-                                    </button>
-                                </div>
-                                <form class="mt-3 grid gap-2" @submit.prevent="convertNote(note)">
-                                    <input
-                                        v-model="convertForm(note).title"
-                                        class="rounded-md border border-slate-300 px-3 py-2 text-sm"
-                                        placeholder="Judul task hasil convert"
-                                    >
-                                    <div class="grid gap-2 sm:grid-cols-2">
-                                        <select
-                                            v-model="convertForm(note).category_id"
-                                            class="rounded-md border border-slate-300 px-3 py-2 text-sm"
-                                        >
-                                            <option
-                                                v-for="category in categories"
-                                                :key="category.id"
-                                                :value="category.id"
-                                            >
-                                                {{ category.name }}
-                                            </option>
-                                        </select>
-                                        <input
-                                            v-model="convertForm(note).deadline_at"
-                                            type="datetime-local"
-                                            class="rounded-md border border-slate-300 px-3 py-2 text-sm"
-                                        >
-                                    </div>
-                                    <button class="rounded-md bg-slate-950 px-3 py-2 text-sm font-semibold text-white">
-                                        Convert ke task
-                                    </button>
-                                </form>
-                            </article>
-                        </div>
-                    </div>
-
-                    <div class="rounded-lg border border-slate-200 bg-white p-5">
-                        <h2 class="text-lg font-semibold text-slate-950">
-                            Activity log
-                        </h2>
-                        <div class="mt-4 max-h-[32rem] space-y-2 overflow-auto">
-                            <article
-                                v-for="activity in activities"
-                                :key="activity.id"
-                                class="rounded-md border border-slate-200 p-3 text-sm"
-                            >
-                                <p class="font-semibold text-slate-900">
-                                    {{ activity.action }}
-                                </p>
-                                <p class="text-slate-600">
-                                    {{ activity.actor?.name ?? 'System' }} | {{ activity.created_at }}
-                                </p>
-                                <pre class="mt-2 overflow-auto rounded bg-slate-50 p-2 text-xs text-slate-600">{{ formatPayload(activity.snapshot ?? activity.changes) }}</pre>
-                            </article>
-                            <p
-                                v-if="activities.length === 0"
-                                class="rounded-md border border-dashed border-slate-300 p-6 text-center text-sm text-slate-500"
-                            >
-                                Belum ada activity log.
-                            </p>
-                        </div>
-                    </div>
-                </section>
-            </template>
-        </div>
+        <TaskFormSheet v-if="activeWorkspace" v-model:open="formOpen" :todo="formTodo" :workspace-id="activeWorkspace.id" :categories="categories" />
+        <TaskDetailsDialog v-model:open="detailOpen" :todo="selectedTodo" @edit="editTodo" @delete="askDeleteTodo" />
+        <AlertDialog v-model:open="deleteOpen"><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>Hapus task “{{ selectedTodo?.title }}”?</AlertDialogTitle><AlertDialogDescription>Task dan reminder terkait akan dihapus permanen. Tindakan ini tidak dapat dibatalkan.</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>Batal</AlertDialogCancel><AlertDialogAction class="bg-destructive text-white hover:bg-destructive/90" @click="deleteTodo">Hapus permanen</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>
     </AppLayout>
 </template>
