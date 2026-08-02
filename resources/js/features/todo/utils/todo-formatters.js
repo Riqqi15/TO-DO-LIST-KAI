@@ -126,7 +126,20 @@ export const summarizeActivity = (activity) => {
     const data = activity.changes ?? activity.snapshot;
     if (!data) return 'Tidak ada rincian tambahan.';
     if (typeof data === 'string') return data;
+    
     const source = data.new ?? data.status ?? data;
-    const entries = Object.entries(source).slice(0, 3);
-    return entries.map(([key, value]) => `${key.replaceAll('_', ' ')}: ${typeof value === 'object' ? JSON.stringify(value) : value}`).join(' · ');
+    if (typeof source !== 'object' || source === null) return String(source);
+
+    const details = [];
+    
+    if (source.title) details.push(`Judul: "${source.title}"`);
+    else if (source.name) details.push(`Nama: "${source.name}"`);
+    
+    if (source.status) details.push(`Status: ${statusLabel(source.status)}`);
+    if (source.content) details.push(`Catatan: "${source.content.length > 50 ? source.content.substring(0, 50) + '...' : source.content}"`);
+    if (source.member_limit) details.push(`Kapasitas: ${source.member_limit} anggota`);
+    
+    if (details.length > 0) return details.join(' · ');
+    
+    return 'Pembaruan berhasil dicatat.';
 };
