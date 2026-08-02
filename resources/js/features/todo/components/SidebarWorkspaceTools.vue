@@ -114,6 +114,14 @@ const openManageTeam = (workspace) => {
     capacityForm.clearErrors();
     deleteTeamForm.reset();
     deleteTeamForm.clearErrors();
+
+    if (props.invite?.code) {
+        activeInviteCode.value = props.invite.code;
+        saveStoredInvite(workspace.id, props.invite.code, props.invite.expires_at);
+    } else {
+        activeInviteCode.value = loadStoredInvite(workspace.id);
+    }
+
     manageTeamOpen.value = true;
 };
 
@@ -182,9 +190,10 @@ const generateInvite = () => {
 };
 
 const copyInvite = async () => {
-    if (!props.invite?.code) return;
+    const codeToCopy = activeInviteCode.value || props.invite?.code;
+    if (!codeToCopy) return;
     try {
-        await navigator.clipboard.writeText(props.invite.code);
+        await navigator.clipboard.writeText(codeToCopy);
         toast.success('Kode tim disalin.');
     } catch {
         toast.error('Kode tidak dapat disalin. Salin kode secara manual.');
@@ -452,8 +461,8 @@ const deleteTeam = () => {
                                 <p class="mt-1 text-xs leading-5 text-muted-foreground">Kode berlaku selama lima menit.</p>
                             </div>
                         </div>
-                        <div v-if="invite?.code" class="mt-3 flex items-center gap-2 rounded-lg bg-secondary p-2.5">
-                            <code class="min-w-0 flex-1 text-center font-mono text-base font-bold tracking-[0.18em]">{{ invite.code }}</code>
+                        <div v-if="activeInviteCode" class="mt-3 flex items-center gap-2 rounded-lg bg-secondary p-2.5">
+                            <code class="min-w-0 flex-1 text-center font-mono text-base font-bold tracking-[0.18em]">{{ activeInviteCode }}</code>
                             <Button variant="outline" size="icon-sm" aria-label="Salin kode tim" @click="copyInvite"><Clipboard class="size-4" /></Button>
                         </div>
                         <Button class="mt-3 w-full" variant="outline" @click="generateInvite">Buat kode baru</Button>
