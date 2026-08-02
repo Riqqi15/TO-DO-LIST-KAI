@@ -65,9 +65,6 @@ const mobileOpen = ref(false);
                         </Sheet>
 
                         <div class="min-w-0 flex-1">
-                            <p v-if="eyebrow" class="truncate text-[11px] font-bold uppercase tracking-[0.15em] text-primary">
-                                {{ eyebrow }}
-                            </p>
                             <h1 class="truncate text-lg font-extrabold tracking-[-0.02em] sm:text-xl">{{ title }}</h1>
                             <p v-if="description" class="hidden truncate text-sm text-muted-foreground sm:block">{{ description }}</p>
                         </div>
