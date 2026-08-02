@@ -43,7 +43,7 @@ import {
     UserRound,
     Users,
 } from '@lucide/vue';
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { toast } from 'vue-sonner';
 
 const props = defineProps({
@@ -55,6 +55,40 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['switch-workspace']);
+
+const activeInviteCode = ref('');
+
+const saveStoredInvite = (teamId, code, expiresAt) => {
+    if (!teamId || !code) return;
+    try {
+        localStorage.setItem(`kai_invite_${teamId}`, JSON.stringify({
+            code,
+            expires_at: expiresAt || new Date(Date.now() + 5 * 60 * 1000).toISOString(),
+        }));
+    } catch {}
+};
+
+const loadStoredInvite = (teamId) => {
+    if (!teamId) return '';
+    try {
+        const raw = localStorage.getItem(`kai_invite_${teamId}`);
+        if (!raw) return '';
+        const data = JSON.parse(raw);
+        if (data?.code && data?.expires_at && new Date(data.expires_at) > new Date()) {
+            return data.code;
+        } else {
+            localStorage.removeItem(`kai_invite_${teamId}`);
+        }
+    } catch {}
+    return '';
+};
+
+watch(() => props.invite, (newInvite) => {
+    if (newInvite?.code && selectedTeam.value) {
+        activeInviteCode.value = newInvite.code;
+        saveStoredInvite(selectedTeam.value.id, newInvite.code, newInvite.expires_at);
+    }
+}, { immediate: true, deep: true });
 
 const personalWorkspaces = computed(() => props.workspaces.filter((workspace) => workspace.type === 'personal'));
 const teamWorkspaces = computed(() => props.workspaces.filter((workspace) => workspace.type === 'team'));
