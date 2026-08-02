@@ -1,4 +1,5 @@
 <script setup>
+import kaiLogo from '@/assets/kai-logo.svg';
 import { BadgeCheck, BellRing, CalendarDays, CheckCheck } from '@lucide/vue';
 
 defineProps({
@@ -14,9 +15,7 @@ defineProps({
             <div class="absolute -bottom-36 left-20 size-96 rounded-full bg-[#12806a]/20 blur-3xl" />
 
             <div class="relative flex items-center gap-3">
-                <div class="grid size-11 place-items-center rounded-xl bg-white text-primary">
-                    <CheckCheck class="size-6" stroke-width="2.4" />
-                </div>
+                <img :src="kaiLogo" alt="Logo KAI" class="h-8 w-auto object-contain shrink-0" />
                 <div>
                     <p class="font-extrabold tracking-[-0.02em]">To Do List KAI</p>
                     <p class="text-xs font-semibold uppercase tracking-[0.16em] text-white/55">Kerja lebih terarah</p>
@@ -50,9 +49,7 @@ defineProps({
         <section class="flex items-center justify-center px-5 py-10 sm:px-10">
             <div class="w-full max-w-md">
                 <div class="mb-10 flex items-center gap-3 lg:hidden">
-                    <div class="grid size-10 place-items-center rounded-xl bg-primary text-primary-foreground">
-                        <CheckCheck class="size-5" />
-                    </div>
+                    <img :src="kaiLogo" alt="Logo KAI" class="h-7 w-auto object-contain shrink-0" />
                     <p class="font-extrabold">To Do List KAI</p>
                 </div>
 
