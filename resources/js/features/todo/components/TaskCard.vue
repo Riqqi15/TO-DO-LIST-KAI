@@ -38,8 +38,8 @@ const statusDate = computed(() => statusDateMeta(props.todo));
                 </DropdownMenu>
             </div>
 
-            <h3 class="mt-3 line-clamp-2 text-[15px] font-extrabold leading-5 tracking-[-0.015em]">{{ todo.title }}</h3>
-            <p v-if="todo.description" class="mt-2 line-clamp-2 text-xs leading-5 text-muted-foreground">{{ todo.description }}</p>
+            <h3 class="mt-3 line-clamp-2 break-words [overflow-wrap:anywhere] text-[15px] font-extrabold leading-5 tracking-[-0.015em]">{{ todo.title }}</h3>
+            <p v-if="todo.description" class="mt-2 line-clamp-2 break-words [overflow-wrap:anywhere] text-xs leading-5 text-muted-foreground">{{ todo.description }}</p>
 
             <div class="mt-4 flex items-center gap-2 text-xs" :class="statusDate.tone">
                 <CalendarClock class="size-3.5" />
