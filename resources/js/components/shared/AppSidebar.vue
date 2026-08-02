@@ -52,18 +52,19 @@ const switchWorkspace = (workspaceId) => {
 
 <template>
     <div class="flex h-full flex-col bg-sidebar text-sidebar-foreground">
-        <div class="flex h-20 items-center gap-3 px-5">
-            <div class="grid size-10 place-items-center rounded-xl bg-primary text-primary-foreground shadow-sm shadow-primary/20">
-                <CheckCheck class="size-5" stroke-width="2.4" />
+        <!-- Sleek Header -->
+        <div class="flex h-16 items-center gap-3 px-4 border-b border-sidebar-border/60">
+            <div class="grid size-8 place-items-center rounded-lg bg-primary text-primary-foreground shadow-xs">
+                <CheckCheck class="size-4" stroke-width="2.5" />
             </div>
-            <div>
-                <p class="text-sm font-extrabold tracking-[-0.02em]">To Do List KAI</p>
-                <p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">Workspace</p>
+            <div class="min-w-0 flex-1">
+                <p class="text-xs font-bold tracking-tight text-foreground">To Do List KAI</p>
+                <p class="text-[10px] font-medium text-muted-foreground uppercase tracking-widest">Workspace</p>
             </div>
         </div>
 
         <ScrollArea class="min-h-0 flex-1">
-            <div class="px-3 pb-3">
+            <div class="p-3">
                 <SidebarWorkspaceTools
                     :workspaces="workspaces"
                     :active-workspace="activeWorkspace"
@@ -74,39 +75,43 @@ const switchWorkspace = (workspaceId) => {
                 />
             </div>
 
-            <Separator />
+            <Separator class="my-1 opacity-60" />
 
-            <nav class="space-y-1.5 p-3" aria-label="Navigasi utama">
-                <p class="mb-2 px-1 text-[10px] font-bold uppercase tracking-[0.15em] text-muted-foreground">Navigasi</p>
+            <nav class="space-y-0.5 p-3" aria-label="Navigasi utama">
+                <p class="mb-1.5 px-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    Navigasi
+                </p>
                 <Button
                     v-for="item in navigation"
                     :key="item.id"
-                    :variant="activeSection === item.id ? 'secondary' : 'ghost'"
-                    class="h-10 w-full justify-start gap-3 px-3"
-                    :class="activeSection === item.id ? 'font-bold text-primary' : 'font-medium text-muted-foreground'"
+                    variant="ghost"
+                    class="h-9 w-full justify-start gap-2.5 px-2.5 text-xs font-medium transition-colors"
+                    :class="activeSection === item.id 
+                        ? 'bg-primary/10 text-primary font-bold hover:bg-primary/15' 
+                        : 'text-muted-foreground hover:bg-sidebar-accent hover:text-foreground'"
                     @click="navigate(item.id)"
                 >
-                    <component :is="item.icon" class="size-4.5" />
+                    <component :is="item.icon" class="size-4 shrink-0" />
                     {{ item.label }}
                 </Button>
             </nav>
         </ScrollArea>
 
-        <div class="mt-auto p-3">
-            <Separator class="mb-3" />
-            <div class="flex items-center gap-3 rounded-xl p-2">
-                <Avatar class="size-9 border border-border">
-                    <AvatarFallback class="bg-secondary text-xs font-bold text-secondary-foreground">
+        <!-- User profile footer -->
+        <div class="mt-auto border-t border-sidebar-border/60 p-3">
+            <div class="flex items-center gap-2.5 rounded-lg p-1.5 transition-colors hover:bg-sidebar-accent">
+                <Avatar class="size-8 border border-border/60">
+                    <AvatarFallback class="bg-secondary text-[10px] font-bold text-secondary-foreground">
                         {{ initials(user?.name) }}
                     </AvatarFallback>
                 </Avatar>
                 <div class="min-w-0 flex-1">
-                    <p class="truncate text-sm font-bold">{{ user?.name ?? 'Pengguna' }}</p>
-                    <p class="truncate text-xs text-muted-foreground">{{ user?.email }}</p>
+                    <p class="truncate text-xs font-bold leading-tight text-foreground">{{ user?.name ?? 'Pengguna' }}</p>
+                    <p class="truncate text-[10px] text-muted-foreground leading-tight mt-0.5">{{ user?.email }}</p>
                 </div>
-                <Button variant="ghost" size="icon-sm" as-child title="Keluar">
+                <Button variant="ghost" size="icon-xs" class="text-muted-foreground hover:text-destructive" as-child title="Keluar">
                     <Link href="/logout" method="post" as="button" aria-label="Keluar">
-                        <LogOut class="size-4" />
+                        <LogOut class="size-3.5" />
                     </Link>
                 </Button>
             </div>

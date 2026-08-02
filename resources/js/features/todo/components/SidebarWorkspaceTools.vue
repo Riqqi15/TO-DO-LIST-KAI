@@ -226,98 +226,105 @@ const deleteTeam = () => {
 
 <template>
     <div class="space-y-4">
+        <!-- Ruang Pribadi -->
         <section aria-labelledby="workspace-active-label">
-            <p id="workspace-active-label" class="mb-2 px-1 text-[10px] font-bold uppercase tracking-[0.15em] text-muted-foreground">
-                Workspace aktif
+            <p id="workspace-active-label" class="mb-1.5 px-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                Ruang Pribadi
             </p>
 
-            <div class="space-y-1">
+            <div class="space-y-0.5">
                 <Button
                     v-for="workspace in personalWorkspaces"
                     :key="workspace.id"
                     variant="ghost"
-                    class="relative h-auto min-h-12 w-full justify-start gap-2.5 overflow-hidden px-3 py-2 text-left"
-                    :class="isActive(workspace) ? 'bg-primary/10 text-primary shadow-[inset_3px_0_0_var(--primary)] hover:bg-primary/12' : 'text-sidebar-foreground hover:bg-sidebar-accent'"
+                    class="h-9 w-full justify-start gap-2.5 px-2.5 text-xs transition-colors"
+                    :class="isActive(workspace) 
+                        ? 'bg-primary/10 text-primary font-bold hover:bg-primary/15' 
+                        : 'text-muted-foreground hover:bg-sidebar-accent hover:text-foreground'"
                     :aria-current="isActive(workspace) ? 'page' : undefined"
                     @click="switchWorkspace(workspace)"
                 >
                     <UserRound class="size-4 shrink-0" />
-                    <span class="min-w-0 flex-1">
-                        <span class="block truncate text-xs font-bold">{{ workspace.name }}</span>
-                        <span class="mt-0.5 block truncate text-[10px] font-medium text-muted-foreground">Ruang pribadi</span>
-                    </span>
+                    <span class="truncate min-w-0 flex-1 text-left">{{ workspace.name }}</span>
                     <Check v-if="isActive(workspace)" class="size-3.5 shrink-0" aria-hidden="true" />
                 </Button>
             </div>
-
-            <div class="mt-3 rounded-xl border border-sidebar-border/80 bg-white/55 p-2">
-                <div class="flex items-center justify-between gap-2 px-1 pb-2">
-                    <div class="flex min-w-0 items-center gap-2">
-                        <Users class="size-3.5 shrink-0 text-primary" />
-                        <span class="truncate text-[11px] font-extrabold">Workspace Tim</span>
-                    </div>
-                    <Badge variant="secondary" class="h-5 px-1.5 font-mono text-[9px]">{{ teamWorkspaces.length }}</Badge>
-                </div>
-
-                <div class="mb-2 grid grid-cols-2 gap-1.5">
-                    <Button variant="outline" size="xs" class="h-7 bg-white px-2 text-[10px] font-bold" @click="openCreateTeam">
-                        <Plus class="size-3" />Buat tim
-                    </Button>
-                    <Button variant="outline" size="xs" class="h-7 bg-white px-2 text-[10px] font-bold" @click="openJoinTeam">
-                        <UserPlus class="size-3" />Gabung
-                    </Button>
-                </div>
-
-                <div v-if="teamWorkspaces.length" class="space-y-1">
-                    <div v-for="workspace in teamWorkspaces" :key="workspace.id" class="flex min-w-0 items-center gap-0.5">
-                        <Button
-                            variant="ghost"
-                            class="relative h-auto min-h-10 min-w-0 flex-1 justify-start gap-2 overflow-hidden px-2 py-1.5 text-left"
-                            :class="isActive(workspace) ? 'bg-primary/10 text-primary shadow-[inset_3px_0_0_var(--primary)] hover:bg-primary/12' : 'text-sidebar-foreground hover:bg-sidebar-accent'"
-                            :aria-current="isActive(workspace) ? 'page' : undefined"
-                            @click="switchWorkspace(workspace)"
-                        >
-                            <ShieldCheck class="size-3.5 shrink-0" />
-                            <span class="min-w-0 flex-1">
-                                <span class="block truncate text-[11px] font-bold">{{ workspace.name }}</span>
-                                <span class="block truncate text-[9px] font-medium text-muted-foreground">
-                                    {{ workspace.membership_rows_count ?? 1 }} anggota<span v-if="isActive(workspace)"> · Aktif</span>
-                                </span>
-                            </span>
-                        </Button>
-
-                        <Tooltip>
-                            <TooltipTrigger as-child>
-                                <Button
-                                    variant="ghost"
-                                    size="icon-xs"
-                                    :aria-label="isOwner(workspace) ? `Kelola ${workspace.name}` : `Keluar dari ${workspace.name}`"
-                                    @click.stop="isOwner(workspace) ? openManageTeam(workspace) : askLeaveTeam(workspace)"
-                                >
-                                    <MoreHorizontal class="size-3.5" />
-                                </Button>
-                            </TooltipTrigger>
-                            <TooltipContent side="right">{{ isOwner(workspace) ? 'Kelola tim' : 'Keluar dari tim' }}</TooltipContent>
-                        </Tooltip>
-                    </div>
-                </div>
-                <p v-else class="px-2 py-2 text-center text-[10px] leading-4 text-muted-foreground">Belum ada workspace tim.</p>
-            </div>
         </section>
 
-        <Collapsible class="rounded-xl border border-sidebar-border/80 bg-white/55 p-2">
-            <div class="flex items-center gap-1">
-                <CollapsibleTrigger as-child>
-                    <Button variant="ghost" class="group h-8 min-w-0 flex-1 justify-start gap-2 px-1.5 text-[11px] font-extrabold">
-                        <Folder class="size-3.5 text-primary" />
-                        <span class="min-w-0 flex-1 truncate text-left">Kategori</span>
-                        <Badge variant="secondary" class="h-5 px-1.5 font-mono text-[9px]">{{ categories.length }}</Badge>
-                        <ChevronDown class="size-3.5 transition-transform group-data-[state=open]:rotate-180" />
+        <!-- Workspace Tim -->
+        <section aria-labelledby="workspace-team-label">
+            <div class="mb-1 flex items-center justify-between px-2">
+                <span id="workspace-team-label" class="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    Workspace Tim
+                </span>
+                <div class="flex items-center gap-0.5">
+                    <Tooltip>
+                        <TooltipTrigger as-child>
+                            <Button variant="ghost" size="icon-xs" class="text-muted-foreground hover:text-foreground" aria-label="Buat tim" @click="openCreateTeam">
+                                <Plus class="size-3.5" />
+                            </Button>
+                        </TooltipTrigger>
+                        <TooltipContent side="right">Buat tim baru</TooltipContent>
+                    </Tooltip>
+
+                    <Tooltip>
+                        <TooltipTrigger as-child>
+                            <Button variant="ghost" size="icon-xs" class="text-muted-foreground hover:text-foreground" aria-label="Gabung tim" @click="openJoinTeam">
+                                <UserPlus class="size-3.5" />
+                            </Button>
+                        </TooltipTrigger>
+                        <TooltipContent side="right">Gabung tim dengan kode</TooltipContent>
+                    </Tooltip>
+                </div>
+            </div>
+
+            <div v-if="teamWorkspaces.length" class="space-y-0.5">
+                <div v-for="workspace in teamWorkspaces" :key="workspace.id" class="group flex min-w-0 items-center">
+                    <Button
+                        variant="ghost"
+                        class="h-9 min-w-0 flex-1 justify-start gap-2.5 px-2.5 text-xs transition-colors"
+                        :class="isActive(workspace) 
+                            ? 'bg-primary/10 text-primary font-bold hover:bg-primary/15' 
+                            : 'text-muted-foreground hover:bg-sidebar-accent hover:text-foreground'"
+                        :aria-current="isActive(workspace) ? 'page' : undefined"
+                        @click="switchWorkspace(workspace)"
+                    >
+                        <Users class="size-4 shrink-0" />
+                        <span class="min-w-0 flex-1 truncate text-left">{{ workspace.name }}</span>
+                        <span class="text-[10px] font-normal opacity-60">{{ workspace.membership_rows_count ?? 1 }}</span>
                     </Button>
+
+                    <Tooltip>
+                        <TooltipTrigger as-child>
+                            <Button
+                                variant="ghost"
+                                size="icon-xs"
+                                class="opacity-0 transition-opacity group-hover:opacity-100"
+                                :aria-label="isOwner(workspace) ? `Kelola ${workspace.name}` : `Keluar dari ${workspace.name}`"
+                                @click.stop="isOwner(workspace) ? openManageTeam(workspace) : askLeaveTeam(workspace)"
+                            >
+                                <MoreHorizontal class="size-3.5" />
+                            </Button>
+                        </TooltipTrigger>
+                        <TooltipContent side="right">{{ isOwner(workspace) ? 'Kelola tim' : 'Keluar dari tim' }}</TooltipContent>
+                    </Tooltip>
+                </div>
+            </div>
+            <p v-else class="px-2 py-1 text-xs text-muted-foreground/60 italic">Belum ada tim.</p>
+        </section>
+
+        <!-- Kategori -->
+        <Collapsible class="space-y-1">
+            <div class="flex items-center justify-between px-2">
+                <CollapsibleTrigger as-child>
+                    <button type="button" class="group flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground hover:text-foreground">
+                        <ChevronDown class="size-3 transition-transform group-data-[state=open]:rotate-180" />
+                        <span>Kategori ({{ categories.length }})</span>
+                    </button>
                 </CollapsibleTrigger>
                 <Tooltip>
                     <TooltipTrigger as-child>
-                        <Button variant="ghost" size="icon-xs" :disabled="!activeWorkspace" aria-label="Tambah kategori" @click="openCreateCategory">
+                        <Button variant="ghost" size="icon-xs" class="text-muted-foreground hover:text-foreground" :disabled="!activeWorkspace" aria-label="Tambah kategori" @click="openCreateCategory">
                             <Plus class="size-3.5" />
                         </Button>
                     </TooltipTrigger>
@@ -325,40 +332,27 @@ const deleteTeam = () => {
                 </Tooltip>
             </div>
 
-            <CollapsibleContent>
-                <p v-if="activeWorkspace" class="truncate px-2 pb-1 pt-2 text-[9px] text-muted-foreground">Untuk {{ activeWorkspace.name }}</p>
-                <div class="space-y-0.5 pt-1">
-                    <div v-for="category in systemCategories" :key="category.id" class="flex min-h-8 items-center gap-2 rounded-lg px-2 text-[10px] font-semibold text-muted-foreground">
-                        <span class="size-1.5 rounded-full bg-slate-400" />
-                        <span class="min-w-0 flex-1 truncate">{{ category.name }}</span>
-                        <span class="text-[8px] font-bold uppercase tracking-wide">Sistem</span>
-                    </div>
-
-                    <div v-for="category in customCategories" :key="category.id" class="flex min-w-0 items-center gap-0.5 rounded-lg hover:bg-sidebar-accent">
-                        <div class="flex min-h-8 min-w-0 flex-1 items-center gap-2 px-2 text-[10px] font-semibold">
-                            <span class="size-1.5 rounded-full bg-primary" />
-                            <span class="truncate">{{ category.name }}</span>
-                        </div>
-                        <Tooltip>
-                            <TooltipTrigger as-child>
-                                <Button variant="ghost" size="icon-xs" :aria-label="`Ubah kategori ${category.name}`" @click="openEditCategory(category)">
-                                    <Pencil class="size-3" />
-                                </Button>
-                            </TooltipTrigger>
-                            <TooltipContent side="right">Ubah nama</TooltipContent>
-                        </Tooltip>
-                        <Tooltip>
-                            <TooltipTrigger as-child>
-                                <Button variant="ghost" size="icon-xs" class="text-destructive" :aria-label="`Hapus kategori ${category.name}`" @click="askDeleteCategory(category)">
-                                    <Trash2 class="size-3" />
-                                </Button>
-                            </TooltipTrigger>
-                            <TooltipContent side="right">Hapus kategori</TooltipContent>
-                        </Tooltip>
-                    </div>
-
-                    <p v-if="categories.length === 0" class="px-2 py-3 text-center text-[10px] leading-4 text-muted-foreground">Belum ada kategori.</p>
+            <CollapsibleContent class="space-y-0.5 pt-0.5">
+                <div v-for="category in systemCategories" :key="category.id" class="flex h-8 items-center gap-2 rounded-md px-2.5 text-xs font-medium text-muted-foreground">
+                    <span class="size-1.5 rounded-full bg-slate-300" />
+                    <span class="min-w-0 flex-1 truncate">{{ category.name }}</span>
+                    <span class="text-[9px] font-normal text-muted-foreground/60">Sistem</span>
                 </div>
+
+                <div v-for="category in customCategories" :key="category.id" class="group flex h-8 items-center gap-1 rounded-md px-2.5 text-xs font-medium text-muted-foreground hover:bg-sidebar-accent hover:text-foreground">
+                    <span class="size-1.5 rounded-full bg-primary/70" />
+                    <span class="min-w-0 flex-1 truncate">{{ category.name }}</span>
+                    <div class="flex items-center opacity-0 transition-opacity group-hover:opacity-100">
+                        <Button variant="ghost" size="icon-xs" class="h-6 w-6" :aria-label="`Ubah kategori ${category.name}`" @click="openEditCategory(category)">
+                            <Pencil class="size-3" />
+                        </Button>
+                        <Button variant="ghost" size="icon-xs" class="h-6 w-6 text-destructive" :aria-label="`Hapus kategori ${category.name}`" @click="askDeleteCategory(category)">
+                            <Trash2 class="size-3" />
+                        </Button>
+                    </div>
+                </div>
+
+                <p v-if="categories.length === 0" class="px-2 py-1.5 text-xs text-muted-foreground/60 italic">Belum ada kategori.</p>
             </CollapsibleContent>
         </Collapsible>
 

@@ -1,4 +1,5 @@
 <script setup>
+import DateTimeInput24h from '@/components/shared/DateTimeInput24h.vue';
 import FieldError from '@/components/shared/FieldError.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -66,12 +67,12 @@ const submit = () => {
                 <div class="space-y-2"><Label for="task-description">Deskripsi <span class="font-normal text-muted-foreground">(opsional)</span></Label><Textarea id="task-description" v-model="form.description" placeholder="Tambahkan konteks, hasil akhir, atau catatan penting." class="min-h-28 resize-y" :aria-invalid="Boolean(form.errors.description)" /><FieldError :message="form.errors.description" /></div>
                 <div class="grid gap-5 sm:grid-cols-2">
                     <div class="space-y-2"><Label for="task-category">Kategori</Label><NativeSelect id="task-category" v-model="form.category_id" class="h-11 w-full" required :aria-invalid="Boolean(form.errors.category_id)"><NativeSelectOption v-for="category in categories" :key="category.id" :value="category.id">{{ category.name }}</NativeSelectOption></NativeSelect><FieldError :message="form.errors.category_id" /></div>
-                    <div class="space-y-2"><Label for="task-deadline">Deadline (WIB)</Label><Input id="task-deadline" v-model="form.deadline_at" type="datetime-local" required class="h-11 font-mono text-xs" :aria-invalid="Boolean(form.errors.deadline_at)" /><FieldError :message="form.errors.deadline_at" /></div>
+                    <div class="space-y-2"><Label for="task-deadline">Deadline (WIB)</Label><DateTimeInput24h id="task-deadline" v-model="form.deadline_at" required class="h-11 font-mono text-xs" :aria-invalid="Boolean(form.errors.deadline_at)" /><FieldError :message="form.errors.deadline_at" /></div>
                 </div>
 
                 <div class="rounded-2xl border bg-slate-50/70 p-4">
                     <div class="flex items-start gap-3"><div class="grid size-9 shrink-0 place-items-center rounded-xl bg-secondary text-primary"><BellPlus class="size-4.5" /></div><div><h3 class="text-sm font-extrabold">Reminder manual</h3><p class="mt-0.5 text-xs leading-5 text-muted-foreground">Reminder otomatis H-7 dan H-3 dibuat backend jika waktunya masih tersedia.</p></div></div>
-                    <div class="mt-4 flex gap-2"><Input v-model="reminderDraft" type="datetime-local" class="h-10 flex-1 font-mono text-xs" aria-label="Waktu reminder manual" /><Button type="button" variant="outline" size="icon" aria-label="Tambah reminder" @click="addReminder"><Plus class="size-4" /></Button></div>
+                    <div class="mt-4 flex gap-2"><DateTimeInput24h v-model="reminderDraft" class="h-10 flex-1 font-mono text-xs" aria-label="Waktu reminder manual" /><Button type="button" variant="outline" size="icon" aria-label="Tambah reminder" @click="addReminder"><Plus class="size-4" /></Button></div>
                     <div v-if="form.manual_reminders.length" class="mt-3 flex flex-wrap gap-2"><Badge v-for="(reminder, index) in form.manual_reminders" :key="reminder" variant="outline" class="gap-2 bg-white py-1.5 font-mono text-[10px]">{{ reminder.replace('T', ' ') }}<button type="button" aria-label="Hapus reminder" @click="form.manual_reminders.splice(index, 1)"><X class="size-3" /></button></Badge></div>
                     <p v-if="requiresManualReminder" class="mt-3 text-xs font-semibold text-amber-700">Deadline kurang dari tiga hari. Tambahkan minimal satu reminder manual jika belum ada jadwal mendatang.</p>
                     <FieldError :message="form.errors.manual_reminders" />

@@ -1,4 +1,5 @@
 <script setup>
+import DateTimeInput24h from '@/components/shared/DateTimeInput24h.vue';
 import FieldError from '@/components/shared/FieldError.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -89,7 +90,7 @@ const deleteReminder = (reminder) => router.delete(`/reminders/${reminder.id}`, 
                 <h3 class="text-sm font-extrabold">Ubah status</h3>
                 <div class="mt-3 grid gap-3 sm:grid-cols-[1fr_1fr_auto]">
                     <NativeSelect :model-value="status" class="h-10 w-full" @change="selectStatus($event.target.value)"><NativeSelectOption v-for="option in TODO_STATUSES" :key="option.value" :value="option.value">{{ option.label }}</NativeSelectOption></NativeSelect>
-                    <div><Label for="status-at" class="sr-only">{{ statusDateLabel }}</Label><Input id="status-at" v-model="statusAt" type="datetime-local" class="h-10 font-mono text-xs" :title="statusDateLabel" :aria-invalid="Boolean(statusErrors.status_at)" /></div>
+                    <div><Label for="status-at" class="sr-only">{{ statusDateLabel }}</Label><DateTimeInput24h id="status-at" v-model="statusAt" class="h-10 font-mono text-xs" :title="statusDateLabel" :aria-invalid="Boolean(statusErrors.status_at)" /></div>
                     <Button :disabled="statusProcessing || !statusChanged" @click="changeStatus"><LoaderCircle v-if="statusProcessing" class="size-4 animate-spin" />Simpan</Button>
                 </div>
                 <p class="mt-2 text-xs text-muted-foreground"><span class="font-semibold text-foreground">{{ statusDateLabel }}:</span> {{ statusDateHelp }}</p>
@@ -103,7 +104,7 @@ const deleteReminder = (reminder) => router.delete(`/reminders/${reminder.id}`, 
                     <div v-for="reminder in todo.reminders ?? []" :key="reminder.id" class="flex items-center justify-between gap-3 rounded-xl border px-3 py-2.5"><div class="min-w-0"><p class="text-xs font-bold">{{ reminderKindLabel(reminder.kind) }} · {{ reminderStatusLabel(reminder.status) }}</p><p class="mt-0.5 font-mono text-[10px] text-muted-foreground">{{ formatDateTime(reminder.scheduled_at) }} WIB</p></div><Button v-if="reminder.kind === 'manual'" variant="ghost" size="icon-sm" class="text-destructive" aria-label="Hapus reminder" @click="deleteReminder(reminder)"><Trash2 class="size-3.5" /></Button></div>
                     <p v-if="!todo.reminders?.length" class="rounded-xl border border-dashed p-5 text-center text-xs text-muted-foreground">Belum ada reminder.</p>
                 </div>
-                <form class="mt-3 flex gap-2" @submit.prevent="addReminder"><div class="flex-1"><Label for="detail-reminder" class="sr-only">Reminder manual baru</Label><Input id="detail-reminder" v-model="reminderForm.scheduled_at" type="datetime-local" required class="h-10 font-mono text-xs" :aria-invalid="Boolean(reminderForm.errors.scheduled_at)" /><FieldError :message="reminderForm.errors.scheduled_at" /></div><Button type="submit" variant="outline" :disabled="reminderForm.processing"><LoaderCircle v-if="reminderForm.processing" class="size-4 animate-spin" />Tambah</Button></form>
+                <form class="mt-3 flex gap-2" @submit.prevent="addReminder"><div class="flex-1"><Label for="detail-reminder" class="sr-only">Reminder manual baru</Label><DateTimeInput24h id="detail-reminder" v-model="reminderForm.scheduled_at" required class="h-10 font-mono text-xs" :aria-invalid="Boolean(reminderForm.errors.scheduled_at)" /><FieldError :message="reminderForm.errors.scheduled_at" /></div><Button type="submit" variant="outline" :disabled="reminderForm.processing"><LoaderCircle v-if="reminderForm.processing" class="size-4 animate-spin" />Tambah</Button></form>
             </section>
 
             <Separator />
