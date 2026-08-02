@@ -41,7 +41,11 @@ class TeamController extends Controller
     {
         $invite = $action->handle($workspace, $request->user());
 
-        return back()->with('success', 'Kode tim berlaku selama 5 menit.')->with('team_invite', $invite);
+        return back()->with('success', 'Kode tim berlaku selama 5 menit.')->with('team_invite', [
+            'code' => $invite['code'],
+            'expires_at' => $invite['expires_at'],
+            'workspace_id' => $workspace->id,
+        ]);
     }
 
     public function capacity(UpdateTeamCapacityRequest $request, Workspace $workspace, UpdateTeamCapacity $action): RedirectResponse

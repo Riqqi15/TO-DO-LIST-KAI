@@ -84,7 +84,7 @@ const loadStoredInvite = (teamId) => {
 };
 
 watch(() => props.invite, (newInvite) => {
-    if (newInvite?.code && selectedTeam.value) {
+    if (newInvite?.code && selectedTeam.value && (newInvite.workspace_id == null || Number(newInvite.workspace_id) === Number(selectedTeam.value.id))) {
         activeInviteCode.value = newInvite.code;
         saveStoredInvite(selectedTeam.value.id, newInvite.code, newInvite.expires_at);
     }
@@ -155,7 +155,7 @@ const openManageTeam = (workspace) => {
     deleteTeamForm.reset();
     deleteTeamForm.clearErrors();
 
-    if (props.invite?.code) {
+    if (props.invite?.code && (props.invite.workspace_id == null || Number(props.invite.workspace_id) === Number(workspace.id))) {
         activeInviteCode.value = props.invite.code;
         saveStoredInvite(workspace.id, props.invite.code, props.invite.expires_at);
     } else {
