@@ -273,23 +273,13 @@ const deleteTeam = () => {
                     Workspace Tim
                 </span>
                 <div class="flex items-center gap-0.5">
-                    <Tooltip>
-                        <TooltipTrigger as-child>
-                            <Button variant="ghost" size="icon-xs" class="text-muted-foreground hover:text-foreground" aria-label="Buat tim" @click="openCreateTeam">
-                                <Plus class="size-3.5" />
-                            </Button>
-                        </TooltipTrigger>
-                        <TooltipContent side="right">Buat tim baru</TooltipContent>
-                    </Tooltip>
+                    <Button variant="ghost" size="icon-xs" class="text-muted-foreground hover:text-foreground" title="Buat tim baru" aria-label="Buat tim" @click="openCreateTeam">
+                        <Plus class="size-3.5" />
+                    </Button>
 
-                    <Tooltip>
-                        <TooltipTrigger as-child>
-                            <Button variant="ghost" size="icon-xs" class="text-muted-foreground hover:text-foreground" aria-label="Gabung tim" @click="openJoinTeam">
-                                <UserPlus class="size-3.5" />
-                            </Button>
-                        </TooltipTrigger>
-                        <TooltipContent side="right">Gabung tim dengan kode</TooltipContent>
-                    </Tooltip>
+                    <Button variant="ghost" size="icon-xs" class="text-muted-foreground hover:text-foreground" title="Gabung tim dengan kode" aria-label="Gabung tim" @click="openJoinTeam">
+                        <UserPlus class="size-3.5" />
+                    </Button>
                 </div>
             </div>
 
@@ -309,21 +299,18 @@ const deleteTeam = () => {
                         <span class="text-[10px] font-normal opacity-60">{{ workspace.membership_rows_count ?? 1 }}</span>
                     </Button>
 
-                    <Tooltip>
-                        <TooltipTrigger as-child>
-                            <Button
-                                variant="ghost"
-                                size="icon-xs"
-                                class="shrink-0 text-muted-foreground hover:text-foreground"
-                                :aria-label="isOwner(workspace) ? `Kelola ${workspace.name}` : `Keluar dari ${workspace.name}`"
-                                @click.stop="isOwner(workspace) ? openManageTeam(workspace) : askLeaveTeam(workspace)"
-                            >
-                                <Settings v-if="isOwner(workspace)" class="size-3.5" />
-                                <LogOut v-else class="size-3.5 text-destructive" />
-                            </Button>
-                        </TooltipTrigger>
-                        <TooltipContent side="right">{{ isOwner(workspace) ? 'Kelola tim' : 'Keluar dari tim' }}</TooltipContent>
-                    </Tooltip>
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon-xs"
+                        class="shrink-0 text-muted-foreground hover:text-foreground"
+                        :title="isOwner(workspace) ? 'Kelola tim' : 'Keluar dari tim'"
+                        :aria-label="isOwner(workspace) ? `Kelola ${workspace.name}` : `Keluar dari ${workspace.name}`"
+                        @click.stop.prevent="isOwner(workspace) ? openManageTeam(workspace) : askLeaveTeam(workspace)"
+                    >
+                        <Settings v-if="isOwner(workspace)" class="size-3.5" />
+                        <LogOut v-else class="size-3.5 text-destructive" />
+                    </Button>
                 </div>
             </div>
             <p v-else class="px-2 py-1 text-xs text-muted-foreground/60 italic">Belum ada tim.</p>
@@ -338,14 +325,9 @@ const deleteTeam = () => {
                         <span>Kategori ({{ categories.length }})</span>
                     </button>
                 </CollapsibleTrigger>
-                <Tooltip>
-                    <TooltipTrigger as-child>
-                        <Button variant="ghost" size="icon-xs" class="text-muted-foreground hover:text-foreground" :disabled="!activeWorkspace" aria-label="Tambah kategori" @click="openCreateCategory">
-                            <Plus class="size-3.5" />
-                        </Button>
-                    </TooltipTrigger>
-                    <TooltipContent side="right">Tambah kategori</TooltipContent>
-                </Tooltip>
+                <Button variant="ghost" size="icon-xs" class="text-muted-foreground hover:text-foreground" :disabled="!activeWorkspace" title="Tambah kategori" aria-label="Tambah kategori" @click="openCreateCategory">
+                    <Plus class="size-3.5" />
+                </Button>
             </div>
 
             <CollapsibleContent class="space-y-0.5 pt-0.5">
