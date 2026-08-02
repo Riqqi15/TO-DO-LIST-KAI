@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Toaster } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
+import UserSettingsDialog from '@/features/user/components/UserSettingsDialog.vue';
 import { Menu } from '@lucide/vue';
 import { ref } from 'vue';
 
@@ -21,6 +22,7 @@ defineProps({
 
 const emit = defineEmits(['navigate', 'switch-workspace']);
 const mobileOpen = ref(false);
+const userSettingsOpen = ref(false);
 </script>
 
 <template>
@@ -36,6 +38,7 @@ const mobileOpen = ref(false);
                     :user="user"
                     @navigate="emit('navigate', $event)"
                     @switch-workspace="emit('switch-workspace', $event)"
+                    @open-settings="userSettingsOpen = true"
                 />
             </aside>
 
@@ -60,6 +63,7 @@ const mobileOpen = ref(false);
                                     @close="mobileOpen = false"
                                     @navigate="emit('navigate', $event)"
                                     @switch-workspace="emit('switch-workspace', $event)"
+                                    @open-settings="userSettingsOpen = true; mobileOpen = false;"
                                 />
                             </SheetContent>
                         </Sheet>
@@ -81,6 +85,7 @@ const mobileOpen = ref(false);
             </div>
         </div>
 
+        <UserSettingsDialog v-model:open="userSettingsOpen" :user="user" />
         <Toaster position="top-right" close-button rich-colors />
     </TooltipProvider>
 </template>

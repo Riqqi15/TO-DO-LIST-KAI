@@ -5,6 +5,7 @@ use App\Http\Controllers\Reminder\ReminderController;
 use App\Http\Controllers\StickyNote\StickyNoteController;
 use App\Http\Controllers\Todo\TodoController;
 use App\Http\Controllers\Todo\TodoPageController;
+use App\Http\Controllers\User\ProfileController;
 use App\Http\Controllers\Workspace\TeamController;
 use Illuminate\Support\Facades\Route;
 
@@ -15,6 +16,8 @@ Route::get('/app', [TodoPageController::class, 'index'])
     ->name('todo.index');
 
 Route::middleware(['auth', 'verified'])->group(function () {
+    Route::put('/profile', [ProfileController::class, 'updateProfile'])->name('profile.update');
+    Route::put('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password.update');
     Route::post('/teams', [TeamController::class, 'store'])->name('teams.store');
     Route::post('/teams/join', [TeamController::class, 'join'])->middleware('throttle:10,1')->name('teams.join');
     Route::post('/workspaces/{workspace}/invite', [TeamController::class, 'generateInvite'])->middleware('throttle:10,1')->name('teams.invite');
