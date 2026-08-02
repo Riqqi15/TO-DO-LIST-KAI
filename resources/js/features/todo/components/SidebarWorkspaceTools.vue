@@ -83,10 +83,17 @@ const loadStoredInvite = (teamId) => {
     return '';
 };
 
+const isInviteForWorkspace = (invite, workspaceId) => {
+    if (!invite?.code || !workspaceId || !invite.workspace_id) return false;
+    return Number(invite.workspace_id) === Number(workspaceId);
+};
+
 watch(() => props.invite, (newInvite) => {
-    if (newInvite?.code && selectedTeam.value && (newInvite.workspace_id == null || Number(newInvite.workspace_id) === Number(selectedTeam.value.id))) {
+    if (selectedTeam.value && isInviteForWorkspace(newInvite, selectedTeam.value.id)) {
         activeInviteCode.value = newInvite.code;
         saveStoredInvite(selectedTeam.value.id, newInvite.code, newInvite.expires_at);
+    } else if (selectedTeam.value) {
+        activeInviteCode.value = loadStoredInvite(selectedTeam.value.id);
     }
 }, { immediate: true, deep: true });
 
@@ -155,7 +162,7 @@ const openManageTeam = (workspace) => {
     deleteTeamForm.reset();
     deleteTeamForm.clearErrors();
 
-    if (props.invite?.code && (props.invite.workspace_id == null || Number(props.invite.workspace_id) === Number(workspace.id))) {
+    if (isInviteForWorkspace(props.invite, workspace.id)) {
         activeInviteCode.value = props.invite.code;
         saveStoredInvite(workspace.id, props.invite.code, props.invite.expires_at);
     } else {
