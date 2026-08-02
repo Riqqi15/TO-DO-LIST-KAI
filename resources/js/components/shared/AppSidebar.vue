@@ -1,4 +1,5 @@
 <script setup>
+import kaiLogo from '@/assets/kai-logo.svg';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -11,6 +12,7 @@ import {
     CheckCheck,
     LayoutDashboard,
     LogOut,
+    Settings,
     StickyNote,
 } from '@lucide/vue';
 
@@ -23,7 +25,7 @@ const props = defineProps({
     user: { type: Object, default: null },
 });
 
-const emit = defineEmits(['navigate', 'switch-workspace', 'close']);
+const emit = defineEmits(['navigate', 'switch-workspace', 'close', 'open-settings']);
 
 const navigation = [
     { id: 'tasks', label: 'Tugas', icon: LayoutDashboard },
@@ -54,9 +56,7 @@ const switchWorkspace = (workspaceId) => {
     <div class="flex h-full flex-col bg-sidebar text-sidebar-foreground">
         <!-- Sleek Header -->
         <div class="flex h-16 items-center gap-3 px-4 border-b border-sidebar-border/60">
-            <div class="grid size-8 place-items-center rounded-lg bg-primary text-primary-foreground shadow-xs">
-                <CheckCheck class="size-4" stroke-width="2.5" />
-            </div>
+            <img :src="kaiLogo" alt="Logo KAI" class="h-6 w-auto object-contain shrink-0" />
             <div class="min-w-0 flex-1">
                 <p class="text-xs font-bold tracking-tight text-foreground">To Do List KAI</p>
                 <p class="text-[10px] font-medium text-muted-foreground uppercase tracking-widest">Workspace</p>
@@ -109,6 +109,9 @@ const switchWorkspace = (workspaceId) => {
                     <p class="truncate text-xs font-bold leading-tight text-foreground">{{ user?.name ?? 'Pengguna' }}</p>
                     <p class="truncate text-[10px] text-muted-foreground leading-tight mt-0.5">{{ user?.email }}</p>
                 </div>
+                <Button variant="ghost" size="icon-xs" class="text-muted-foreground hover:text-foreground" type="button" title="Pengaturan akun" @click="emit('open-settings')">
+                    <Settings class="size-3.5" />
+                </Button>
                 <Button variant="ghost" size="icon-xs" class="text-muted-foreground hover:text-destructive" as-child title="Keluar">
                     <Link href="/logout" method="post" as="button" aria-label="Keluar">
                         <LogOut class="size-3.5" />

@@ -19,6 +19,7 @@ class TodoPageController extends Controller
     {
         $workspaces = Workspace::query()
             ->whereHas('membershipRows', fn ($query) => $query->where('user_id', $request->user()->id))
+            ->with(['members:id,name,email'])
             ->withCount('membershipRows')
             ->orderBy('type')->orderBy('name')->get();
 

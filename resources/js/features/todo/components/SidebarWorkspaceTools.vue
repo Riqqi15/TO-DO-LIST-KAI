@@ -26,9 +26,11 @@ import { Label } from '@/components/ui/label';
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { router, useForm } from '@inertiajs/vue3';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
     Check,
     ChevronDown,
+    ChevronRight,
     Clipboard,
     Folder,
     KeyRound,
@@ -101,6 +103,28 @@ const personalWorkspaces = computed(() => props.workspaces.filter((workspace) =>
 const teamWorkspaces = computed(() => props.workspaces.filter((workspace) => workspace.type === 'team'));
 const systemCategories = computed(() => props.categories.filter((category) => category.is_system));
 const customCategories = computed(() => props.categories.filter((category) => !category.is_system));
+
+const expandedTeams = ref([]);
+const toggleExpandTeam = (workspaceId) => {
+    const id = Number(workspaceId);
+    if (expandedTeams.value.includes(id)) {
+        expandedTeams.value = expandedTeams.value.filter((item) => item !== id);
+    } else {
+        expandedTeams.value.push(id);
+    }
+};
+
+const initials = (name) => {
+    if (!name) return '?';
+    return name
+        .trim()
+        .split(' ')
+        .filter(Boolean)
+        .map((part) => part[0])
+        .join('')
+        .toUpperCase()
+        .slice(0, 2);
+};
 
 const createTeamOpen = ref(false);
 const joinTeamOpen = ref(false);
@@ -324,34 +348,82 @@ const deleteTeam = () => {
                 </div>
             </div>
 
-            <div v-if="teamWorkspaces.length" class="space-y-0.5">
-                <div v-for="workspace in teamWorkspaces" :key="workspace.id" class="group flex min-w-0 items-center">
-                    <Button
-                        variant="ghost"
-                        class="h-9 min-w-0 flex-1 justify-start gap-2.5 px-2.5 text-xs transition-colors"
-                        :class="isActive(workspace) 
-                            ? 'bg-primary/10 text-primary font-bold hover:bg-primary/15' 
-                            : 'text-muted-foreground hover:bg-sidebar-accent hover:text-foreground'"
-                        :aria-current="isActive(workspace) ? 'page' : undefined"
-                        @click="switchWorkspace(workspace)"
-                    >
-                        <Users class="size-4 shrink-0" />
-                        <span class="min-w-0 flex-1 truncate text-left">{{ workspace.name }}</span>
-                        <span class="text-[10px] font-normal opacity-60">{{ workspace.membership_rows_count ?? 1 }}</span>
-                    </Button>
+            <div v-if="teamWorkspaces.length" class="space-y-1">
+                <div v-for="workspace in teamWorkspaces" :key="workspace.id" class="space-y-0.5">
+                    <div class="group flex min-w-0 items-center gap-0.5">
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon-xs"
+                            class="shrink-0 text-muted-foreground hover:text-foreground"
+                            :title="expandedTeams.includes(Number(workspace.id)) ? 'Sembunyikan anggota' : 'Tampilkan anggota'"
+                            @click.stop.prevent="toggleExpandTeam(workspace.id)"
+                        >
+                            <ChevronDown v-if="expandedTeams.includes(Number(workspace.id))" class="size-3.5 text-primary" />
+                            <ChevronRight v-else class="size-3.5" />
+                        </Button>
 
-                    <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon-xs"
-                        class="shrink-0 text-muted-foreground hover:text-foreground"
-                        :title="isOwner(workspace) ? 'Kelola tim' : 'Keluar dari tim'"
-                        :aria-label="isOwner(workspace) ? `Kelola ${workspace.name}` : `Keluar dari ${workspace.name}`"
-                        @click.stop.prevent="isOwner(workspace) ? openManageTeam(workspace) : askLeaveTeam(workspace)"
+                        <Button
+                            variant="ghost"
+                            class="h-9 min-w-0 flex-1 justify-start gap-2 px-2 text-xs transition-colors"
+                            :class="isActive(workspace) 
+                                ? 'bg-primary/10 text-primary font-bold hover:bg-primary/15' 
+                                : 'text-muted-foreground hover:bg-sidebar-accent hover:text-foreground'"
+                            :aria-current="isActive(workspace) ? 'page' : undefined"
+                            @click="switchWorkspace(workspace)"
+                        >
+                            <Users class="size-3.5 shrink-0" />
+                            <span class="min-w-0 flex-1 truncate text-left">{{ workspace.name }}</span>
+                            <span class="text-[10px] font-normal opacity-60">{{ workspace.membership_rows_count ?? (workspace.members?.length ?? 1) }}</span>
+                        </Button>
+
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon-xs"
+                            class="shrink-0 text-muted-foreground hover:text-foreground"
+                            :title="isOwner(workspace) ? 'Kelola tim' : 'Keluar dari tim'"
+                            :aria-label="isOwner(workspace) ? `Kelola ${workspace.name}` : `Keluar dari ${workspace.name}`"
+                            @click.stop.prevent="isOwner(workspace) ? openManageTeam(workspace) : askLeaveTeam(workspace)"
+                        >
+                            <Settings v-if="isOwner(workspace)" class="size-3.5" />
+                            <LogOut v-else class="size-3.5 text-destructive" />
+                        </Button>
+                    </div>
+
+                    <!-- Dropdown daftar anggota tim -->
+                    <div
+                        v-if="expandedTeams.includes(Number(workspace.id))"
+                        class="ml-5 my-1 space-y-1 border-l-2 border-primary/20 pl-2.5"
                     >
-                        <Settings v-if="isOwner(workspace)" class="size-3.5" />
-                        <LogOut v-else class="size-3.5 text-destructive" />
-                    </Button>
+                        <p v-if="!workspace.members?.length" class="py-1 text-[11px] text-muted-foreground/60 italic">
+                            Tidak ada data anggota
+                        </p>
+                        <div
+                            v-for="member in workspace.members"
+                            :key="member.id"
+                            class="flex items-center gap-2 py-1 px-1.5 rounded-md text-xs text-muted-foreground hover:bg-sidebar-accent/50 transition-colors"
+                        >
+                            <Avatar class="size-5 border border-border/40 shrink-0">
+                                <AvatarFallback class="bg-secondary text-[9px] font-bold text-secondary-foreground">
+                                    {{ initials(member.name) }}
+                                </AvatarFallback>
+                            </Avatar>
+                            <div class="min-w-0 flex-1 truncate">
+                                <p class="truncate text-[11px] font-medium leading-none text-foreground/90">
+                                    {{ member.name }}
+                                    <span v-if="Number(member.id) === Number(props.user?.id)" class="text-[9px] text-muted-foreground font-normal">(Anda)</span>
+                                </p>
+                                <p class="truncate text-[9px] text-muted-foreground leading-tight mt-0.5">{{ member.email }}</p>
+                            </div>
+                            <span
+                                v-if="member.pivot?.role === 'owner'"
+                                class="shrink-0 text-[9px] font-bold text-white bg-[#eb6a28] px-1.5 py-0.5 rounded-md shadow-2xs"
+                            >
+                                Pemilik
+                            </span>
+                        </div>
+                    </div>
                 </div>
             </div>
             <p v-else class="px-2 py-1 text-xs text-muted-foreground/60 italic">Belum ada tim.</p>
