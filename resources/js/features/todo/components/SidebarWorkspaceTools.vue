@@ -32,10 +32,11 @@ import {
     Clipboard,
     Folder,
     KeyRound,
-    LoaderCircle,
+    LogOut,
     MoreHorizontal,
     Pencil,
     Plus,
+    Settings,
     ShieldCheck,
     Trash2,
     UserPlus,
@@ -79,7 +80,12 @@ const capacityForm = useForm({ member_limit: 5 });
 const deleteTeamForm = useForm({ confirmation: '' });
 
 const isActive = (workspace) => Number(workspace?.id) === Number(props.activeWorkspace?.id);
-const isOwner = (workspace) => Number(workspace?.created_by ?? workspace?.owner_id) === Number(props.user?.id);
+const isOwner = (workspace) => {
+    if (!workspace || !props.user) return true;
+    if (workspace.created_by != null) return Number(workspace.created_by) === Number(props.user.id);
+    if (workspace.owner_id != null) return Number(workspace.owner_id) === Number(props.user.id);
+    return true;
+};
 
 const switchWorkspace = (workspace) => {
     if (!workspace || isActive(workspace)) return;
@@ -308,11 +314,12 @@ const deleteTeam = () => {
                             <Button
                                 variant="ghost"
                                 size="icon-xs"
-                                class="opacity-0 transition-opacity group-hover:opacity-100"
+                                class="shrink-0 text-muted-foreground hover:text-foreground"
                                 :aria-label="isOwner(workspace) ? `Kelola ${workspace.name}` : `Keluar dari ${workspace.name}`"
                                 @click.stop="isOwner(workspace) ? openManageTeam(workspace) : askLeaveTeam(workspace)"
                             >
-                                <MoreHorizontal class="size-3.5" />
+                                <Settings v-if="isOwner(workspace)" class="size-3.5" />
+                                <LogOut v-else class="size-3.5 text-destructive" />
                             </Button>
                         </TooltipTrigger>
                         <TooltipContent side="right">{{ isOwner(workspace) ? 'Kelola tim' : 'Keluar dari tim' }}</TooltipContent>
