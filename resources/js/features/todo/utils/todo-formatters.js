@@ -70,13 +70,16 @@ export const deadlineMeta = (todo) => {
     if (todo.status === 'selesai') {
         return { label: 'Selesai', color: '#12806a', tone: 'text-emerald-700', icon: 'check' };
     }
+    if (todo.status === 'sedang_dikerjakan') {
+        return { label: 'Sedang Dikerjakan', color: '#3b82f6', tone: 'text-blue-600', icon: 'activity' };
+    }
 
     const deadline = new Date(todo.deadline_at);
     const hours = (deadline.getTime() - Date.now()) / 3_600_000;
     if (hours < 0) return { label: 'Terlambat', color: '#c23b3b', tone: 'text-red-700', icon: 'alert' };
     if (hours <= 24) return { label: 'Kurang dari 24 jam', color: '#c23b3b', tone: 'text-red-700', icon: 'clock' };
     if (hours <= 72) return { label: 'Mendekati deadline', color: '#b76e00', tone: 'text-amber-700', icon: 'clock' };
-    return { label: 'Terjadwal', color: '#3157d5', tone: 'text-blue-700', icon: 'calendar' };
+    return { label: 'Terjadwal', color: '#64748b', tone: 'text-slate-500', icon: 'calendar' };
 };
 
 export const defaultDeadline = (days = 1) => {
@@ -126,20 +129,20 @@ export const summarizeActivity = (activity) => {
     const data = activity.changes ?? activity.snapshot;
     if (!data) return 'Tidak ada rincian tambahan.';
     if (typeof data === 'string') return data;
-    
+
     const source = data.new ?? data.status ?? data;
     if (typeof source !== 'object' || source === null) return String(source);
 
     const details = [];
-    
+
     if (source.title) details.push(`Judul: "${source.title}"`);
     else if (source.name) details.push(`Nama: "${source.name}"`);
-    
+
     if (source.status) details.push(`Status: ${statusLabel(source.status)}`);
     if (source.content) details.push(`Catatan: "${source.content.length > 50 ? source.content.substring(0, 50) + '...' : source.content}"`);
     if (source.member_limit) details.push(`Kapasitas: ${source.member_limit} anggota`);
-    
+
     if (details.length > 0) return details.join(' · ');
-    
+
     return 'Pembaruan berhasil dicatat.';
 };

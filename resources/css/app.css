@@ -90,6 +90,7 @@
 
     body {
         @apply min-w-80 bg-background font-sans text-foreground antialiased;
+        font-variant-ligatures: no-common-ligatures;
     }
 
     button,

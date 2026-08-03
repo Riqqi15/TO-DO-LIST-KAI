@@ -125,7 +125,12 @@ onMounted(loadEvents);
                                 v-for="event in day.events.slice(0, 3)"
                                 :key="event.id"
                                 type="button"
-                                class="w-full text-left truncate rounded-full bg-blue-50/90 text-blue-700 px-3 py-1 text-[11px] font-semibold hover:bg-blue-100/90 transition-colors block"
+                                class="w-full text-left truncate rounded-full px-3 py-1 text-[11px] font-semibold transition-colors block"
+                                :class="{
+                                    'bg-slate-100/90 text-slate-700 hover:bg-slate-200/90': event.status === 'belum_dikerjakan',
+                                    'bg-blue-50/90 text-blue-700 hover:bg-blue-100/90': event.status === 'sedang_dikerjakan',
+                                    'bg-emerald-50/90 text-emerald-700 hover:bg-emerald-100/90': event.status === 'selesai'
+                                }"
                                 @click="openEvent(event)"
                             >
                                 {{ event.deadline_wib ? event.deadline_wib.slice(11) : '' }} · {{ event.title }}
