@@ -17,7 +17,7 @@ import { TODO_STATUSES } from '@/features/todo/constants/todo-options';
 import { deadlineMeta } from '@/features/todo/utils/todo-formatters';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { router, usePage } from '@inertiajs/vue3';
-import { CalendarDays, CheckCircle2, CircleDot, LayoutGrid, List, Plus, Search, SlidersHorizontal, Sparkles } from '@lucide/vue';
+import { CalendarDays, CheckCircle2, Circle, CircleDot, LayoutGrid, List, Plus, Search, SlidersHorizontal, Sparkles } from '@lucide/vue';
 import { computed, ref, watch } from 'vue';
 import { toast } from 'vue-sonner';
 
@@ -53,6 +53,7 @@ const filteredTodos = computed(() => todos.value.filter((todo) => {
 }));
 const counts = computed(() => ({
     total: todos.value.length,
+    pending: todos.value.filter((todo) => todo.status === 'belum_dikerjakan').length,
     ongoing: todos.value.filter((todo) => todo.status === 'sedang_dikerjakan').length,
     done: todos.value.filter((todo) => todo.status === 'selesai').length,
     urgent: todos.value.filter((todo) => ['Terlambat', 'Kurang dari 24 jam'].includes(deadlineMeta(todo).label)).length,
@@ -115,8 +116,9 @@ watch(todos, (items) => {
         <div v-if="!activeWorkspace" class="grid min-h-[65vh] place-items-center"><Card class="max-w-md border-dashed p-9 text-center shadow-none"><div class="mx-auto grid size-12 place-items-center rounded-2xl bg-secondary text-primary"><Sparkles class="size-5" /></div><h2 class="mt-4 text-lg font-extrabold">Workspace belum tersedia</h2><p class="mt-2 text-sm leading-6 text-muted-foreground">Verifikasi email untuk membuat workspace personal, lalu muat ulang halaman.</p></Card></div>
 
         <template v-else-if="activeSection === 'tasks'">
-            <div class="mb-5 grid grid-cols-2 gap-3 xl:grid-cols-4">
+            <div class="mb-5 grid grid-cols-2 gap-3 xl:grid-cols-5">
                 <Card class="border-border/80 p-4 shadow-none"><div class="flex items-center justify-between"><p class="text-xs font-bold text-muted-foreground">Semua task</p><LayoutGrid class="size-4 text-primary" /></div><p class="mt-3 font-mono text-2xl font-semibold">{{ counts.total }}</p></Card>
+                <Card class="border-border/80 p-4 shadow-none"><div class="flex items-center justify-between"><p class="text-xs font-bold text-muted-foreground">Belum dikerjakan</p><Circle class="size-4 text-slate-400" /></div><p class="mt-3 font-mono text-2xl font-semibold">{{ counts.pending }}</p></Card>
                 <Card class="border-border/80 p-4 shadow-none"><div class="flex items-center justify-between"><p class="text-xs font-bold text-muted-foreground">Sedang dikerjakan</p><CircleDot class="size-4 text-blue-600" /></div><p class="mt-3 font-mono text-2xl font-semibold">{{ counts.ongoing }}</p></Card>
                 <Card class="border-border/80 p-4 shadow-none"><div class="flex items-center justify-between"><p class="text-xs font-bold text-muted-foreground">Mendesak</p><CalendarDays class="size-4 text-red-600" /></div><p class="mt-3 font-mono text-2xl font-semibold">{{ counts.urgent }}</p></Card>
                 <Card class="border-border/80 p-4 shadow-none"><div class="flex items-center justify-between"><p class="text-xs font-bold text-muted-foreground">Selesai</p><CheckCircle2 class="size-4 text-emerald-600" /></div><p class="mt-3 font-mono text-2xl font-semibold">{{ counts.done }}</p></Card>
