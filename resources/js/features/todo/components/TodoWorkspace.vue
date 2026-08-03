@@ -12,6 +12,7 @@ import TaskBoard from '@/features/todo/components/TaskBoard.vue';
 import TaskCalendar from '@/features/todo/components/TaskCalendar.vue';
 import TaskDetailsDialog from '@/features/todo/components/TaskDetailsDialog.vue';
 import TaskFormSheet from '@/features/todo/components/TaskFormSheet.vue';
+import TaskOverviewDialog from '@/features/todo/components/TaskOverviewDialog.vue';
 import TaskList from '@/features/todo/components/TaskList.vue';
 import { TODO_STATUSES } from '@/features/todo/constants/todo-options';
 import { deadlineMeta } from '@/features/todo/utils/todo-formatters';
@@ -40,6 +41,7 @@ const statusFilter = ref('');
 const formOpen = ref(false);
 const formTodo = ref(null);
 const detailOpen = ref(false);
+const overviewOpen = ref(false);
 const selectedTodo = ref(null);
 const detailInitialStatus = ref(null);
 const deleteOpen = ref(false);
@@ -76,6 +78,8 @@ const switchWorkspace = (id) => router.get('/app', { workspace: id }, { preserve
 const createTodo = () => { formTodo.value = null; formOpen.value = true; };
 const editTodo = (todo) => { selectedTodo.value = todo; detailOpen.value = false; formTodo.value = todo; formOpen.value = true; };
 const openTodo = (todo) => { selectedTodo.value = todo; detailInitialStatus.value = null; detailOpen.value = true; };
+const openCalendarTodo = (todo) => { selectedTodo.value = todo; overviewOpen.value = true; };
+const editFromOverview = (todo) => { overviewOpen.value = false; detailInitialStatus.value = null; detailOpen.value = true; };
 const askDeleteTodo = (todo) => { selectedTodo.value = todo; detailOpen.value = false; deleteOpen.value = true; };
 const deleteTodo = () => router.delete(`/todos/${selectedTodo.value.id}`, { preserveScroll: true, onSuccess: () => { deleteOpen.value = false; selectedTodo.value = null; } });
 const changeStatus = (todo, nextStatus) => {
@@ -91,7 +95,10 @@ watch(flash, (value) => {
 watch(todos, (items) => {
     if (!selectedTodo.value) return;
     selectedTodo.value = items.find((todo) => todo.id === selectedTodo.value.id) ?? null;
-    if (!selectedTodo.value) detailOpen.value = false;
+    if (!selectedTodo.value) {
+        detailOpen.value = false;
+        overviewOpen.value = false;
+    }
 });
 </script>
 
@@ -139,12 +146,13 @@ watch(todos, (items) => {
             <TaskList v-else :todos="filteredTodos" @open="openTodo" @status="changeStatus" />
         </template>
 
-        <TaskCalendar v-else-if="activeSection === 'calendar'" :workspace-id="activeWorkspace.id" :todos="todos" @open="openTodo" />
+        <TaskCalendar v-else-if="activeSection === 'calendar'" :workspace-id="activeWorkspace.id" :todos="todos" @open="openCalendarTodo" />
         <StickyNotesPanel v-else-if="activeSection === 'notes'" :notes="stickyNotes" :workspace-id="activeWorkspace.id" />
         <ActivityPanel v-else-if="activeSection === 'activity'" :activities="activities" />
 
         <TaskFormSheet v-if="activeWorkspace" v-model:open="formOpen" :todo="formTodo" :workspace-id="activeWorkspace.id" :categories="categories" />
-        <TaskDetailsDialog v-model:open="detailOpen" :todo="selectedTodo" :initial-status="detailInitialStatus" @edit="editTodo" @delete="askDeleteTodo" @status-saved="detailInitialStatus = null" />
+        <TaskOverviewDialog v-model:open="overviewOpen" :todo="selectedTodo" @edit="editFromOverview" />
+        <TaskDetailsDialog v-model:open="detailOpen" :todo="selectedTodo" :initial-status="detailInitialStatus" :hide-edit="activeSection === 'calendar'" @edit="editTodo" @delete="askDeleteTodo" @status-saved="detailInitialStatus = null" />
         <AlertDialog v-model:open="deleteOpen"><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>Hapus task “{{ selectedTodo?.title }}”?</AlertDialogTitle><AlertDialogDescription>Task dan reminder terkait akan dihapus permanen. Tindakan ini tidak dapat dibatalkan.</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>Batal</AlertDialogCancel><AlertDialogAction class="bg-destructive text-white hover:bg-destructive/90" @click="deleteTodo">Hapus permanen</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>
     </AppLayout>
 </template>
