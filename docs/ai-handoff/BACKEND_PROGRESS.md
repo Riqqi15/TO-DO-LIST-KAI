@@ -174,7 +174,7 @@ Checkpoint status date dan pinned note pada 1 Agustus 2026:
   error. Unpin dan persistence reorder diverifikasi melalui feature test backend.
 
 Checkpoint penyempurnaan UI (3 Agustus 2026):
-- **Kalender**: Penambahan `TaskOverviewDialog` untuk melihat detail awal sebelum mengubah status atau reminder, serta fungsi inline edit untuk judul dan deskripsi terpadu pada form detail task kalender.
+- **Kalender**: Penambahan `TaskOverviewDialog` untuk melihat detail awal sebelum mengubah status atau reminder, fungsi inline edit untuk judul dan deskripsi terpadu pada form detail task kalender, serta penambahan informasi tanggal task dibuat.
 - **Sticky Notes**: Penambahan filter catatan berdasarkan warna, serta opsi pengurutan otomatis berdasarkan urutan warna yang sekaligus menyesuaikan logika *drag-and-drop* pin secara dinamis.
 - Seluruh penyempurnaan lolos _build_ (`npm run build`) tanpa peringatan error.
 
