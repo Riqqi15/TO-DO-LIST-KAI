@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { TODO_STATUSES } from '@/features/todo/constants/todo-options';
 import { deadlineMeta, formatDateTime, statusDateMeta } from '@/features/todo/utils/todo-formatters';
-import { CalendarClock, CheckCircle2, Circle, CircleDot, Clock, Pencil, UserRound } from '@lucide/vue';
+import { CalendarClock, CalendarPlus, CheckCircle2, Circle, CircleDot, Clock, Pencil, UserRound } from '@lucide/vue';
 import { computed } from 'vue';
 
 const props = defineProps({
@@ -73,6 +73,14 @@ const statusColor = computed(() => {
                     <div>
                         <p class="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Dibuat oleh</p>
                         <p class="mt-0.5 text-xs font-medium">{{ todo.creator?.name ?? 'Pengguna' }}</p>
+                    </div>
+                </div>
+
+                <div v-if="todo.created_at" class="flex items-center gap-3 rounded-xl border p-3">
+                    <CalendarPlus class="size-4 text-primary" />
+                    <div>
+                        <p class="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Dibuat pada</p>
+                        <p class="mt-0.5 font-mono text-xs font-medium">{{ formatDateTime(todo.created_at) }} WIB</p>
                     </div>
                 </div>
             </div>
