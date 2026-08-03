@@ -14,6 +14,12 @@ const loading = ref(false);
 const error = ref('');
 
 const monthLabel = computed(() => new Intl.DateTimeFormat('id-ID', { month: 'long', year: 'numeric' }).format(cursor.value));
+
+const todayKey = computed(() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+});
+
 const days = computed(() => {
     const year = cursor.value.getFullYear();
     const month = cursor.value.getMonth();
@@ -53,26 +59,94 @@ onMounted(loadEvents);
 </script>
 
 <template>
-    <Card class="overflow-hidden border-border/90 shadow-none">
-        <div class="flex flex-col gap-3 border-b px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
-            <div><h2 class="text-base font-extrabold capitalize">{{ monthLabel }}</h2><p class="text-xs text-muted-foreground">Deadline ditampilkan dalam WIB.</p></div>
-            <div class="flex items-center gap-2"><Button variant="outline" size="icon-sm" aria-label="Bulan sebelumnya" @click="moveMonth(-1)"><ChevronLeft class="size-4" /></Button><Button variant="outline" size="sm" @click="cursor = new Date()">Hari ini</Button><Button variant="outline" size="icon-sm" aria-label="Bulan berikutnya" @click="moveMonth(1)"><ChevronRight class="size-4" /></Button></div>
+    <Card class="overflow-hidden border border-slate-200/80 shadow-none bg-white rounded-xl">
+        <!-- Calendar Header -->
+        <div class="flex flex-col gap-3 border-b border-slate-100 px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+            <div>
+                <h2 class="text-base font-extrabold text-slate-900 capitalize tracking-tight">{{ monthLabel }}</h2>
+                <p class="text-xs text-slate-400 mt-0.5">Deadline ditampilkan dalam WIB.</p>
+            </div>
+            <div class="flex items-center gap-2">
+                <Button variant="outline" size="icon-sm" class="size-8 rounded-lg border-slate-200/80 shadow-none hover:bg-slate-50" aria-label="Bulan sebelumnya" @click="moveMonth(-1)">
+                    <ChevronLeft class="size-4 text-slate-600" />
+                </Button>
+                <Button variant="outline" size="sm" class="h-8 rounded-lg px-3.5 text-xs font-semibold border-slate-200/80 shadow-none hover:bg-slate-50 text-slate-700" @click="cursor = new Date()">
+                    Hari ini
+                </Button>
+                <Button variant="outline" size="icon-sm" class="size-8 rounded-lg border-slate-200/80 shadow-none hover:bg-slate-50" aria-label="Bulan berikutnya" @click="moveMonth(1)">
+                    <ChevronRight class="size-4 text-slate-600" />
+                </Button>
+            </div>
         </div>
-        <div v-if="error" class="flex items-center justify-between gap-4 border-b bg-red-50 px-5 py-3 text-sm text-red-700"><span>{{ error }}</span><Button variant="outline" size="sm" @click="loadEvents"><RefreshCw class="size-4" />Coba lagi</Button></div>
+
+        <!-- Error Alert -->
+        <div v-if="error" class="flex items-center justify-between gap-4 border-b bg-red-50 px-5 py-3 text-sm text-red-700">
+            <span>{{ error }}</span>
+            <Button variant="outline" size="sm" @click="loadEvents"><RefreshCw class="size-4" />Coba lagi</Button>
+        </div>
+
+        <!-- Calendar Body -->
         <div class="relative overflow-x-auto">
             <div class="min-w-[48rem]">
-                <div class="grid grid-cols-7 border-b bg-slate-50/70 text-center text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground"><div v-for="day in ['Sen','Sel','Rab','Kam','Jum','Sab','Min']" :key="day" class="py-2.5">{{ day }}</div></div>
+                <!-- Days Header Row: SEN SEL RAB KAM JUM SAB MIN -->
+                <div class="grid grid-cols-7 border-b border-slate-100 bg-white text-center text-[11px] font-extrabold uppercase tracking-wider text-slate-400">
+                    <div v-for="day in ['SEN','SEL','RAB','KAM','JUM','SAB','MIN']" :key="day" class="py-3">
+                        {{ day }}
+                    </div>
+                </div>
+
+                <!-- Grid 7 columns x 6 rows -->
                 <div class="grid grid-cols-7">
-                    <div v-for="day in days" :key="day.key" class="min-h-28 border-b border-r p-2 last:border-r-0" :class="day.current ? 'bg-white' : 'bg-slate-50/60'">
-                        <span class="grid size-6 place-items-center rounded-full text-xs font-semibold" :class="day.key === new Date().toLocaleDateString('en-CA') ? 'bg-primary text-primary-foreground' : day.current ? '' : 'text-muted-foreground/50'">{{ day.date.getDate() }}</span>
-                        <div class="mt-1.5 space-y-1">
-                            <button v-for="event in day.events.slice(0, 3)" :key="event.id" type="button" class="block w-full truncate rounded-md border-l-2 border-primary bg-secondary px-2 py-1 text-left text-[11px] font-semibold text-secondary-foreground hover:bg-accent" @click="openEvent(event)">{{ event.deadline_wib.slice(11) }} · {{ event.title }}</button>
-                            <Badge v-if="day.events.length > 3" variant="outline" class="text-[9px]">+{{ day.events.length - 3 }} lainnya</Badge>
+                    <div
+                        v-for="day in days"
+                        :key="day.key"
+                        class="min-h-28 border-b border-r border-slate-100 p-2.5 last:border-r-0 flex flex-col justify-start"
+                        :class="day.current ? 'bg-white' : 'bg-slate-50/30'"
+                    >
+                        <!-- Date Number -->
+                        <div class="flex items-center justify-between mb-1.5">
+                            <span
+                                class="grid size-6 place-items-center rounded-full text-xs"
+                                :class="[
+                                    day.key === todayKey
+                                        ? 'bg-blue-600 text-white font-bold shadow-xs'
+                                        : day.current
+                                            ? 'font-semibold text-slate-700'
+                                            : 'font-normal text-slate-300'
+                                ]"
+                            >
+                                {{ day.date.getDate() }}
+                            </span>
+                        </div>
+
+                        <!-- Task Events (Pill style matching screenshot) -->
+                        <div class="mt-0.5 space-y-1 flex-1">
+                            <button
+                                v-for="event in day.events.slice(0, 3)"
+                                :key="event.id"
+                                type="button"
+                                class="w-full text-left truncate rounded-full bg-blue-50/90 text-blue-700 px-3 py-1 text-[11px] font-semibold hover:bg-blue-100/90 transition-colors block"
+                                @click="openEvent(event)"
+                            >
+                                {{ event.deadline_wib ? event.deadline_wib.slice(11) : '' }} · {{ event.title }}
+                            </button>
+
+                            <Badge
+                                v-if="day.events.length > 3"
+                                variant="outline"
+                                class="text-[9px] rounded-full px-2 py-0.5 text-blue-600 border-blue-200 bg-blue-50/50"
+                            >
+                                +{{ day.events.length - 3 }} lainnya
+                            </Badge>
                         </div>
                     </div>
                 </div>
             </div>
-            <div v-if="loading" class="absolute inset-0 grid place-items-center bg-white/65 backdrop-blur-[1px]"><LoaderCircle class="size-7 animate-spin text-primary" /></div>
+
+            <!-- Loading overlay -->
+            <div v-if="loading" class="absolute inset-0 grid place-items-center bg-white/65 backdrop-blur-[1px]">
+                <LoaderCircle class="size-7 animate-spin text-primary" />
+            </div>
         </div>
     </Card>
 </template>
