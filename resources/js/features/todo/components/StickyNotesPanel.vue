@@ -4,12 +4,13 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
 import { Textarea } from '@/components/ui/textarea';
 import StickyNoteCard from '@/features/todo/components/StickyNoteCard.vue';
 import { router, useForm } from '@inertiajs/vue3';
-import { LoaderCircle, Pin, Plus, StickyNote } from '@lucide/vue';
+import { LoaderCircle, Pin, Plus, Search, StickyNote } from '@lucide/vue';
 import Sortable from 'sortablejs';
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { toast } from 'vue-sonner';
@@ -37,12 +38,17 @@ const colors = [
 const colorOrder = Object.fromEntries(colors.map((c, i) => [c.value, i]));
 const noteClass = (color) => colors.find((item) => item.value === color)?.class ?? colors[0].class;
 
+const searchQuery = ref('');
 const colorFilter = ref('');
 const sortBy = ref('newest');
 
 const displayNotes = computed(() => {
     let notes = localNotes.value;
     if (colorFilter.value) notes = notes.filter(n => n.color === colorFilter.value);
+    if (searchQuery.value) {
+        const q = searchQuery.value.toLowerCase();
+        notes = notes.filter(n => n.content.toLowerCase().includes(q));
+    }
     return notes;
 });
 
@@ -71,7 +77,7 @@ const ordinaryNotes = computed(() => {
     }
     return notes;
 });
-const canDragPin = computed(() => sortBy.value === 'newest' && colorFilter.value === '');
+const canDragPin = computed(() => sortBy.value === 'newest' && colorFilter.value === '' && searchQuery.value === '');
 
 let sortable = null;
 const destroySortable = () => {
@@ -81,7 +87,7 @@ const destroySortable = () => {
 const initializeSortable = () => {
     destroySortable();
     if (!pinnedGrid.value || pinnedNotes.value.length < 2) return;
-    if (!canDragPin.value) return; // Disable drag if sorting/filtering
+    if (!canDragPin.value) return; // Disable drag if sorting/filtering/searching
 
     sortable = Sortable.create(pinnedGrid.value, {
         animation: 180,
@@ -161,13 +167,17 @@ const remove = () => router.delete(`/sticky-notes/${selected.value.id}`, { prese
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div><h2 class="text-xl font-extrabold tracking-[-0.025em]">Sticky Notes</h2><p class="mt-1 text-sm text-muted-foreground">Simpan catatan penting dan pin prioritas agar selalu mudah ditemukan.</p></div>
             <div class="flex flex-col sm:flex-row items-center gap-2">
-                <div class="w-full sm:w-40">
+                <div class="relative w-full sm:w-48">
+                    <Search class="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+                    <Input v-model="searchQuery" placeholder="Cari catatan..." class="h-9 pl-9 text-xs" />
+                </div>
+                <div class="w-full sm:w-32">
                     <NativeSelect v-model="sortBy" class="h-9 text-xs">
                         <NativeSelectOption value="newest">Terbaru</NativeSelectOption>
                         <NativeSelectOption value="color">Urutkan warna</NativeSelectOption>
                     </NativeSelect>
                 </div>
-                <div class="w-full sm:w-40">
+                <div class="w-full sm:w-32">
                     <NativeSelect v-model="colorFilter" class="h-9 text-xs">
                         <NativeSelectOption value="">Semua warna</NativeSelectOption>
                         <NativeSelectOption v-for="color in colors" :key="color.value" :value="color.value">{{ color.label }}</NativeSelectOption>
