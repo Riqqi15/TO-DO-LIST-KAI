@@ -173,6 +173,11 @@ Checkpoint status date dan pinned note pada 1 Agustus 2026:
   label tanggal Board, create note, pin, kontrol drag aktif, dan console tanpa
   error. Unpin dan persistence reorder diverifikasi melalui feature test backend.
 
+Checkpoint penyempurnaan UI (3 Agustus 2026):
+- **Kalender**: Penambahan `TaskOverviewDialog` untuk melihat detail awal sebelum mengubah status atau reminder, serta fungsi inline edit untuk judul dan deskripsi terpadu pada form detail task kalender.
+- **Sticky Notes**: Penambahan filter catatan berdasarkan warna, serta opsi pengurutan otomatis berdasarkan urutan warna yang sekaligus menyesuaikan logika *drag-and-drop* pin secara dinamis.
+- Seluruh penyempurnaan lolos _build_ (`npm run build`) tanpa peringatan error.
+
 Test mencakup auth, isolasi workspace, kode reusable/expired, kapasitas,
 transfer owner, exact delete confirmation, kategori terpakai, Todo/status,
 tanggal status, deadline dekat, reopen, policy delete, pin/reorder sticky note,
