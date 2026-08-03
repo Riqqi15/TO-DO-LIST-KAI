@@ -28,8 +28,8 @@ class ChangeTodoStatus
         if ($status === TodoStatus::BelumDikerjakan && $statusAt->lt($now->copy()->addMinutes(5))) {
             throw ValidationException::withMessages(['status_at' => 'Deadline minimal 5 menit dari sekarang.']);
         }
-        if ($status !== TodoStatus::BelumDikerjakan && $statusAt->gt($now)) {
-            throw ValidationException::withMessages(['status_at' => 'Tanggal status tidak boleh berada di masa depan.']);
+        if ($status !== TodoStatus::BelumDikerjakan && $todo->deadline_at && $statusAt->gt($todo->deadline_at)) {
+            throw ValidationException::withMessages(['status_at' => 'Tanggal status tidak boleh melebihi deadline.']);
         }
         if ($status === TodoStatus::Selesai && $todo->started_at && $statusAt->lt($todo->started_at)) {
             throw ValidationException::withMessages(['status_at' => 'Tanggal selesai tidak boleh lebih awal dari tanggal mulai.']);

@@ -215,7 +215,7 @@ class TodoManagementTest extends TestCase
         ])->assertSessionHasErrors('status_at');
         $this->actingAs($user)->patch(route('todos.status', $todo), [
             'status' => TodoStatus::SedangDikerjakan->value,
-            'status_at' => now('Asia/Jakarta')->addHour()->format('Y-m-d H:i:s'),
+            'status_at' => now('Asia/Jakarta')->addDays(15)->format('Y-m-d H:i:s'),
         ])->assertSessionHasErrors('status_at');
 
         $startedAt = now('Asia/Jakarta')->subHour();
