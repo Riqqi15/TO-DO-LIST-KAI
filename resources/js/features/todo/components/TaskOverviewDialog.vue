@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { TODO_STATUSES } from '@/features/todo/constants/todo-options';
 import { deadlineMeta, formatDateTime, statusDateMeta } from '@/features/todo/utils/todo-formatters';
-import { CalendarClock, CalendarPlus, CheckCircle2, Circle, CircleDot, Clock, Pencil, UserRound } from '@lucide/vue';
+import { CalendarClock, CalendarPlus, CheckCircle2, Circle, CircleDot, Clock, Pencil, UserRound, Timer } from '@lucide/vue';
 import { computed } from 'vue';
 
 const props = defineProps({
@@ -28,6 +28,33 @@ const statusColor = computed(() => {
     if (props.todo?.status === 'selesai') return 'text-emerald-600';
     if (props.todo?.status === 'sedang_dikerjakan') return 'text-blue-600';
     return 'text-slate-400';
+});
+
+const durationWorked = computed(() => {
+    if (!props.todo?.started_at) return null;
+    const start = new Date(props.todo.started_at);
+    const end = props.todo.status === 'selesai' && props.todo.completed_at 
+        ? new Date(props.todo.completed_at) 
+        : new Date();
+    
+    let diffMs = end.getTime() - start.getTime();
+    if (diffMs < 0) return 'Kurang dari 1 menit';
+    
+    const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    diffMs -= days * (1000 * 60 * 60 * 24);
+    
+    const hours = Math.floor(diffMs / (1000 * 60 * 60));
+    diffMs -= hours * (1000 * 60 * 60);
+    
+    const minutes = Math.floor(diffMs / (1000 * 60));
+    
+    const parts = [];
+    if (days > 0) parts.push(`${days} hari`);
+    if (hours > 0) parts.push(`${hours} jam`);
+    if (minutes > 0) parts.push(`${minutes} menit`);
+    
+    if (parts.length === 0) return 'Kurang dari 1 menit';
+    return parts.join(' ');
 });
 </script>
 
@@ -60,11 +87,27 @@ const statusColor = computed(() => {
                     </div>
                 </div>
 
-                <div v-if="todo.status !== 'belum_dikerjakan'" class="flex items-center gap-3 rounded-xl border p-3">
+                <div v-if="todo.started_at" class="flex items-center gap-3 rounded-xl border p-3">
                     <Clock class="size-4 text-primary" />
                     <div>
-                        <p class="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Tanggal {{ statusDateMeta(todo).label }}</p>
-                        <p class="mt-0.5 font-mono text-xs font-medium">{{ formatDateTime(statusDateMeta(todo).value) }} WIB</p>
+                        <p class="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Mulai Dikerjakan</p>
+                        <p class="mt-0.5 font-mono text-xs font-medium">{{ formatDateTime(todo.started_at) }} WIB</p>
+                    </div>
+                </div>
+
+                <div v-if="todo.status === 'selesai' && todo.completed_at" class="flex items-center gap-3 rounded-xl border p-3">
+                    <CheckCircle2 class="size-4 text-primary" />
+                    <div>
+                        <p class="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Selesai Pada</p>
+                        <p class="mt-0.5 font-mono text-xs font-medium">{{ formatDateTime(todo.completed_at) }} WIB</p>
+                    </div>
+                </div>
+
+                <div v-if="todo.started_at" class="flex items-center gap-3 rounded-xl border p-3">
+                    <Timer class="size-4 text-primary" />
+                    <div>
+                        <p class="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Durasi Pengerjaan</p>
+                        <p class="mt-0.5 text-xs font-medium">{{ durationWorked }}</p>
                     </div>
                 </div>
 
