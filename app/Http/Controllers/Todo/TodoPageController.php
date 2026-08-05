@@ -67,20 +67,49 @@ class TodoPageController extends Controller
         abort_unless($workspace->hasMember($request->user()), 403);
         $validated = $request->validate(['from' => ['nullable', 'date'], 'to' => ['nullable', 'date', 'after_or_equal:from']]);
         $query = $workspace->todos()->with('category:id,name');
-        if (isset($validated['from'])) {
+        if (isset($validated['from']) && isset($validated['to'])) {
+            $query->where(function ($q) use ($validated) {
+                $q->whereBetween('deadline_at', [$validated['from'], $validated['to']])
+                  ->orWhereBetween('started_at', [$validated['from'], $validated['to']])
+                  ->orWhereBetween('completed_at', [$validated['from'], $validated['to']])
+                  ->orWhere(function ($q2) use ($validated) {
+                      $q2->where('started_at', '<=', $validated['from'])
+                         ->where(function ($q3) use ($validated) {
+                             $q3->where('completed_at', '>=', $validated['to'])
+                                ->orWhere('deadline_at', '>=', $validated['to'])
+                                ->orWhere('status', 'sedang_dikerjakan');
+                         });
+                  });
+            });
+        } elseif (isset($validated['from'])) {
             $query->where('deadline_at', '>=', $validated['from']);
-        }
-        if (isset($validated['to'])) {
+        } elseif (isset($validated['to'])) {
             $query->where('deadline_at', '<=', $validated['to']);
         }
-        $events = $query->orderBy('deadline_at')->get()->map(fn (Todo $todo) => [
-            'id' => $todo->id,
-            'title' => $todo->title,
-            'status' => $todo->status->value,
-            'category' => $todo->category?->name,
-            'deadline_at' => $todo->deadline_at->toIso8601String(),
-            'deadline_wib' => $todo->deadline_at->copy()->timezone('Asia/Jakarta')->format('Y-m-d H:i'),
-        ]);
+
+        $events = $query->orderBy('deadline_at')->get()->map(function (Todo $todo) {
+            $start = $todo->started_at ?? $todo->deadline_at;
+            $end = match ($todo->status->value) {
+                'selesai' => $todo->completed_at ?? $todo->deadline_at,
+                'sedang_dikerjakan' => now(),
+                default => $todo->deadline_at,
+            };
+
+            if ($start > $end) {
+                $end = $start;
+            }
+
+            return [
+                'id' => $todo->id,
+                'title' => $todo->title,
+                'status' => $todo->status->value,
+                'category' => $todo->category?->name,
+                'start_date' => $start->copy()->timezone('Asia/Jakarta')->format('Y-m-d'),
+                'end_date' => $end->copy()->timezone('Asia/Jakarta')->format('Y-m-d'),
+                'deadline_at' => $todo->deadline_at->toIso8601String(),
+                'deadline_wib' => $todo->deadline_at->copy()->timezone('Asia/Jakarta')->format('Y-m-d H:i'),
+            ];
+        });
 
         return response()->json(['timezone' => 'Asia/Jakarta', 'events' => $events]);
     }
