@@ -27,6 +27,7 @@ const statusAt = ref('');
 const editableTitle = ref('');
 const editableDescription = ref('');
 const titleErrors = ref({});
+const resultNotes = ref('');
 const reminderForm = useForm({ scheduled_at: '' });
 const statusErrors = ref({});
 const saveProcessing = ref(false);
@@ -42,7 +43,9 @@ const statusDateHelp = computed(() => ({
 }[status.value] ?? 'Pilih tanggal dan waktu status.'));
 const statusChanged = computed(() => {
     if (!props.todo || !statusAt.value) return false;
-    return status.value !== props.todo.status || statusAt.value !== statusDateInput(props.todo, status.value);
+    return status.value !== props.todo.status || 
+           statusAt.value !== statusDateInput(props.todo, status.value) ||
+           (status.value === 'selesai' && resultNotes.value !== (props.todo.result_notes || ''));
 });
 const detailsChanged = computed(() => {
     if (!props.todo) return false;
@@ -69,6 +72,7 @@ watch(() => [props.todo, props.initialStatus, props.open], ([todo, initialStatus
     titleErrors.value = {};
     editableTitle.value = todo.title;
     editableDescription.value = todo.description || '';
+    resultNotes.value = todo.result_notes || '';
 }, { immediate: true });
 
 const saveAll = () => {
@@ -103,7 +107,11 @@ const saveAll = () => {
 };
 
 const changeStatus = () => {
-    router.patch(`/todos/${props.todo.id}/status`, { status: status.value, status_at: statusAt.value }, {
+    router.patch(`/todos/${props.todo.id}/status`, { 
+        status: status.value, 
+        status_at: statusAt.value,
+        result_notes: status.value === 'selesai' ? resultNotes.value : null 
+    }, {
         preserveScroll: true,
         onSuccess: () => {
             emit('status-saved');
@@ -148,6 +156,13 @@ const deleteReminder = (reminder) => router.delete(`/reminders/${reminder.id}`, 
                     <NativeSelect :model-value="status" class="h-10 w-full" @change="selectStatus($event.target.value)"><NativeSelectOption v-for="option in TODO_STATUSES" :key="option.value" :value="option.value">{{ option.label }}</NativeSelectOption></NativeSelect>
                     <div><Label for="status-at" class="sr-only">{{ statusDateLabel }}</Label><DateTimeInput24h id="status-at" v-model="statusAt" class="h-10 font-mono text-xs" :title="statusDateLabel" :aria-invalid="Boolean(statusErrors.status_at)" /></div>
                 </div>
+                
+                <div v-if="status === 'selesai'" class="mt-3">
+                    <Label for="result-notes" class="text-xs font-semibold">Hasil kegiatan (opsional)</Label>
+                    <Textarea id="result-notes" v-model="resultNotes" class="mt-1 flex min-h-[60px] w-full resize-y text-sm bg-transparent" placeholder="Tuliskan keterangan atau hasil dari kegiatan ini..." />
+                    <FieldError :message="statusErrors.result_notes" />
+                </div>
+
                 <p class="mt-2 text-xs text-muted-foreground"><span class="font-semibold text-foreground">{{ statusDateLabel }}:</span> {{ statusDateHelp }}</p>
                 <FieldError :message="statusErrors.status" />
                 <FieldError :message="statusErrors.status_at" />

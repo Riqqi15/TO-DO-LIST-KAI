@@ -39,7 +39,13 @@ class TodoController extends Controller
     public function status(ChangeTodoStatusRequest $request, Todo $todo, ChangeTodoStatus $action): RedirectResponse
     {
         $statusAt = Carbon::parse($request->validated('status_at'), 'Asia/Jakarta')->utc();
-        $action->handle($todo, $request->user(), TodoStatus::from($request->validated('status')), $statusAt);
+        $action->handle(
+            $todo, 
+            $request->user(), 
+            TodoStatus::from($request->validated('status')), 
+            $statusAt,
+            $request->validated('result_notes')
+        );
 
         return back()->with('success', 'Status task diperbarui.');
     }

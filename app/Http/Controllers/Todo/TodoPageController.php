@@ -123,6 +123,7 @@ class TodoPageController extends Controller
             'deadline_wib' => $todo->deadline_at->copy()->timezone('Asia/Jakarta')->format('Y-m-d H:i'),
             'started_at' => $todo->started_at?->toIso8601String(),
             'completed_at' => $todo->completed_at?->toIso8601String(),
+            'result_notes' => $todo->result_notes,
         ];
     }
 }

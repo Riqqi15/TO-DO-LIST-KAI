@@ -18,6 +18,7 @@ class ChangeTodoStatusRequest extends FormRequest
         return [
             'status' => ['required', Rule::enum(TodoStatus::class)],
             'status_at' => ['required', 'date'],
+            'result_notes' => ['nullable', 'string', 'max:5000'],
         ];
     }
 }

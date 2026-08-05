@@ -13,7 +13,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Todo extends Model
 {
-    protected $fillable = ['workspace_id', 'created_by', 'category_id', 'title', 'description', 'status', 'deadline_at', 'started_at', 'completed_at'];
+    protected $fillable = ['workspace_id', 'created_by', 'category_id', 'title', 'description', 'status', 'deadline_at', 'started_at', 'completed_at', 'result_notes'];
 
     protected function casts(): array
     {

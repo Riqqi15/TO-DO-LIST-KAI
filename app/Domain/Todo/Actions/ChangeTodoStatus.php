@@ -18,7 +18,7 @@ class ChangeTodoStatus
 {
     public function __construct(private SyncAutomaticReminders $automatic, private RecordActivity $activity) {}
 
-    public function handle(Todo $todo, User $actor, TodoStatus $status, Carbon $statusAt): Todo
+    public function handle(Todo $todo, User $actor, TodoStatus $status, Carbon $statusAt, ?string $resultNotes = null): Todo
     {
         if (! $actor->can('update', $todo)) {
             throw new AuthorizationException;
@@ -35,9 +35,10 @@ class ChangeTodoStatus
             throw ValidationException::withMessages(['status_at' => 'Tanggal selesai tidak boleh lebih awal dari tanggal mulai.']);
         }
 
-        return DB::transaction(function () use ($todo, $actor, $status, $statusAt) {
+        return DB::transaction(function () use ($todo, $actor, $status, $statusAt, $resultNotes) {
             $oldStatus = $todo->status;
             $old = $this->dateSnapshot($todo);
+            $old['result_notes'] = $todo->result_notes;
 
             if ($status === TodoStatus::BelumDikerjakan) {
                 $todo->update([
@@ -45,6 +46,7 @@ class ChangeTodoStatus
                     'deadline_at' => $statusAt,
                     'started_at' => null,
                     'completed_at' => null,
+                    'result_notes' => null,
                 ]);
                 $todo->reminders()
                     ->where('kind', ReminderKind::Manual->value)
@@ -53,13 +55,13 @@ class ChangeTodoStatus
                 $this->automatic->handle($todo);
                 $this->reactivateValidManualReminders($todo);
             } elseif ($status === TodoStatus::SedangDikerjakan) {
-                $todo->update(['status' => $status, 'started_at' => $statusAt, 'completed_at' => null]);
+                $todo->update(['status' => $status, 'started_at' => $statusAt, 'completed_at' => null, 'result_notes' => null]);
                 if ($oldStatus === TodoStatus::Selesai) {
                     $this->automatic->handle($todo);
                     $this->reactivateValidManualReminders($todo);
                 }
             } else {
-                $todo->update(['status' => $status, 'completed_at' => $statusAt]);
+                $todo->update(['status' => $status, 'completed_at' => $statusAt, 'result_notes' => $resultNotes]);
             }
 
             if ($status === TodoStatus::Selesai) {
@@ -91,6 +93,7 @@ class ChangeTodoStatus
             'deadline_at' => $todo->deadline_at?->toIso8601String(),
             'started_at' => $todo->started_at?->toIso8601String(),
             'completed_at' => $todo->completed_at?->toIso8601String(),
+            'result_notes' => $todo->result_notes,
         ];
     }
 }
