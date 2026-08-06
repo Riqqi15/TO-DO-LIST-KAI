@@ -16,6 +16,21 @@ const error = ref('');
 
 const monthOnlyLabel = computed(() => new Intl.DateTimeFormat('id-ID', { month: 'long' }).format(cursor.value));
 
+const monthOptions = computed(() => {
+    return Array.from({ length: 12 }, (_, i) => {
+        const d = new Date(2000, i, 1);
+        return {
+            value: i.toString(),
+            label: new Intl.DateTimeFormat('id-ID', { month: 'long' }).format(d)
+        };
+    });
+});
+
+const updateMonth = (monthStr) => {
+    const newMonth = parseInt(monthStr, 10);
+    cursor.value = new Date(cursor.value.getFullYear(), newMonth, 1);
+};
+
 const yearOptions = computed(() => {
     const current = new Date().getFullYear();
     return Array.from({ length: 21 }, (_, i) => current - 10 + i); // +/- 10 years
@@ -134,8 +149,16 @@ onMounted(loadEvents);
         <!-- Calendar Header -->
         <div class="flex flex-col gap-3 border-b border-slate-100 px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
             <div>
-                <div class="flex items-center gap-1.5">
-                    <h2 class="text-base font-extrabold text-slate-900 capitalize tracking-tight">{{ monthOnlyLabel }}</h2>
+                <div class="flex items-center gap-1.5 -ml-1">
+                    <Select :modelValue="cursor.getMonth().toString()" @update:modelValue="updateMonth">
+                        <SelectTrigger class="h-7 w-fit text-base font-extrabold text-slate-900 border-none shadow-none bg-transparent hover:bg-slate-100 p-1 focus:ring-0 capitalize tracking-tight">
+                            <SelectValue :placeholder="monthOnlyLabel" />
+                        </SelectTrigger>
+                        <SelectContent class="max-h-[300px]">
+                            <SelectItem v-for="m in monthOptions" :key="m.value" :value="m.value" class="capitalize">{{ m.label }}</SelectItem>
+                        </SelectContent>
+                    </Select>
+                    
                     <Select :modelValue="cursor.getFullYear().toString()" @update:modelValue="updateYear">
                         <SelectTrigger class="h-7 w-[80px] text-base font-extrabold text-slate-900 border-none shadow-none bg-transparent hover:bg-slate-100 p-1 focus:ring-0">
                             <SelectValue />
