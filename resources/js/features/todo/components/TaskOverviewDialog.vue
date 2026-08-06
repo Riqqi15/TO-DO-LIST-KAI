@@ -67,10 +67,15 @@ const durationWorked = computed(() => {
                     <Badge variant="outline" :style="{ borderColor: deadlineMeta(todo).color, color: deadlineMeta(todo).color }">{{ deadlineMeta(todo).label }}</Badge>
                 </div>
                 <DialogTitle class="text-xl font-extrabold leading-7">{{ todo.title }}</DialogTitle>
-                <DialogDescription class="text-sm leading-6 whitespace-pre-wrap">{{ todo.description || 'Task ini tidak memiliki deskripsi.' }}</DialogDescription>
+                <DialogDescription class="sr-only">Detail dan informasi task</DialogDescription>
             </DialogHeader>
 
             <div class="mt-2 grid gap-3">
+                <div v-if="todo.description" class="rounded-xl border p-4 bg-slate-50/50">
+                    <p class="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2">Deskripsi Task</p>
+                    <p class="text-sm leading-relaxed whitespace-pre-wrap text-slate-800">{{ todo.description }}</p>
+                </div>
+
                 <div class="flex items-center gap-3 rounded-xl border p-3">
                     <CalendarClock class="size-4 text-primary" />
                     <div>

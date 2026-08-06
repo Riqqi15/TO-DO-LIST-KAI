@@ -13,6 +13,7 @@ const cursor = ref(new Date());
 const events = ref([]);
 const loading = ref(false);
 const error = ref('');
+const hoveredEventId = ref(null);
 
 const monthOnlyLabel = computed(() => new Intl.DateTimeFormat('id-ID', { month: 'long' }).format(cursor.value));
 
@@ -237,13 +238,24 @@ onMounted(loadEvents);
                                         :class="[
                                             slot.isStart ? 'rounded-l-md' : 'rounded-l-none',
                                             slot.isEnd ? 'rounded-r-md' : 'rounded-r-none',
-                                            slot.status === 'belum_dikerjakan' ? 'bg-slate-100 border border-slate-200/60 text-slate-700 hover:bg-slate-200' :
-                                            slot.status === 'sedang_dikerjakan' ? 'bg-blue-100/90 text-blue-700 hover:bg-blue-200/90' :
-                                            'bg-emerald-100/90 text-emerald-700 hover:bg-emerald-200/90',
+                                            slot.status === 'belum_dikerjakan' ? 'border border-slate-200/60 text-slate-700' :
+                                            slot.status === 'sedang_dikerjakan' ? 'text-blue-700' :
+                                            'text-emerald-700',
+                                            hoveredEventId === slot.id ? (
+                                                slot.status === 'belum_dikerjakan' ? 'bg-slate-200' :
+                                                slot.status === 'sedang_dikerjakan' ? 'bg-blue-200/90' :
+                                                'bg-emerald-200/90'
+                                            ) : (
+                                                slot.status === 'belum_dikerjakan' ? 'bg-slate-100' :
+                                                slot.status === 'sedang_dikerjakan' ? 'bg-blue-100/90' :
+                                                'bg-emerald-100/90'
+                                            ),
                                             (!slot.isStart || !slot.isEnd) && slot.status === 'belum_dikerjakan' ? 'border-x-0' : '',
                                             !slot.isStart && slot.status === 'belum_dikerjakan' ? 'border-l-0' : '',
                                             !slot.isEnd && slot.status === 'belum_dikerjakan' ? 'border-r-0' : ''
                                         ]"
+                                        @mouseenter="hoveredEventId = slot.id"
+                                        @mouseleave="hoveredEventId = null"
                                         @click="openEvent(slot)"
                                     >
                                         <span v-if="slot.isFirstDayOfEvent || day.date.getDay() === 1" class="truncate leading-none">
