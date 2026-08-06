@@ -242,9 +242,9 @@ onMounted(loadEvents);
                                             slot.status === 'sedang_dikerjakan' ? 'text-blue-700' :
                                             'text-emerald-700',
                                             hoveredEventId === slot.id ? (
-                                                slot.status === 'belum_dikerjakan' ? 'bg-slate-200' :
-                                                slot.status === 'sedang_dikerjakan' ? 'bg-blue-200/90' :
-                                                'bg-emerald-200/90'
+                                                slot.status === 'belum_dikerjakan' ? 'bg-slate-300/70' :
+                                                slot.status === 'sedang_dikerjakan' ? 'bg-blue-300/60' :
+                                                'bg-emerald-300/60'
                                             ) : (
                                                 slot.status === 'belum_dikerjakan' ? 'bg-slate-100' :
                                                 slot.status === 'sedang_dikerjakan' ? 'bg-blue-100/90' :
