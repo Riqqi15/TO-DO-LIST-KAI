@@ -12,7 +12,7 @@ import { TODO_STATUSES } from '@/features/todo/constants/todo-options';
 import { deadlineMeta, formatDateTime, formatDuration, reminderKindLabel, reminderStatusLabel, statusDateInput, toWibDateTimeInput } from '@/features/todo/utils/todo-formatters';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
 import { ArrowLeft, Bell, CalendarClock, CheckCircle2, Hourglass, LoaderCircle, Pencil, Play, Trash2, UserRound } from '@lucide/vue';
-import { computed, ref, watch } from 'vue';
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 
 const page = usePage();
@@ -33,6 +33,19 @@ const reminderForm = useForm({ scheduled_at: '' });
 const noteForm = useForm({ body: '' });
 const statusErrors = ref({});
 const saveProcessing = ref(false);
+
+const now = ref(new Date());
+let timeInterval;
+
+onMounted(() => {
+    timeInterval = setInterval(() => {
+        now.value = new Date();
+    }, 60000);
+});
+
+onUnmounted(() => {
+    if (timeInterval) clearInterval(timeInterval);
+});
 
 const statusDateLabel = computed(() => ({
     belum_dikerjakan: 'Deadline baru',
@@ -228,13 +241,13 @@ const goBack = () => {
                         <p class="mt-0.5 font-mono text-xs font-medium">{{ formatDateTime(todo.completed_at) }} WIB</p>
                     </div>
                 </div>
-                <div v-if="todo.started_at && todo.completed_at" class="flex items-center gap-3 rounded-lg border bg-card p-3">
+                <div class="flex items-center gap-3 rounded-lg border bg-card p-3">
                     <div class="rounded-md bg-amber-50 p-2 text-amber-600">
                         <Hourglass class="size-4" />
                     </div>
                     <div>
                         <p class="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Durasi Pengerjaan</p>
-                        <p class="mt-0.5 font-mono text-xs font-medium">{{ formatDuration(todo.started_at, todo.completed_at) }}</p>
+                        <p class="mt-0.5 font-mono text-xs font-medium">{{ formatDuration(todo.started_at, todo.completed_at || now) }}</p>
                     </div>
                 </div>
             </div>

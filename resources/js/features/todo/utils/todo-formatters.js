@@ -24,14 +24,13 @@ export const formatDateTime = (value) => {
 };
 
 export const formatDuration = (start, end) => {
-    if (!start || !end) return '-';
+    if (!start) return '-';
     const startDate = new Date(start);
-    const endDate = new Date(end);
+    const endDate = end ? new Date(end) : new Date();
     const diffMs = endDate.getTime() - startDate.getTime();
     if (diffMs < 0) return 'Tidak valid';
 
     const totalMins = Math.floor(diffMs / 60000);
-    if (totalMins === 0) return 'Kurang dari 1 menit';
 
     const days = Math.floor(totalMins / (24 * 60));
     const hours = Math.floor((totalMins % (24 * 60)) / 60);
@@ -39,8 +38,12 @@ export const formatDuration = (start, end) => {
 
     const parts = [];
     if (days > 0) parts.push(`${days} hari`);
-    if (hours > 0) parts.push(`${hours} jam`);
-    if (mins > 0) parts.push(`${mins} menit`);
+    
+    if (days === 0 || hours > 0) {
+        parts.push(`${hours} jam`);
+    }
+    
+    parts.push(`${mins} menit`);
     
     return parts.join(' ');
 };
