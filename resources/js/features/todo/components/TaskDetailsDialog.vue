@@ -80,6 +80,8 @@ const saveAll = () => {
     saveProcessing.value = true;
     titleErrors.value = {};
     
+    const shouldUpdateStatus = statusChanged.value;
+    
     if (detailsChanged.value) {
         router.put(`/todos/${props.todo.id}`, {
             title: editableTitle.value,
@@ -89,7 +91,7 @@ const saveAll = () => {
         }, {
             preserveScroll: true,
             onSuccess: () => {
-                if (statusChanged.value) {
+                if (shouldUpdateStatus) {
                     changeStatus();
                 } else {
                     emit('update:open', false);
@@ -101,7 +103,7 @@ const saveAll = () => {
                 saveProcessing.value = false;
             },
         });
-    } else if (statusChanged.value) {
+    } else if (shouldUpdateStatus) {
         changeStatus();
     }
 };
