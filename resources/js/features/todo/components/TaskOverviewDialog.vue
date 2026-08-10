@@ -38,7 +38,7 @@ const durationWorked = computed(() => {
         : new Date();
     
     let diffMs = end.getTime() - start.getTime();
-    if (diffMs < 0) return 'Kurang dari 1 menit';
+    if (diffMs < 0) return { lessThanOneMinute: true };
     
     const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
     diffMs -= days * (1000 * 60 * 60 * 24);
@@ -48,13 +48,9 @@ const durationWorked = computed(() => {
     
     const minutes = Math.floor(diffMs / (1000 * 60));
     
-    const parts = [];
-    if (days > 0) parts.push(`${days} hari`);
-    if (hours > 0) parts.push(`${hours} jam`);
-    if (minutes > 0) parts.push(`${minutes} menit`);
+    if (days === 0 && hours === 0 && minutes === 0) return { lessThanOneMinute: true };
     
-    if (parts.length === 0) return 'Kurang dari 1 menit';
-    return parts.join(' ');
+    return { days, hours, minutes, lessThanOneMinute: false };
 });
 </script>
 
@@ -108,11 +104,27 @@ const durationWorked = computed(() => {
                     </div>
                 </div>
 
-                <div v-if="todo.started_at" class="flex items-center gap-3 rounded-xl border p-3">
-                    <Timer class="size-4 text-primary" />
+                <div v-if="todo.started_at" class="flex items-start gap-3 rounded-xl border p-3">
+                    <Timer class="size-4 text-primary mt-0.5" />
                     <div>
                         <p class="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Durasi Pengerjaan</p>
-                        <p class="mt-0.5 text-xs font-medium">{{ durationWorked }}</p>
+                        <div v-if="durationWorked.lessThanOneMinute" class="mt-1 text-xs font-medium text-slate-600">
+                            Kurang dari 1 menit
+                        </div>
+                        <div v-else class="mt-1.5 flex flex-wrap items-center gap-1.5">
+                            <div v-if="durationWorked.days > 0" class="flex items-baseline gap-1 bg-slate-100/80 px-2 py-1 rounded-md">
+                                <span class="font-bold text-slate-800 text-sm leading-none">{{ durationWorked.days }}</span>
+                                <span class="text-[9px] text-slate-500 uppercase tracking-widest font-bold leading-none">hari</span>
+                            </div>
+                            <div class="flex items-baseline gap-1 bg-slate-100/80 px-2 py-1 rounded-md">
+                                <span class="font-bold text-slate-800 text-sm leading-none">{{ durationWorked.hours }}</span>
+                                <span class="text-[9px] text-slate-500 uppercase tracking-widest font-bold leading-none">jam</span>
+                            </div>
+                            <div class="flex items-baseline gap-1 bg-slate-100/80 px-2 py-1 rounded-md">
+                                <span class="font-bold text-slate-800 text-sm leading-none">{{ durationWorked.minutes }}</span>
+                                <span class="text-[9px] text-slate-500 uppercase tracking-widest font-bold leading-none">mnt</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
