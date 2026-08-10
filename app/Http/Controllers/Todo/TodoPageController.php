@@ -91,30 +91,18 @@ class TodoPageController extends Controller
         $validated = $request->validate(['from' => ['nullable', 'date'], 'to' => ['nullable', 'date', 'after_or_equal:from']]);
         $query = $workspace->todos()->with(['category:id,name', 'notes.creator']);
         if (isset($validated['from']) && isset($validated['to'])) {
-            $query->where(function ($q) use ($validated) {
-                $q->whereBetween('deadline_at', [$validated['from'], $validated['to']])
-                  ->orWhereBetween('started_at', [$validated['from'], $validated['to']])
-                  ->orWhereBetween('completed_at', [$validated['from'], $validated['to']])
-                  ->orWhere(function ($q2) use ($validated) {
-                      $q2->where('started_at', '<=', $validated['from'])
-                         ->where(function ($q3) use ($validated) {
-                             $q3->where('completed_at', '>=', $validated['to'])
-                                ->orWhere('deadline_at', '>=', $validated['to'])
-                                ->orWhere('status', 'sedang_dikerjakan');
-                         });
-                  });
-            });
+            $query->where('created_at', '<=', $validated['to'] . ' 23:59:59')
+                  ->where('deadline_at', '>=', $validated['from'] . ' 00:00:00');
         } elseif (isset($validated['from'])) {
-            $query->where('deadline_at', '>=', $validated['from']);
+            $query->where('deadline_at', '>=', $validated['from'] . ' 00:00:00');
         } elseif (isset($validated['to'])) {
-            $query->where('deadline_at', '<=', $validated['to']);
+            $query->where('created_at', '<=', $validated['to'] . ' 23:59:59');
         }
 
         $events = $query->orderBy('deadline_at')->get()->map(function (Todo $todo) {
-            $start = $todo->started_at ?? $todo->deadline_at;
+            $start = $todo->created_at;
             $end = match ($todo->status->value) {
                 'selesai' => $todo->completed_at ?? $todo->deadline_at,
-                'sedang_dikerjakan' => now(),
                 default => $todo->deadline_at,
             };
 

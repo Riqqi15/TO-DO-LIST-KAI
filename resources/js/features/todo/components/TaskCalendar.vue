@@ -189,6 +189,31 @@ const loadEvents = async () => {
 
 const moveMonth = (amount) => { cursor.value = new Date(cursor.value.getFullYear(), cursor.value.getMonth() + amount, 1); };
 const openEvent = (event) => { const todo = props.todos.find((item) => item.id === event.id); if (todo) emit('open', todo); };
+const getEventStyle = (slot, dayKey) => {
+    if (slot.status === 'selesai') {
+        return { backgroundColor: '#10b981', color: 'white', border: 'none' };
+    }
+    
+    const start = new Date(slot.start_date || slot.deadline_wib?.slice(0, 10)).getTime();
+    const end = new Date(slot.end_date || slot.deadline_wib?.slice(0, 10)).getTime();
+    const current = new Date(dayKey).getTime();
+    
+    let ratio = 0;
+    if (end > start) {
+        ratio = (current - start) / (end - start);
+    }
+    ratio = Math.max(0, Math.min(1, ratio));
+    
+    const opacity = 0.15 + (ratio * 0.85);
+    const textColor = ratio > 0.6 ? 'white' : '#991b1b'; // text-red-800
+    
+    return {
+        backgroundColor: `rgba(239, 68, 68, ${opacity})`,
+        color: textColor,
+        border: 'none'
+    };
+};
+
 watch(() => props.workspaceId, loadEvents);
 watch(cursor, loadEvents);
 watch(() => props.todos, loadEvents, { deep: true });
@@ -355,26 +380,12 @@ onMounted(loadEvents);
                                 }">
                                     <button
                                         type="button"
-                                        class="flex-1 h-full truncate px-2 text-[10.5px] font-semibold transition-colors flex items-center"
+                                        class="flex-1 h-full truncate px-2 text-[10.5px] font-semibold transition-all flex items-center hover:brightness-90"
                                         :class="[
                                             slot.isStart ? 'rounded-l-md' : 'rounded-l-none',
                                             slot.isEnd ? 'rounded-r-md' : 'rounded-r-none',
-                                            slot.status === 'belum_dikerjakan' ? 'border border-slate-200/60 text-slate-700' :
-                                            slot.status === 'sedang_dikerjakan' ? 'text-blue-700' :
-                                            'text-emerald-700',
-                                            hoveredEventId === slot.id ? (
-                                                slot.status === 'belum_dikerjakan' ? 'bg-slate-300/70' :
-                                                slot.status === 'sedang_dikerjakan' ? 'bg-blue-300/60' :
-                                                'bg-emerald-300/60'
-                                            ) : (
-                                                slot.status === 'belum_dikerjakan' ? 'bg-slate-100' :
-                                                slot.status === 'sedang_dikerjakan' ? 'bg-blue-100/90' :
-                                                'bg-emerald-100/90'
-                                            ),
-                                            (!slot.isStart || !slot.isEnd) && slot.status === 'belum_dikerjakan' ? 'border-x-0' : '',
-                                            !slot.isStart && slot.status === 'belum_dikerjakan' ? 'border-l-0' : '',
-                                            !slot.isEnd && slot.status === 'belum_dikerjakan' ? 'border-r-0' : ''
                                         ]"
+                                        :style="getEventStyle(slot, day.key)"
                                         @mouseenter="hoveredEventId = slot.id"
                                         @mouseleave="hoveredEventId = null"
                                         @click="openEvent(slot)"
