@@ -327,7 +327,7 @@ const goBack = () => {
                                 </Button>
                             </div>
                         </div>
-                        <p class="whitespace-pre-wrap text-sm leading-relaxed">{{ note.body }}</p>
+                        <p class="whitespace-pre-wrap text-sm leading-relaxed break-words">{{ note.body }}</p>
                     </div>
                     <p v-if="!todo.notes?.length" class="rounded-lg border border-dashed p-6 text-center text-xs text-muted-foreground">Belum ada catatan.</p>
                 </div>
