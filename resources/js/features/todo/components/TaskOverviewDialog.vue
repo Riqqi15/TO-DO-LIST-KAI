@@ -66,8 +66,8 @@ const durationWorked = computed(() => {
                 <DialogDescription class="sr-only">Detail dan informasi task</DialogDescription>
             </DialogHeader>
 
-            <div class="mt-2 grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div class="space-y-3">
+            <div class="mt-2 grid gap-4" :class="todo.description || (todo.status === 'selesai' && todo.result_notes) ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1'">
+                <div v-if="todo.description || (todo.status === 'selesai' && todo.result_notes)" class="space-y-3">
                     <div v-if="todo.description" class="rounded-xl border p-4 bg-slate-50/50">
                         <p class="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2">Deskripsi Task</p>
                         <p class="text-sm leading-relaxed whitespace-pre-wrap text-slate-800">{{ todo.description }}</p>
