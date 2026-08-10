@@ -56,7 +56,7 @@ const durationWorked = computed(() => {
 
 <template>
     <Dialog :open="open" @update:open="emit('update:open', $event)">
-        <DialogContent v-if="todo" class="sm:max-w-md">
+        <DialogContent v-if="todo" class="sm:max-w-3xl">
             <DialogHeader>
                 <div class="mb-2 flex flex-wrap items-center gap-2">
                     <Badge variant="secondary">{{ todo.category?.name ?? 'Tanpa kategori' }}</Badge>
@@ -66,86 +66,90 @@ const durationWorked = computed(() => {
                 <DialogDescription class="sr-only">Detail dan informasi task</DialogDescription>
             </DialogHeader>
 
-            <div class="mt-2 grid gap-3">
-                <div v-if="todo.description" class="rounded-xl border p-4 bg-slate-50/50">
-                    <p class="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2">Deskripsi Task</p>
-                    <p class="text-sm leading-relaxed whitespace-pre-wrap text-slate-800">{{ todo.description }}</p>
-                </div>
+            <div class="mt-2 grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="space-y-3">
+                    <div v-if="todo.description" class="rounded-xl border p-4 bg-slate-50/50">
+                        <p class="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2">Deskripsi Task</p>
+                        <p class="text-sm leading-relaxed whitespace-pre-wrap text-slate-800">{{ todo.description }}</p>
+                    </div>
 
-                <div v-if="todo.status === 'selesai' && todo.result_notes" class="rounded-xl border p-4 bg-slate-50/50">
-                    <p class="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2">Hasil Kegiatan</p>
-                    <p class="text-sm leading-relaxed whitespace-pre-wrap text-slate-800">{{ todo.result_notes }}</p>
-                </div>
-
-                <div class="flex items-center gap-3 rounded-xl border p-3">
-                    <CalendarClock class="size-4 text-primary" />
-                    <div>
-                        <p class="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Deadline</p>
-                        <p class="mt-0.5 font-mono text-xs font-medium">{{ formatDateTime(todo.deadline_at) }} WIB</p>
+                    <div v-if="todo.status === 'selesai' && todo.result_notes" class="rounded-xl border p-4 bg-slate-50/50">
+                        <p class="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2">Hasil Kegiatan</p>
+                        <p class="text-sm leading-relaxed whitespace-pre-wrap text-slate-800">{{ todo.result_notes }}</p>
                     </div>
                 </div>
 
-                <div class="flex items-center gap-3 rounded-xl border p-3">
-                    <component :is="statusIcon" class="size-4" :class="statusColor" />
-                    <div>
-                        <p class="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Status</p>
-                        <p class="mt-0.5 text-xs font-medium">{{ statusLabel }}</p>
-                    </div>
-                </div>
-
-                <div v-if="todo.started_at" class="flex items-center gap-3 rounded-xl border p-3">
-                    <Clock class="size-4 text-primary" />
-                    <div>
-                        <p class="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Mulai Dikerjakan</p>
-                        <p class="mt-0.5 font-mono text-xs font-medium">{{ formatDateTime(todo.started_at) }} WIB</p>
-                    </div>
-                </div>
-
-                <div v-if="todo.status === 'selesai' && todo.completed_at" class="flex items-center gap-3 rounded-xl border p-3">
-                    <CheckCircle2 class="size-4 text-primary" />
-                    <div>
-                        <p class="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Selesai Pada</p>
-                        <p class="mt-0.5 font-mono text-xs font-medium">{{ formatDateTime(todo.completed_at) }} WIB</p>
-                    </div>
-                </div>
-
-                <div v-if="todo.started_at" class="flex items-start gap-3 rounded-xl border p-3">
-                    <Timer class="size-4 text-primary mt-0.5" />
-                    <div>
-                        <p class="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Durasi Pengerjaan</p>
-                        <div v-if="durationWorked.lessThanOneMinute" class="mt-1 text-xs font-medium text-slate-600">
-                            Kurang dari 1 menit
-                        </div>
-                        <div v-else class="mt-1.5 flex flex-wrap items-center gap-1.5">
-                            <div v-if="durationWorked.days > 0" class="flex items-baseline gap-1 bg-slate-100/80 px-2 py-1 rounded-md">
-                                <span class="font-bold text-slate-800 text-sm leading-none">{{ durationWorked.days }}</span>
-                                <span class="text-[9px] text-slate-500 uppercase tracking-widest font-bold leading-none">hari</span>
-                            </div>
-                            <div class="flex items-baseline gap-1 bg-slate-100/80 px-2 py-1 rounded-md">
-                                <span class="font-bold text-slate-800 text-sm leading-none">{{ durationWorked.hours }}</span>
-                                <span class="text-[9px] text-slate-500 uppercase tracking-widest font-bold leading-none">jam</span>
-                            </div>
-                            <div class="flex items-baseline gap-1 bg-slate-100/80 px-2 py-1 rounded-md">
-                                <span class="font-bold text-slate-800 text-sm leading-none">{{ durationWorked.minutes }}</span>
-                                <span class="text-[9px] text-slate-500 uppercase tracking-widest font-bold leading-none">mnt</span>
-                            </div>
+                <div class="space-y-3">
+                    <div class="flex items-center gap-3 rounded-xl border p-3">
+                        <CalendarClock class="size-4 text-primary" />
+                        <div>
+                            <p class="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Deadline</p>
+                            <p class="mt-0.5 font-mono text-xs font-medium">{{ formatDateTime(todo.deadline_at) }} WIB</p>
                         </div>
                     </div>
-                </div>
 
-                <div class="flex items-center gap-3 rounded-xl border p-3">
-                    <UserRound class="size-4 text-primary" />
-                    <div>
-                        <p class="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Dibuat oleh</p>
-                        <p class="mt-0.5 text-xs font-medium">{{ todo.creator?.name ?? 'Pengguna' }}</p>
+                    <div class="flex items-center gap-3 rounded-xl border p-3">
+                        <component :is="statusIcon" class="size-4" :class="statusColor" />
+                        <div>
+                            <p class="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Status</p>
+                            <p class="mt-0.5 text-xs font-medium">{{ statusLabel }}</p>
+                        </div>
                     </div>
-                </div>
 
-                <div v-if="todo.created_at" class="flex items-center gap-3 rounded-xl border p-3">
-                    <CalendarPlus class="size-4 text-primary" />
-                    <div>
-                        <p class="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Dibuat pada</p>
-                        <p class="mt-0.5 font-mono text-xs font-medium">{{ formatDateTime(todo.created_at) }} WIB</p>
+                    <div v-if="todo.started_at" class="flex items-center gap-3 rounded-xl border p-3">
+                        <Clock class="size-4 text-primary" />
+                        <div>
+                            <p class="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Mulai Dikerjakan</p>
+                            <p class="mt-0.5 font-mono text-xs font-medium">{{ formatDateTime(todo.started_at) }} WIB</p>
+                        </div>
+                    </div>
+
+                    <div v-if="todo.status === 'selesai' && todo.completed_at" class="flex items-center gap-3 rounded-xl border p-3">
+                        <CheckCircle2 class="size-4 text-primary" />
+                        <div>
+                            <p class="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Selesai Pada</p>
+                            <p class="mt-0.5 font-mono text-xs font-medium">{{ formatDateTime(todo.completed_at) }} WIB</p>
+                        </div>
+                    </div>
+
+                    <div v-if="todo.started_at" class="flex items-start gap-3 rounded-xl border p-3">
+                        <Timer class="size-4 text-primary mt-0.5" />
+                        <div>
+                            <p class="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Durasi Pengerjaan</p>
+                            <div v-if="durationWorked.lessThanOneMinute" class="mt-1 text-xs font-medium text-slate-600">
+                                Kurang dari 1 menit
+                            </div>
+                            <div v-else class="mt-1.5 flex flex-wrap items-center gap-1.5">
+                                <div v-if="durationWorked.days > 0" class="flex items-baseline gap-1 bg-slate-100/80 px-2 py-1 rounded-md">
+                                    <span class="font-bold text-slate-800 text-sm leading-none">{{ durationWorked.days }}</span>
+                                    <span class="text-[9px] text-slate-500 uppercase tracking-widest font-bold leading-none">hari</span>
+                                </div>
+                                <div class="flex items-baseline gap-1 bg-slate-100/80 px-2 py-1 rounded-md">
+                                    <span class="font-bold text-slate-800 text-sm leading-none">{{ durationWorked.hours }}</span>
+                                    <span class="text-[9px] text-slate-500 uppercase tracking-widest font-bold leading-none">jam</span>
+                                </div>
+                                <div class="flex items-baseline gap-1 bg-slate-100/80 px-2 py-1 rounded-md">
+                                    <span class="font-bold text-slate-800 text-sm leading-none">{{ durationWorked.minutes }}</span>
+                                    <span class="text-[9px] text-slate-500 uppercase tracking-widest font-bold leading-none">mnt</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-3 rounded-xl border p-3">
+                        <UserRound class="size-4 text-primary" />
+                        <div>
+                            <p class="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Dibuat oleh</p>
+                            <p class="mt-0.5 text-xs font-medium">{{ todo.creator?.name ?? 'Pengguna' }}</p>
+                        </div>
+                    </div>
+
+                    <div v-if="todo.created_at" class="flex items-center gap-3 rounded-xl border p-3">
+                        <CalendarPlus class="size-4 text-primary" />
+                        <div>
+                            <p class="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Dibuat pada</p>
+                            <p class="mt-0.5 font-mono text-xs font-medium">{{ formatDateTime(todo.created_at) }} WIB</p>
+                        </div>
                     </div>
                 </div>
             </div>
