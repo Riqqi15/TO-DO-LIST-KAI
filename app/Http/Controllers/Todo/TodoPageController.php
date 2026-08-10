@@ -34,7 +34,7 @@ class TodoPageController extends Controller
         $activities = collect();
         if ($workspace) {
             $categories = Category::where('is_system', true)->orWhere('workspace_id', $workspace->id)->orderByDesc('is_system')->orderBy('name')->get();
-            $todosQuery = Todo::where('workspace_id', $workspace->id)->with(['category:id,name,slug,is_system', 'creator:id,name', 'reminders'])->orderBy('deadline_at');
+            $todosQuery = Todo::where('workspace_id', $workspace->id)->with(['category:id,name,slug,is_system', 'creator:id,name', 'reminders', 'notes.creator'])->orderBy('deadline_at');
             if ($request->filled('status')) {
                 $todosQuery->where('status', $request->string('status')->toString());
             }
@@ -66,7 +66,7 @@ class TodoPageController extends Controller
     {
         abort_unless($workspace->hasMember($request->user()), 403);
         $validated = $request->validate(['from' => ['nullable', 'date'], 'to' => ['nullable', 'date', 'after_or_equal:from']]);
-        $query = $workspace->todos()->with('category:id,name');
+        $query = $workspace->todos()->with(['category:id,name', 'notes.creator']);
         if (isset($validated['from']) && isset($validated['to'])) {
             $query->where(function ($q) use ($validated) {
                 $q->whereBetween('deadline_at', [$validated['from'], $validated['to']])
@@ -124,6 +124,7 @@ class TodoPageController extends Controller
             'started_at' => $todo->started_at?->toIso8601String(),
             'completed_at' => $todo->completed_at?->toIso8601String(),
             'result_notes' => $todo->result_notes,
+            'notes' => $todo->notes,
         ];
     }
 }

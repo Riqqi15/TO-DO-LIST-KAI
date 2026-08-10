@@ -37,6 +37,11 @@ class Todo extends Model
 
     public function reminders(): HasMany
     {
-        return $this->hasMany(TodoReminder::class);
+        return $this->hasMany(\App\Domain\Reminder\Models\TodoReminder::class);
+    }
+
+    public function notes(): HasMany
+    {
+        return $this->hasMany(TodoNote::class);
     }
 }

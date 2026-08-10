@@ -29,6 +29,7 @@ const editableDescription = ref('');
 const titleErrors = ref({});
 const resultNotes = ref('');
 const reminderForm = useForm({ scheduled_at: '' });
+const noteForm = useForm({ body: '' });
 const statusErrors = ref({});
 const saveProcessing = ref(false);
 const statusDateLabel = computed(() => ({
@@ -126,6 +127,9 @@ const changeStatus = () => {
 
 const addReminder = () => reminderForm.post(`/todos/${props.todo.id}/reminders`, { preserveScroll: true, onSuccess: () => reminderForm.reset() });
 const deleteReminder = (reminder) => router.delete(`/reminders/${reminder.id}`, { preserveScroll: true });
+
+const addNote = () => noteForm.post(`/todos/${props.todo.id}/notes`, { preserveScroll: true, onSuccess: () => noteForm.reset() });
+const deleteNote = (note) => router.delete(`/notes/${note.id}`, { preserveScroll: true });
 </script>
 
 <template>
@@ -168,6 +172,24 @@ const deleteReminder = (reminder) => router.delete(`/reminders/${reminder.id}`, 
                 <p class="mt-2 text-xs text-muted-foreground"><span class="font-semibold text-foreground">{{ statusDateLabel }}:</span> {{ statusDateHelp }}</p>
                 <FieldError :message="statusErrors.status" />
                 <FieldError :message="statusErrors.status_at" />
+            </section>
+
+            <section v-if="status === 'sedang_dikerjakan' || (status === 'selesai' && todo.notes?.length)" class="rounded-2xl border p-4">
+                <div class="flex items-center justify-between"><div><h3 class="text-sm font-extrabold">Catatan Harian</h3><p class="text-xs text-muted-foreground">Catatan progres selama pengerjaan.</p></div><Badge variant="outline">{{ todo.notes?.length ?? 0 }}</Badge></div>
+                <div class="mt-3 space-y-2">
+                    <div v-for="note in todo.notes ?? []" :key="note.id" class="rounded-xl border p-3 text-sm">
+                        <div class="flex items-center justify-between gap-3 mb-1">
+                            <p class="text-xs font-bold">{{ note.creator?.name ?? 'Pengguna' }}</p>
+                            <div class="flex items-center gap-2">
+                                <p class="font-mono text-[10px] text-muted-foreground">{{ formatDateTime(note.created_at) }} WIB</p>
+                                <Button variant="ghost" size="icon-sm" class="text-destructive h-5 w-5" aria-label="Hapus catatan" @click="deleteNote(note)"><Trash2 class="size-3" /></Button>
+                            </div>
+                        </div>
+                        <p class="whitespace-pre-wrap text-sm">{{ note.body }}</p>
+                    </div>
+                    <p v-if="!todo.notes?.length" class="rounded-xl border border-dashed p-5 text-center text-xs text-muted-foreground">Belum ada catatan.</p>
+                </div>
+                <form v-if="status === 'sedang_dikerjakan'" class="mt-3 flex gap-2 items-start" @submit.prevent="addNote"><div class="flex-1"><Label for="new-note" class="sr-only">Catatan baru</Label><Textarea id="new-note" v-model="noteForm.body" required class="min-h-[60px] text-xs resize-y bg-transparent" placeholder="Tulis catatan progres hari ini..." :aria-invalid="Boolean(noteForm.errors.body)" /><FieldError :message="noteForm.errors.body" /></div><Button type="submit" variant="outline" :disabled="noteForm.processing"><LoaderCircle v-if="noteForm.processing" class="size-4 animate-spin" />Tambah</Button></form>
             </section>
 
             <section>

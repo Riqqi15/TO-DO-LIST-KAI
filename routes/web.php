@@ -39,6 +39,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/todos/{todo}/reminders', [ReminderController::class, 'store'])->name('reminders.store');
     Route::delete('/reminders/{reminder}', [ReminderController::class, 'destroy'])->name('reminders.destroy');
 
+    Route::post('/todos/{todo}/notes', [\App\Http\Controllers\Todo\TodoNoteController::class, 'store'])->name('todos.notes.store');
+    Route::delete('/notes/{note}', [\App\Http\Controllers\Todo\TodoNoteController::class, 'destroy'])->name('todos.notes.destroy');
+
     Route::post('/workspaces/{workspace}/sticky-notes', [StickyNoteController::class, 'store'])->name('sticky-notes.store');
     Route::patch('/sticky-notes/{note}', [StickyNoteController::class, 'update'])->name('sticky-notes.update');
     Route::patch('/sticky-notes/{note}/pin', [StickyNoteController::class, 'togglePin'])->name('sticky-notes.pin');
