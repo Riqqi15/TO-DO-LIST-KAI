@@ -321,9 +321,12 @@ const goBack = () => {
                                 <p class="text-xs font-bold">{{ note.creator?.name ?? 'Pengguna' }}</p>
                             </div>
                             <div class="flex items-center gap-2">
-                                <p class="font-mono text-[11px] text-muted-foreground">{{ formatDateTime(note.created_at) }} WIB</p>
-                                <Button variant="ghost" size="icon-sm" class="text-destructive h-6 w-6 hover:bg-destructive/10" aria-label="Hapus catatan" @click="deleteNote(note)">
-                                    <Trash2 class="size-3" />
+                                <span class="flex items-center gap-1.5 rounded-md bg-secondary/60 px-2 py-1 font-mono text-xs font-medium text-secondary-foreground border border-secondary/20">
+                                    <CalendarClock class="size-3" />
+                                    {{ formatDateTime(note.created_at) }} WIB
+                                </span>
+                                <Button variant="ghost" size="icon-sm" class="text-destructive h-7 w-7 hover:bg-destructive/10" aria-label="Hapus catatan" @click="deleteNote(note)">
+                                    <Trash2 class="size-3.5" />
                                 </Button>
                             </div>
                         </div>
