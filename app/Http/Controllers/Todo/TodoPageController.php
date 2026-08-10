@@ -62,6 +62,29 @@ class TodoPageController extends Controller
         ]);
     }
 
+    public function show(Request $request, Todo $todo): Response
+    {
+        $todo->load(['category', 'creator', 'reminders', 'notes.creator']);
+        abort_unless($todo->workspace->hasMember($request->user()), 403);
+
+        $workspaces = Workspace::query()
+            ->whereHas('membershipRows', fn ($query) => $query->where('user_id', $request->user()->id))
+            ->with(['members:id,name,email'])
+            ->withCount('membershipRows')
+            ->orderBy('type')->orderBy('name')->get();
+
+        $activeWorkspace = $workspaces->firstWhere('id', $todo->workspace_id);
+        $categories = Category::where('is_system', true)->orWhere('workspace_id', $activeWorkspace->id)->orderByDesc('is_system')->orderBy('name')->get();
+
+        return Inertia::render('Todo/Show', [
+            'workspaces' => $workspaces,
+            'activeWorkspace' => $activeWorkspace,
+            'categories' => $categories,
+            'todo' => $this->todoPayload($todo),
+            'timezone' => 'Asia/Jakarta',
+        ]);
+    }
+
     public function calendar(Request $request, Workspace $workspace): JsonResponse
     {
         abort_unless($workspace->hasMember($request->user()), 403);

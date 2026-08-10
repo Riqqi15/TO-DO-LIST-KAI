@@ -33,6 +33,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::post('/workspaces/{workspace}/todos', [TodoController::class, 'store'])->name('todos.store');
     Route::get('/workspaces/{workspace}/calendar', [TodoPageController::class, 'calendar'])->name('todos.calendar');
+    Route::get('/todos/{todo}', [TodoPageController::class, 'show'])->name('todos.show');
     Route::put('/todos/{todo}', [TodoController::class, 'update'])->name('todos.update');
     Route::patch('/todos/{todo}/status', [TodoController::class, 'status'])->name('todos.status');
     Route::delete('/todos/{todo}', [TodoController::class, 'destroy'])->name('todos.destroy');
