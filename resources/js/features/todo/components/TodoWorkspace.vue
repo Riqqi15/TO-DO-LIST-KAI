@@ -17,7 +17,8 @@ import { TODO_STATUSES } from '@/features/todo/constants/todo-options';
 import { deadlineMeta } from '@/features/todo/utils/todo-formatters';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { router, usePage } from '@inertiajs/vue3';
-import { CalendarDays, CheckCircle2, Circle, CircleDot, LayoutGrid, List, Plus, Search, SlidersHorizontal, Sparkles } from '@lucide/vue';
+import { Activity, ArrowDownNarrowWide, CalendarDays, CheckCircle2, CircleDashed, Clock, FileText, Filter, FlaskConical, Globe, Hourglass, LayoutGrid, MessageSquareQuote, PanelLeft, Plus, Search, Sparkles, UserPlus, List, Circle, CircleDot, SlidersHorizontal } from '@lucide/vue';
+import { useSessionStorage } from '@vueuse/core';
 import { computed, ref, watch } from 'vue';
 import { toast } from 'vue-sonner';
 
@@ -32,11 +33,11 @@ const activities = computed(() => props.value.activities ?? []);
 const flash = computed(() => props.value.flash ?? {});
 const user = computed(() => props.value.auth?.user ?? null);
 
-const activeSection = ref('tasks');
-const viewMode = ref('board');
-const search = ref('');
-const categoryFilter = ref('');
-const statusFilter = ref('');
+const activeSection = useSessionStorage('todo_active_section', 'tasks');
+const viewMode = useSessionStorage('todo_view_mode', 'board');
+const search = useSessionStorage('todo_search', '');
+const categoryFilter = useSessionStorage('todo_category', '');
+const statusFilter = useSessionStorage('todo_status', '');
 const formOpen = ref(false);
 const formTodo = ref(null);
 const overviewOpen = ref(false);
