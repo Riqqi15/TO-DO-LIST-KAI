@@ -247,7 +247,7 @@ onMounted(loadEvents);
                                 <TabsContent value="belum_dikerjakan" class="m-0 focus-visible:outline-none">
                                     <div v-if="tasksByStatus.belum_dikerjakan.length === 0" class="flex h-full items-center justify-center text-sm text-slate-400 py-10">Tidak ada task</div>
                                     <div v-else class="space-y-1">
-                                        <button v-for="t in tasksByStatus.belum_dikerjakan" :key="t.id" @click="jumpToSpecificTask(t)" class="w-full flex flex-col text-left px-4 py-2.5 rounded-lg hover:bg-slate-50 border border-transparent hover:border-slate-100 transition-colors">
+                                        <button v-for="t in tasksByStatus.belum_dikerjakan" :key="t.id" @click="jumpToSpecificTask(t)" class="w-full flex flex-col text-left px-4 py-2.5 rounded-lg hover:bg-slate-100 hover:shadow-sm border border-transparent hover:border-slate-200 transition-all">
                                             <span class="text-sm font-semibold text-slate-700">{{ t.title }}</span>
                                             <span class="text-xs text-slate-400 mt-0.5">{{ t.deadline_wib ? new Date(t.deadline_wib).toLocaleDateString('id-ID', {day: 'numeric', month: 'short', year: 'numeric'}) : 'Tanpa Tenggat' }}</span>
                                         </button>
@@ -256,7 +256,7 @@ onMounted(loadEvents);
                                 <TabsContent value="sedang_dikerjakan" class="m-0 focus-visible:outline-none">
                                     <div v-if="tasksByStatus.sedang_dikerjakan.length === 0" class="flex h-full items-center justify-center text-sm text-slate-400 py-10">Tidak ada task</div>
                                     <div v-else class="space-y-1">
-                                        <button v-for="t in tasksByStatus.sedang_dikerjakan" :key="t.id" @click="jumpToSpecificTask(t)" class="w-full flex flex-col text-left px-4 py-2.5 rounded-lg hover:bg-slate-50 border border-transparent hover:border-slate-100 transition-colors">
+                                        <button v-for="t in tasksByStatus.sedang_dikerjakan" :key="t.id" @click="jumpToSpecificTask(t)" class="w-full flex flex-col text-left px-4 py-2.5 rounded-lg hover:bg-slate-100 hover:shadow-sm border border-transparent hover:border-slate-200 transition-all">
                                             <span class="text-sm font-semibold text-blue-700">{{ t.title }}</span>
                                             <span class="text-xs text-slate-400 mt-0.5">{{ t.deadline_wib ? new Date(t.deadline_wib).toLocaleDateString('id-ID', {day: 'numeric', month: 'short', year: 'numeric'}) : 'Tanpa Tenggat' }}</span>
                                         </button>
@@ -265,7 +265,7 @@ onMounted(loadEvents);
                                 <TabsContent value="selesai" class="m-0 focus-visible:outline-none">
                                     <div v-if="tasksByStatus.selesai.length === 0" class="flex h-full items-center justify-center text-sm text-slate-400 py-10">Tidak ada task</div>
                                     <div v-else class="space-y-1">
-                                        <button v-for="t in tasksByStatus.selesai" :key="t.id" @click="jumpToSpecificTask(t)" class="w-full flex flex-col text-left px-4 py-2.5 rounded-lg hover:bg-slate-50 border border-transparent hover:border-slate-100 transition-colors">
+                                        <button v-for="t in tasksByStatus.selesai" :key="t.id" @click="jumpToSpecificTask(t)" class="w-full flex flex-col text-left px-4 py-2.5 rounded-lg hover:bg-slate-100 hover:shadow-sm border border-transparent hover:border-slate-200 transition-all">
                                             <span class="text-sm font-semibold text-emerald-700">{{ t.title }}</span>
                                             <span class="text-xs text-slate-400 mt-0.5">{{ t.deadline_wib ? new Date(t.deadline_wib).toLocaleDateString('id-ID', {day: 'numeric', month: 'short', year: 'numeric'}) : 'Tanpa Tenggat' }}</span>
                                         </button>
