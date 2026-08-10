@@ -195,23 +195,29 @@ const getEventStyle = (slot) => {
         return { backgroundColor: '#10b981', color: 'white', border: 'none' };
     }
     
-    const start = new Date(slot.start_date || slot.deadline_wib?.slice(0, 10)).getTime();
-    const end = new Date(slot.end_date || slot.deadline_wib?.slice(0, 10)).getTime();
+    const parseDateStr = (dateStr) => {
+        if (!dateStr) return new Date().getTime();
+        const parts = dateStr.split('-');
+        return new Date(parts[0], parts[1] - 1, parts[2]).getTime();
+    };
+    
+    const end = parseDateStr(slot.end_date || slot.deadline_wib?.slice(0, 10));
     
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const current = today.getTime();
     
-    let ratio = 0;
-    if (end > start) {
-        ratio = (current - start) / (end - start);
-    } else if (current >= end) {
-        ratio = 1;
-    }
-    ratio = Math.max(0, Math.min(1, ratio));
+    const daysLeft = Math.ceil((end - current) / (1000 * 3600 * 24));
     
-    const opacity = 0.15 + (ratio * 0.85);
-    const textColor = ratio > 0.6 ? 'white' : '#991b1b'; // text-red-800
+    let opacity = 0.15;
+    if (daysLeft <= 0) opacity = 1.0;
+    else if (daysLeft === 1) opacity = 0.85;
+    else if (daysLeft === 2) opacity = 0.70;
+    else if (daysLeft === 3) opacity = 0.50;
+    else if (daysLeft === 4) opacity = 0.30;
+    else opacity = 0.15;
+    
+    const textColor = opacity > 0.5 ? 'white' : '#991b1b'; // text-red-800
     
     return {
         backgroundColor: `rgba(239, 68, 68, ${opacity})`,
