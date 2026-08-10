@@ -146,176 +146,193 @@ const goBack = () => {
 
 <template>
     <Head :title="`Task: ${todo?.title ?? 'Detail'}`" />
-    
-    <AppLayout :workspaces="workspaces" :active-workspace="activeWorkspace" :categories="categories">
-        <div class="container mx-auto p-4 max-w-4xl pt-6">
-            <Button variant="ghost" class="-ml-2 mb-4 text-muted-foreground" @click="goBack">
-                <ArrowLeft class="mr-2 size-4" />
-                Kembali
+
+    <AppLayout
+        title="Detail Task"
+        :workspaces="workspaces"
+        :active-workspace="activeWorkspace"
+        :categories="categories"
+    >
+        <template #actions>
+            <Button variant="outline" size="sm" class="text-destructive hover:bg-destructive hover:text-destructive-foreground border-destructive/20" @click="deleteTodo">
+                <Trash2 class="mr-1.5 size-3.5" />
+                Hapus
             </Button>
-            
-            <div v-if="todo" class="bg-card text-card-foreground border rounded-2xl shadow-sm p-6 sm:p-8 relative">
-                <!-- Header Actions -->
-                <div class="absolute right-6 top-6 flex gap-2">
-                    <Button variant="ghost" class="text-destructive hover:text-destructive" @click="deleteTodo" aria-label="Hapus task">
-                        <Trash2 class="size-4" />
-                    </Button>
-                    <Button :disabled="saveProcessing || !canSave" @click="saveAll">
-                        <LoaderCircle v-if="saveProcessing" class="mr-2 size-4 animate-spin" />
-                        Simpan Perubahan
-                    </Button>
-                </div>
-                
-                <!-- Header badges -->
-                <div class="mb-4 flex flex-wrap items-center gap-2 pr-40">
-                    <Badge variant="secondary">{{ todo.category?.name ?? 'Tanpa kategori' }}</Badge>
+            <Button size="sm" :disabled="saveProcessing || !canSave" @click="saveAll">
+                <LoaderCircle v-if="saveProcessing" class="mr-1.5 size-3.5 animate-spin" />
+                Simpan Perubahan
+            </Button>
+        </template>
+
+        <div v-if="todo" class="space-y-6">
+            <!-- Back + Badges + Title -->
+            <div>
+                <Button variant="ghost" size="sm" class="-ml-2 mb-3 text-muted-foreground hover:text-foreground" @click="goBack">
+                    <ArrowLeft class="mr-1.5 size-4" />
+                    Kembali
+                </Button>
+
+                <div class="flex flex-wrap items-center gap-2 mb-2">
+                    <Badge variant="secondary" class="font-semibold">{{ todo.category?.name ?? 'Tanpa kategori' }}</Badge>
                     <Badge variant="outline" :style="{ borderColor: deadlineMeta(todo).color, color: deadlineMeta(todo).color }">{{ deadlineMeta(todo).label }}</Badge>
                 </div>
-                
-                <!-- Main Content & Title -->
-                <div class="space-y-4 mb-8">
-                    <div>
-                        <Label for="edit-title" class="sr-only">Judul task</Label>
-                        <Input id="edit-title" v-model="editableTitle" class="text-3xl font-extrabold leading-tight h-auto py-2 px-3 -ml-3 border-transparent hover:border-input focus-visible:border-input bg-transparent" placeholder="Judul task" />
-                        <FieldError :message="titleErrors.title" />
+
+                <Input
+                    id="edit-title"
+                    v-model="editableTitle"
+                    class="text-2xl sm:text-3xl font-extrabold leading-tight h-auto py-1.5 px-2 -ml-2 border-transparent hover:border-input focus-visible:border-input bg-transparent shadow-none"
+                    placeholder="Judul task"
+                />
+                <FieldError :message="titleErrors.title" />
+            </div>
+
+            <!-- Metadata: Deadline + Creator -->
+            <div class="grid gap-3 sm:grid-cols-2">
+                <div class="flex items-center gap-3 rounded-lg border bg-card p-3">
+                    <div class="rounded-md bg-primary/10 p-2 text-primary">
+                        <CalendarClock class="size-4" />
                     </div>
                     <div>
-                        <Label for="edit-desc" class="sr-only">Deskripsi task</Label>
-                        <Textarea id="edit-desc" v-model="editableDescription" class="flex min-h-[120px] w-full rounded-md border-transparent hover:border-input focus-visible:border-input bg-transparent px-3 py-3 text-base shadow-none placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 resize-y leading-relaxed -ml-3" placeholder="Tambahkan deskripsi lengkap untuk task ini..." />
-                        <FieldError :message="titleErrors.description" />
+                        <p class="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Deadline</p>
+                        <p class="mt-0.5 font-mono text-sm font-medium">{{ formatDateTime(todo.deadline_at) }} WIB</p>
                     </div>
                 </div>
-
-                <!-- Meta grids -->
-                <div class="grid gap-4 sm:grid-cols-2 mb-8">
-                    <div class="flex items-center gap-4 rounded-xl border p-4 bg-muted/30">
-                        <CalendarClock class="size-5 text-primary" />
-                        <div>
-                            <p class="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Deadline</p>
-                            <p class="mt-0.5 font-mono text-sm font-medium">{{ formatDateTime(todo.deadline_at) }} WIB</p>
-                        </div>
+                <div class="flex items-center gap-3 rounded-lg border bg-card p-3">
+                    <div class="rounded-md bg-primary/10 p-2 text-primary">
+                        <UserRound class="size-4" />
                     </div>
-                    <div class="flex items-center gap-4 rounded-xl border p-4 bg-muted/30">
-                        <UserRound class="size-5 text-primary" />
-                        <div>
-                            <p class="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Dibuat oleh</p>
-                            <p class="mt-0.5 text-sm font-bold">{{ todo.creator?.name ?? 'Pengguna' }}</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="grid md:grid-cols-2 gap-8">
-                    <!-- Left Column: Status & Notes -->
-                    <div class="space-y-8">
-                        <section>
-                            <h3 class="text-lg font-extrabold mb-4 flex items-center gap-2">Status & Hasil</h3>
-                            <div class="space-y-4 rounded-xl border p-5 bg-card">
-                                <div class="grid gap-3 sm:grid-cols-2">
-                                    <div>
-                                        <Label class="text-xs font-semibold mb-1.5 block">Status</Label>
-                                        <NativeSelect :model-value="status" class="h-10 w-full" @change="selectStatus($event.target.value)">
-                                            <NativeSelectOption v-for="option in TODO_STATUSES" :key="option.value" :value="option.value">{{ option.label }}</NativeSelectOption>
-                                        </NativeSelect>
-                                    </div>
-                                    <div>
-                                        <Label for="status-at" class="text-xs font-semibold mb-1.5 block">{{ statusDateLabel }}</Label>
-                                        <DateTimeInput24h id="status-at" v-model="statusAt" class="h-10 font-mono text-xs" :title="statusDateLabel" :aria-invalid="Boolean(statusErrors.status_at)" />
-                                    </div>
-                                </div>
-                                
-                                <div v-if="status === 'selesai'">
-                                    <Label for="result-notes" class="text-xs font-semibold mb-1.5 block">Hasil kegiatan (opsional)</Label>
-                                    <Textarea id="result-notes" v-model="resultNotes" class="mt-1 flex min-h-[80px] w-full resize-y text-sm bg-transparent" placeholder="Tuliskan keterangan atau hasil dari kegiatan ini..." />
-                                    <FieldError :message="statusErrors.result_notes" />
-                                </div>
-
-                                <p class="text-xs text-muted-foreground"><span class="font-semibold text-foreground">{{ statusDateLabel }}:</span> {{ statusDateHelp }}</p>
-                                <FieldError :message="statusErrors.status" />
-                                <FieldError :message="statusErrors.status_at" />
-                            </div>
-                        </section>
-
-                        <section v-if="status === 'sedang_dikerjakan' || (status === 'selesai' && todo.notes?.length)">
-                            <div class="flex items-center justify-between mb-4">
-                                <div>
-                                    <h3 class="text-lg font-extrabold">Catatan Harian</h3>
-                                    <p class="text-sm text-muted-foreground">Catatan progres selama pengerjaan.</p>
-                                </div>
-                                <Badge variant="secondary" class="text-sm">{{ todo.notes?.length ?? 0 }}</Badge>
-                            </div>
-                            
-                            <div class="space-y-3">
-                                <form v-if="status === 'sedang_dikerjakan'" class="flex gap-2 items-start mb-4" @submit.prevent="addNote">
-                                    <div class="flex-1">
-                                        <Label for="new-note" class="sr-only">Catatan baru</Label>
-                                        <Textarea id="new-note" v-model="noteForm.body" required class="min-h-[60px] text-sm resize-y bg-transparent" placeholder="Tulis catatan progres hari ini..." :aria-invalid="Boolean(noteForm.errors.body)" />
-                                        <FieldError :message="noteForm.errors.body" />
-                                    </div>
-                                    <Button type="submit" variant="secondary" :disabled="noteForm.processing">
-                                        <LoaderCircle v-if="noteForm.processing" class="mr-2 size-4 animate-spin" />
-                                        Tambah
-                                    </Button>
-                                </form>
-
-                                <div v-for="note in todo.notes ?? []" :key="note.id" class="rounded-xl border p-4 text-sm bg-card">
-                                    <div class="flex items-center justify-between gap-3 mb-2 pb-2 border-b border-border/50">
-                                        <p class="text-sm font-bold">{{ note.creator?.name ?? 'Pengguna' }}</p>
-                                        <div class="flex items-center gap-3">
-                                            <p class="font-mono text-xs text-muted-foreground">{{ formatDateTime(note.created_at) }} WIB</p>
-                                            <Button variant="ghost" size="icon-sm" class="text-destructive h-6 w-6 -mr-1" aria-label="Hapus catatan" @click="deleteNote(note)">
-                                                <Trash2 class="size-3.5" />
-                                            </Button>
-                                        </div>
-                                    </div>
-                                    <p class="whitespace-pre-wrap text-sm leading-relaxed">{{ note.body }}</p>
-                                </div>
-                                <p v-if="!todo.notes?.length" class="rounded-xl border border-dashed p-8 text-center text-sm text-muted-foreground bg-muted/10">Belum ada catatan.</p>
-                            </div>
-                        </section>
-                    </div>
-
-                    <!-- Right Column: Reminders -->
                     <div>
-                        <section>
-                            <div class="flex items-center justify-between mb-4">
-                                <div>
-                                    <h3 class="text-lg font-extrabold flex items-center gap-2"><Bell class="size-5" /> Reminder</h3>
-                                    <p class="text-sm text-muted-foreground">Jadwal otomatis dan manual.</p>
-                                </div>
-                                <Badge variant="secondary" class="text-sm">{{ todo.reminders?.length ?? 0 }}</Badge>
-                            </div>
-                            
-                            <div class="space-y-3">
-                                <form class="flex gap-2 items-start mb-4 bg-muted/30 p-4 rounded-xl border" @submit.prevent="addReminder">
-                                    <div class="flex-1">
-                                        <Label for="detail-reminder" class="text-xs font-semibold block mb-1.5">Tambah Reminder Manual</Label>
-                                        <DateTimeInput24h id="detail-reminder" v-model="reminderForm.scheduled_at" required class="h-10 font-mono text-sm" :aria-invalid="Boolean(reminderForm.errors.scheduled_at)" />
-                                        <FieldError :message="reminderForm.errors.scheduled_at" />
-                                    </div>
-                                    <Button type="submit" variant="secondary" :disabled="reminderForm.processing" class="mt-5">
-                                        <LoaderCircle v-if="reminderForm.processing" class="mr-2 size-4 animate-spin" />
-                                        Set
-                                    </Button>
-                                </form>
-
-                                <div v-for="reminder in todo.reminders ?? []" :key="reminder.id" class="flex items-center justify-between gap-3 rounded-xl border px-4 py-3 bg-card">
-                                    <div class="min-w-0">
-                                        <p class="text-sm font-bold flex items-center gap-1.5">
-                                            <span class="inline-block w-2 h-2 rounded-full" :class="reminder.status === 'pending' ? 'bg-amber-400' : 'bg-emerald-500'"></span>
-                                            {{ reminderKindLabel(reminder.kind) }}
-                                        </p>
-                                        <p class="mt-1 font-mono text-xs text-muted-foreground">{{ formatDateTime(reminder.scheduled_at) }} WIB</p>
-                                    </div>
-                                    <Button v-if="reminder.kind === 'manual'" variant="ghost" size="icon-sm" class="text-destructive h-8 w-8" aria-label="Hapus reminder" @click="deleteReminder(reminder)">
-                                        <Trash2 class="size-4" />
-                                    </Button>
-                                </div>
-                                <p v-if="!todo.reminders?.length" class="rounded-xl border border-dashed p-8 text-center text-sm text-muted-foreground bg-muted/10">Belum ada reminder.</p>
-                            </div>
-                        </section>
+                        <p class="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Dibuat oleh</p>
+                        <p class="mt-0.5 text-sm font-bold">{{ todo.creator?.name ?? 'Pengguna' }}</p>
                     </div>
                 </div>
             </div>
+
+            <!-- Deskripsi -->
+            <section>
+                <h3 class="mb-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">Deskripsi</h3>
+                <Textarea
+                    id="edit-desc"
+                    v-model="editableDescription"
+                    class="min-h-[120px] w-full resize-y rounded-lg border bg-card px-4 py-3 text-sm leading-relaxed shadow-none placeholder:text-muted-foreground"
+                    placeholder="Tambahkan deskripsi lengkap untuk task ini..."
+                />
+                <FieldError :message="titleErrors.description" />
+            </section>
+
+            <!-- Status & Hasil + Reminder (2 kolom) -->
+            <div class="grid gap-6 lg:grid-cols-5">
+                <!-- Status & Hasil (3/5) -->
+                <section class="lg:col-span-3">
+                    <h3 class="mb-3 text-xs font-bold uppercase tracking-wider text-muted-foreground">Status & Hasil</h3>
+                    <div class="space-y-4 rounded-lg border bg-card p-4">
+                        <div class="grid gap-4 sm:grid-cols-2">
+                            <div>
+                                <Label class="text-xs font-semibold mb-1.5 block">Status</Label>
+                                <NativeSelect :model-value="status" class="h-9 w-full" @change="selectStatus($event.target.value)">
+                                    <NativeSelectOption v-for="option in TODO_STATUSES" :key="option.value" :value="option.value">{{ option.label }}</NativeSelectOption>
+                                </NativeSelect>
+                                <FieldError :message="statusErrors.status" />
+                            </div>
+                            <div>
+                                <Label for="status-at" class="text-xs font-semibold mb-1.5 block">{{ statusDateLabel }}</Label>
+                                <DateTimeInput24h id="status-at" v-model="statusAt" class="h-9 font-mono text-xs" :title="statusDateLabel" :aria-invalid="Boolean(statusErrors.status_at)" />
+                                <p class="mt-1 text-[11px] text-muted-foreground">{{ statusDateHelp }}</p>
+                                <FieldError :message="statusErrors.status_at" />
+                            </div>
+                        </div>
+
+                        <div v-if="status === 'selesai'">
+                            <Label for="result-notes" class="text-xs font-semibold mb-1.5 block">Hasil kegiatan (opsional)</Label>
+                            <Textarea id="result-notes" v-model="resultNotes" class="min-h-[80px] w-full resize-y text-sm" placeholder="Tuliskan keterangan atau hasil dari kegiatan ini..." />
+                            <FieldError :message="statusErrors.result_notes" />
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Reminder (2/5) -->
+                <section class="lg:col-span-2">
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                            <Bell class="size-3.5" /> Reminder
+                        </h3>
+                        <Badge variant="secondary" class="text-[11px] px-1.5 py-0">{{ todo.reminders?.length ?? 0 }}</Badge>
+                    </div>
+                    <div class="space-y-3 rounded-lg border bg-card p-4">
+                        <form class="space-y-2" @submit.prevent="addReminder">
+                            <Label for="detail-reminder" class="text-xs font-semibold block">Set pengingat manual</Label>
+                            <DateTimeInput24h id="detail-reminder" v-model="reminderForm.scheduled_at" required class="h-9 font-mono text-xs" :aria-invalid="Boolean(reminderForm.errors.scheduled_at)" />
+                            <FieldError :message="reminderForm.errors.scheduled_at" />
+                            <Button type="submit" variant="secondary" size="sm" class="w-full" :disabled="reminderForm.processing">
+                                <LoaderCircle v-if="reminderForm.processing" class="mr-1.5 size-3 animate-spin" />
+                                Tambahkan
+                            </Button>
+                        </form>
+
+                        <Separator />
+
+                        <div class="space-y-2">
+                            <div v-for="reminder in todo.reminders ?? []" :key="reminder.id" class="flex items-center justify-between gap-2 rounded-md border px-3 py-2 text-sm">
+                                <div class="min-w-0">
+                                    <p class="text-xs font-semibold flex items-center gap-1.5">
+                                        <span class="inline-block size-1.5 rounded-full" :class="reminder.status === 'pending' ? 'bg-amber-400' : 'bg-emerald-500'"></span>
+                                        {{ reminderKindLabel(reminder.kind) }}
+                                    </p>
+                                    <p class="mt-0.5 font-mono text-[11px] text-muted-foreground">{{ formatDateTime(reminder.scheduled_at) }} WIB</p>
+                                </div>
+                                <Button v-if="reminder.kind === 'manual'" variant="ghost" size="icon-sm" class="text-destructive h-7 w-7 shrink-0 hover:bg-destructive/10" aria-label="Hapus reminder" @click="deleteReminder(reminder)">
+                                    <Trash2 class="size-3.5" />
+                                </Button>
+                            </div>
+                            <p v-if="!todo.reminders?.length" class="rounded-md border border-dashed p-4 text-center text-xs text-muted-foreground">Belum ada reminder.</p>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Catatan Harian -->
+            <section v-if="status === 'sedang_dikerjakan' || (status === 'selesai' && todo.notes?.length)">
+                <div class="flex items-center justify-between mb-3">
+                    <div>
+                        <h3 class="text-xs font-bold uppercase tracking-wider text-muted-foreground">Catatan Harian</h3>
+                        <p class="text-[11px] text-muted-foreground mt-0.5">Catatan progres selama pengerjaan.</p>
+                    </div>
+                    <Badge variant="secondary" class="text-[11px] px-1.5 py-0">{{ todo.notes?.length ?? 0 }}</Badge>
+                </div>
+
+                <div class="space-y-3">
+                    <form v-if="status === 'sedang_dikerjakan'" class="flex gap-3 items-start" @submit.prevent="addNote">
+                        <div class="flex-1">
+                            <Textarea id="new-note" v-model="noteForm.body" required class="min-h-[70px] text-sm resize-y" placeholder="Tulis catatan progres hari ini..." :aria-invalid="Boolean(noteForm.errors.body)" />
+                            <FieldError :message="noteForm.errors.body" />
+                        </div>
+                        <Button type="submit" :disabled="noteForm.processing" class="shrink-0">
+                            <LoaderCircle v-if="noteForm.processing" class="mr-1.5 size-4 animate-spin" />
+                            Tambah
+                        </Button>
+                    </form>
+
+                    <div v-for="note in todo.notes ?? []" :key="note.id" class="rounded-lg border bg-card p-4 text-sm">
+                        <div class="flex items-center justify-between gap-3 mb-2 pb-2 border-b border-border/50">
+                            <div class="flex items-center gap-2">
+                                <div class="flex size-5 items-center justify-center rounded-full bg-primary/10 text-primary">
+                                    <UserRound class="size-2.5" />
+                                </div>
+                                <p class="text-xs font-bold">{{ note.creator?.name ?? 'Pengguna' }}</p>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <p class="font-mono text-[11px] text-muted-foreground">{{ formatDateTime(note.created_at) }} WIB</p>
+                                <Button variant="ghost" size="icon-sm" class="text-destructive h-6 w-6 hover:bg-destructive/10" aria-label="Hapus catatan" @click="deleteNote(note)">
+                                    <Trash2 class="size-3" />
+                                </Button>
+                            </div>
+                        </div>
+                        <p class="whitespace-pre-wrap text-sm leading-relaxed">{{ note.body }}</p>
+                    </div>
+                    <p v-if="!todo.notes?.length" class="rounded-lg border border-dashed p-6 text-center text-xs text-muted-foreground">Belum ada catatan.</p>
+                </div>
+            </section>
         </div>
     </AppLayout>
 </template>
+

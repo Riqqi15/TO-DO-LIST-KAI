@@ -35,3 +35,4 @@ jangan diam-diam menganggap fitur yang baru direncanakan sudah selesai.
   action pada `docs/ai-handoff/BACKEND_PROGRESS.md`.
 - Bedakan jelas status `selesai`, `baru didesain`, `belum dimulai`, dan
   `ditunda sebelum produksi`.
+- Selalu jalankan `docker compose up -d --build` setiap kali selesai menyelesaikan atau memperbarui fitur.
