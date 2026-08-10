@@ -3,8 +3,10 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import axios from 'axios';
-import { ChevronLeft, ChevronRight, LoaderCircle, RefreshCw } from '@lucide/vue';
+import { ChevronLeft, ChevronRight, LoaderCircle, RefreshCw, Zap } from '@lucide/vue';
 import { computed, onMounted, ref, watch } from 'vue';
 
 const props = defineProps({ workspaceId: { type: [Number, String], required: true }, todos: { type: Array, default: () => [] } });
@@ -15,6 +17,39 @@ const loading = ref(false);
 const error = ref('');
 const hoveredEventId = ref(null);
 const statusFilter = ref('all');
+const isQuickJumpOpen = ref(false);
+const previousCursor = ref(null);
+
+const resetView = () => {
+    if (previousCursor.value) {
+        cursor.value = new Date(previousCursor.value);
+        previousCursor.value = null;
+    } else {
+        cursor.value = new Date();
+    }
+    statusFilter.value = 'all';
+};
+
+const tasksByStatus = computed(() => {
+    return {
+        belum_dikerjakan: props.todos.filter(t => t.status === 'belum_dikerjakan').sort((a,b) => (a.deadline_wib || '9999').localeCompare(b.deadline_wib || '9999')),
+        sedang_dikerjakan: props.todos.filter(t => t.status === 'sedang_dikerjakan').sort((a,b) => (a.deadline_wib || '9999').localeCompare(b.deadline_wib || '9999')),
+        selesai: props.todos.filter(t => t.status === 'selesai').sort((a,b) => (a.deadline_wib || '9999').localeCompare(b.deadline_wib || '9999'))
+    };
+});
+
+const jumpToSpecificTask = (task) => {
+    const dateStr = task.start_date || task.deadline_wib?.slice(0, 10);
+    if (dateStr) {
+        if (!previousCursor.value) {
+            previousCursor.value = new Date(cursor.value);
+        }
+        const dateObj = new Date(dateStr);
+        cursor.value = new Date(dateObj.getFullYear(), dateObj.getMonth(), 1);
+        statusFilter.value = task.status;
+        isQuickJumpOpen.value = false;
+    }
+};
 
 const monthOnlyLabel = computed(() => new Intl.DateTimeFormat('id-ID', { month: 'long' }).format(cursor.value));
 
@@ -186,11 +221,70 @@ onMounted(loadEvents);
                         <SelectItem value="selesai">Selesai</SelectItem>
                     </SelectContent>
                 </Select>
+                
+                <Dialog v-model:open="isQuickJumpOpen">
+                    <DialogTrigger asChild>
+                        <Button variant="outline" size="sm" class="h-8 rounded-lg px-3 text-xs font-semibold border-slate-200/80 shadow-none hover:bg-slate-50 text-indigo-700 hover:text-indigo-800 gap-1.5">
+                            <Zap class="size-3.5" />
+                            Cari Task Cepat
+                        </Button>
+                    </DialogTrigger>
+                    <DialogContent class="max-w-xl p-0 overflow-hidden border-slate-200/80">
+                        <DialogHeader class="px-5 pt-5 pb-3 border-b border-slate-100">
+                            <DialogTitle class="text-base font-bold text-slate-800">Cari & Lompat ke Task</DialogTitle>
+                        </DialogHeader>
+                        
+                        <Tabs defaultValue="belum_dikerjakan" class="w-full">
+                            <div class="px-5 pt-2">
+                                <TabsList class="grid w-full grid-cols-3 bg-slate-100/80 p-1">
+                                    <TabsTrigger value="belum_dikerjakan" class="text-xs data-[state=active]:bg-white data-[state=active]:shadow-sm">Belum Dikerjakan</TabsTrigger>
+                                    <TabsTrigger value="sedang_dikerjakan" class="text-xs data-[state=active]:bg-white data-[state=active]:shadow-sm">Sedang Dikerjakan</TabsTrigger>
+                                    <TabsTrigger value="selesai" class="text-xs data-[state=active]:bg-white data-[state=active]:shadow-sm">Selesai</TabsTrigger>
+                                </TabsList>
+                            </div>
+                            
+                            <div class="h-[300px] overflow-y-auto p-2">
+                                <TabsContent value="belum_dikerjakan" class="m-0 focus-visible:outline-none">
+                                    <div v-if="tasksByStatus.belum_dikerjakan.length === 0" class="flex h-full items-center justify-center text-sm text-slate-400 py-10">Tidak ada task</div>
+                                    <div v-else class="space-y-1">
+                                        <button v-for="t in tasksByStatus.belum_dikerjakan" :key="t.id" @click="jumpToSpecificTask(t)" class="w-full flex flex-col text-left px-4 py-2.5 rounded-lg hover:bg-slate-50 border border-transparent hover:border-slate-100 transition-colors">
+                                            <span class="text-sm font-semibold text-slate-700">{{ t.title }}</span>
+                                            <span class="text-xs text-slate-400 mt-0.5">{{ t.deadline_wib ? new Date(t.deadline_wib).toLocaleDateString('id-ID', {day: 'numeric', month: 'short', year: 'numeric'}) : 'Tanpa Tenggat' }}</span>
+                                        </button>
+                                    </div>
+                                </TabsContent>
+                                <TabsContent value="sedang_dikerjakan" class="m-0 focus-visible:outline-none">
+                                    <div v-if="tasksByStatus.sedang_dikerjakan.length === 0" class="flex h-full items-center justify-center text-sm text-slate-400 py-10">Tidak ada task</div>
+                                    <div v-else class="space-y-1">
+                                        <button v-for="t in tasksByStatus.sedang_dikerjakan" :key="t.id" @click="jumpToSpecificTask(t)" class="w-full flex flex-col text-left px-4 py-2.5 rounded-lg hover:bg-slate-50 border border-transparent hover:border-slate-100 transition-colors">
+                                            <span class="text-sm font-semibold text-blue-700">{{ t.title }}</span>
+                                            <span class="text-xs text-slate-400 mt-0.5">{{ t.deadline_wib ? new Date(t.deadline_wib).toLocaleDateString('id-ID', {day: 'numeric', month: 'short', year: 'numeric'}) : 'Tanpa Tenggat' }}</span>
+                                        </button>
+                                    </div>
+                                </TabsContent>
+                                <TabsContent value="selesai" class="m-0 focus-visible:outline-none">
+                                    <div v-if="tasksByStatus.selesai.length === 0" class="flex h-full items-center justify-center text-sm text-slate-400 py-10">Tidak ada task</div>
+                                    <div v-else class="space-y-1">
+                                        <button v-for="t in tasksByStatus.selesai" :key="t.id" @click="jumpToSpecificTask(t)" class="w-full flex flex-col text-left px-4 py-2.5 rounded-lg hover:bg-slate-50 border border-transparent hover:border-slate-100 transition-colors">
+                                            <span class="text-sm font-semibold text-emerald-700">{{ t.title }}</span>
+                                            <span class="text-xs text-slate-400 mt-0.5">{{ t.deadline_wib ? new Date(t.deadline_wib).toLocaleDateString('id-ID', {day: 'numeric', month: 'short', year: 'numeric'}) : 'Tanpa Tenggat' }}</span>
+                                        </button>
+                                    </div>
+                                </TabsContent>
+                            </div>
+                        </Tabs>
+                    </DialogContent>
+                </Dialog>
+
+                <Button v-if="previousCursor || statusFilter !== 'all'" variant="ghost" size="sm" class="h-8 rounded-lg px-3 text-xs font-semibold text-slate-500 hover:text-slate-700 hover:bg-slate-100" @click="resetView">
+                    Kembali
+                </Button>
+
                 <div class="w-px h-5 bg-slate-200/80 mx-1"></div>
                 <Button variant="outline" size="icon-sm" class="size-8 rounded-lg border-slate-200/80 shadow-none hover:bg-slate-50" aria-label="Bulan sebelumnya" @click="moveMonth(-1)">
                     <ChevronLeft class="size-4 text-slate-600" />
                 </Button>
-                <Button variant="outline" size="sm" class="h-8 rounded-lg px-3.5 text-xs font-semibold border-slate-200/80 shadow-none hover:bg-slate-50 text-slate-700" @click="cursor = new Date()">
+                <Button variant="outline" size="sm" class="h-8 rounded-lg px-3.5 text-xs font-semibold border-slate-200/80 shadow-none hover:bg-slate-50 text-slate-700" @click="resetView">
                     Hari ini
                 </Button>
                 <Button variant="outline" size="icon-sm" class="size-8 rounded-lg border-slate-200/80 shadow-none hover:bg-slate-50" aria-label="Bulan berikutnya" @click="moveMonth(1)">
