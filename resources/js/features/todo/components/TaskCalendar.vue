@@ -189,18 +189,24 @@ const loadEvents = async () => {
 
 const moveMonth = (amount) => { cursor.value = new Date(cursor.value.getFullYear(), cursor.value.getMonth() + amount, 1); };
 const openEvent = (event) => { const todo = props.todos.find((item) => item.id === event.id); if (todo) emit('open', todo); };
-const getEventStyle = (slot, dayKey) => {
+
+const getEventStyle = (slot) => {
     if (slot.status === 'selesai') {
         return { backgroundColor: '#10b981', color: 'white', border: 'none' };
     }
     
     const start = new Date(slot.start_date || slot.deadline_wib?.slice(0, 10)).getTime();
     const end = new Date(slot.end_date || slot.deadline_wib?.slice(0, 10)).getTime();
-    const current = new Date(dayKey).getTime();
+    
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const current = today.getTime();
     
     let ratio = 0;
     if (end > start) {
         ratio = (current - start) / (end - start);
+    } else if (current >= end) {
+        ratio = 1;
     }
     ratio = Math.max(0, Math.min(1, ratio));
     
@@ -385,7 +391,7 @@ onMounted(loadEvents);
                                             slot.isStart ? 'rounded-l-md' : 'rounded-l-none',
                                             slot.isEnd ? 'rounded-r-md' : 'rounded-r-none',
                                         ]"
-                                        :style="getEventStyle(slot, day.key)"
+                                        :style="getEventStyle(slot)"
                                         @mouseenter="hoveredEventId = slot.id"
                                         @mouseleave="hoveredEventId = null"
                                         @click="openEvent(slot)"
