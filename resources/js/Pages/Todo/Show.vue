@@ -351,7 +351,7 @@ const goBack = () => {
                 <div class="space-y-3">
                     <form v-if="status === 'sedang_dikerjakan'" class="flex gap-3 items-start" @submit.prevent="addNote">
                         <div class="flex-1">
-                            <Textarea id="new-note" v-model="noteForm.body" required class="min-h-[70px] text-sm resize-y" placeholder="Tulis catatan progres hari ini..." :aria-invalid="Boolean(noteForm.errors.body)" />
+                            <Textarea id="new-note" v-model="noteForm.body" required class="min-h-[70px] text-sm resize-y bg-white" placeholder="Tulis catatan progres hari ini..." :aria-invalid="Boolean(noteForm.errors.body)" />
                             <FieldError :message="noteForm.errors.body" />
                         </div>
                         <Button type="submit" :disabled="noteForm.processing" class="shrink-0">
@@ -359,6 +359,8 @@ const goBack = () => {
                             Tambah
                         </Button>
                     </form>
+
+                    <Separator v-if="status === 'sedang_dikerjakan' && todo.notes?.length" class="my-5" />
 
                     <div v-for="note in todo.notes ?? []" :key="note.id" class="rounded-lg border bg-card p-4 text-sm">
                         <div class="flex items-center justify-between gap-3 mb-2 pb-2 border-b border-border/50">
