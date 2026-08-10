@@ -8,15 +8,24 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import axios from 'axios';
 import { ChevronLeft, ChevronRight, LoaderCircle, RefreshCw, Zap } from '@lucide/vue';
 import { computed, onMounted, ref, watch } from 'vue';
+import { useSessionStorage } from '@vueuse/core';
 
 const props = defineProps({ workspaceId: { type: [Number, String], required: true }, todos: { type: Array, default: () => [] } });
 const emit = defineEmits(['open']);
-const cursor = ref(new Date());
+
+// Convert stored string back to Date for cursor
+const storedCursor = useSessionStorage('todo_calendar_cursor', new Date().toISOString());
+const cursor = ref(new Date(storedCursor.value));
+
+watch(cursor, (newVal) => {
+    storedCursor.value = newVal.toISOString();
+});
+
 const events = ref([]);
 const loading = ref(false);
 const error = ref('');
 const hoveredEventId = ref(null);
-const statusFilter = ref('all');
+const statusFilter = useSessionStorage('todo_calendar_status', 'all');
 const isQuickJumpOpen = ref(false);
 const previousCursor = ref(null);
 
@@ -48,6 +57,9 @@ const jumpToSpecificTask = (task) => {
         cursor.value = new Date(dateObj.getFullYear(), dateObj.getMonth(), 1);
         statusFilter.value = task.status;
         isQuickJumpOpen.value = false;
+        
+        // Directly open the task instead of just scrolling the calendar to save the user a click
+        emit('open', task);
     }
 };
 
