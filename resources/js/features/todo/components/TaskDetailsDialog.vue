@@ -64,15 +64,15 @@ const selectStatus = (nextStatus) => {
     statusErrors.value = {};
 };
 
-watch(() => [props.todo, props.initialStatus, props.open], ([todo, initialStatus, open]) => {
-    if (!todo || !open) return;
-    status.value = initialStatus ?? todo.status;
+watch(() => [props.todo?.id, props.initialStatus, props.open], ([todoId, initialStatus, open]) => {
+    if (!todoId || !open || !props.todo) return;
+    status.value = initialStatus ?? props.todo.status;
     statusAt.value = defaultDateForStatus(status.value);
     statusErrors.value = {};
     titleErrors.value = {};
-    editableTitle.value = todo.title;
-    editableDescription.value = todo.description || '';
-    resultNotes.value = todo.result_notes || '';
+    editableTitle.value = props.todo.title;
+    editableDescription.value = props.todo.description || '';
+    resultNotes.value = props.todo.result_notes || '';
 }, { immediate: true });
 
 const saveAll = () => {
