@@ -23,6 +23,28 @@ export const formatDateTime = (value) => {
     }).format(date).replace('.', ':');
 };
 
+export const formatDuration = (start, end) => {
+    if (!start || !end) return '-';
+    const startDate = new Date(start);
+    const endDate = new Date(end);
+    const diffMs = endDate.getTime() - startDate.getTime();
+    if (diffMs < 0) return 'Tidak valid';
+
+    const diffMins = Math.floor(diffMs / 60000);
+    if (diffMins < 60) return `${diffMins} menit`;
+    
+    const diffHours = Math.floor(diffMins / 60);
+    const remainingMins = diffMins % 60;
+    
+    if (diffHours < 24) {
+        return remainingMins > 0 ? `${diffHours} jam ${remainingMins} menit` : `${diffHours} jam`;
+    }
+    
+    const diffDays = Math.floor(diffHours / 24);
+    const remainingHours = diffHours % 24;
+    return remainingHours > 0 ? `${diffDays} hari ${remainingHours} jam` : `${diffDays} hari`;
+};
+
 export const formatShortDate = (value) => {
     if (!value) return '-';
     const date = new Date(value);

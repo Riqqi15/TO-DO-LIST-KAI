@@ -9,9 +9,9 @@ import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
 import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
 import { TODO_STATUSES } from '@/features/todo/constants/todo-options';
-import { deadlineMeta, formatDateTime, reminderKindLabel, reminderStatusLabel, statusDateInput, toWibDateTimeInput } from '@/features/todo/utils/todo-formatters';
+import { deadlineMeta, formatDateTime, formatDuration, reminderKindLabel, reminderStatusLabel, statusDateInput, toWibDateTimeInput } from '@/features/todo/utils/todo-formatters';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
-import { ArrowLeft, Bell, CalendarClock, LoaderCircle, Pencil, Trash2, UserRound } from '@lucide/vue';
+import { ArrowLeft, Bell, CalendarClock, CheckCircle2, Hourglass, LoaderCircle, Pencil, Play, Trash2, UserRound } from '@lucide/vue';
 import { computed, ref, watch } from 'vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 
@@ -204,6 +204,37 @@ const goBack = () => {
                     <div>
                         <p class="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Dibuat oleh</p>
                         <p class="mt-0.5 text-sm font-bold">{{ todo.creator?.name ?? 'Pengguna' }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Metadata: Work Timeline -->
+            <div v-if="todo.started_at" class="grid gap-3 sm:grid-cols-3">
+                <div class="flex items-center gap-3 rounded-lg border bg-card p-3">
+                    <div class="rounded-md bg-blue-50 p-2 text-blue-600">
+                        <Play class="size-4" />
+                    </div>
+                    <div>
+                        <p class="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Mulai Dikerjakan</p>
+                        <p class="mt-0.5 font-mono text-xs font-medium">{{ formatDateTime(todo.started_at) }} WIB</p>
+                    </div>
+                </div>
+                <div v-if="todo.completed_at" class="flex items-center gap-3 rounded-lg border bg-card p-3">
+                    <div class="rounded-md bg-emerald-50 p-2 text-emerald-600">
+                        <CheckCircle2 class="size-4" />
+                    </div>
+                    <div>
+                        <p class="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Selesai Dikerjakan</p>
+                        <p class="mt-0.5 font-mono text-xs font-medium">{{ formatDateTime(todo.completed_at) }} WIB</p>
+                    </div>
+                </div>
+                <div v-if="todo.started_at && todo.completed_at" class="flex items-center gap-3 rounded-lg border bg-card p-3">
+                    <div class="rounded-md bg-amber-50 p-2 text-amber-600">
+                        <Hourglass class="size-4" />
+                    </div>
+                    <div>
+                        <p class="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Durasi Pengerjaan</p>
+                        <p class="mt-0.5 font-mono text-xs font-medium">{{ formatDuration(todo.started_at, todo.completed_at) }}</p>
                     </div>
                 </div>
             </div>
