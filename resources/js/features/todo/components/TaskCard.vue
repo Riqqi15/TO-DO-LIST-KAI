@@ -50,7 +50,7 @@ const statusDate = computed(() => statusDateMeta(props.todo));
 
             <div class="mt-4 flex items-center justify-between gap-3 border-t border-border/70 pt-3" @click.stop>
                 <NativeSelect
-                    class="h-8 min-w-0 border-0 bg-transparent px-0 pr-7 text-xs font-bold shadow-none focus-visible:ring-0"
+                    class="h-8 min-w-0 border-0 pl-3 pr-7 text-xs font-bold shadow-none focus-visible:ring-0 rounded-md"
                     :class="statusTone(todo.status)"
                     :model-value="todo.status"
                     aria-label="Ubah status task"
