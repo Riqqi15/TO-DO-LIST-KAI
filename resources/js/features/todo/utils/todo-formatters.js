@@ -13,6 +13,7 @@ export const formatDateTime = (value) => {
     const date = new Date(value);
     if (Number.isNaN(date.getTime())) return value;
     return new Intl.DateTimeFormat('id-ID', {
+        weekday: 'long',
         day: '2-digit',
         month: 'short',
         year: 'numeric',
@@ -26,6 +27,7 @@ export const formatShortDate = (value) => {
     if (!value) return '-';
     const date = new Date(value);
     return new Intl.DateTimeFormat('id-ID', {
+        weekday: 'long',
         day: '2-digit',
         month: 'short',
         year: 'numeric',
