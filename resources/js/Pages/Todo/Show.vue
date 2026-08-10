@@ -153,7 +153,11 @@ const addNote = () => noteForm.post(`/todos/${todo.value.id}/notes`, { preserveS
 const deleteNote = (note) => router.delete(`/notes/${note.id}`, { preserveScroll: true });
 
 const goBack = () => {
-    window.history.back();
+    if (window.history.length > 1) {
+        window.history.back();
+    } else {
+        router.visit('/todos');
+    }
 };
 </script>
 
