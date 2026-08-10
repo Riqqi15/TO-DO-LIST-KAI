@@ -28,21 +28,30 @@ class UpdateTodo
             throw ValidationException::withMessages(['category_id' => 'Kategori tidak tersedia pada workspace ini.']);
         }
         $deadline = Carbon::parse($data['deadline_at'], 'Asia/Jakarta')->utc();
-        if ($deadline->lt(now()->addMinutes(5))) {
+        $deadlineChanged = ! $todo->deadline_at->equalTo($deadline);
+        
+        if ($deadlineChanged && $deadline->lt(now()->addMinutes(5))) {
             throw ValidationException::withMessages(['deadline_at' => 'Deadline minimal 5 menit dari sekarang.']);
         }
 
-        return DB::transaction(function () use ($todo, $actor, $category, $data, $deadline, $manualReminderTimes) {
+        return DB::transaction(function () use ($todo, $actor, $category, $data, $deadline, $manualReminderTimes, $deadlineChanged) {
             $old = $todo->only(['title', 'description', 'category_id', 'deadline_at']);
             $todo->update(['category_id' => $category->id, 'title' => $data['title'], 'description' => $data['description'] ?? null, 'deadline_at' => $deadline]);
-            $todo->reminders()->where('kind', ReminderKind::Manual->value)->where('scheduled_at', '>=', $deadline)->update(['status' => ReminderStatus::Cancelled->value, 'cancelled_at' => now()]);
+            
+            if ($deadlineChanged) {
+                $todo->reminders()->where('kind', ReminderKind::Manual->value)->where('scheduled_at', '>=', $deadline)->update(['status' => ReminderStatus::Cancelled->value, 'cancelled_at' => now()]);
+            }
+            
             $automaticCount = $this->automatic->handle($todo);
             foreach ($manualReminderTimes as $time) {
                 $this->manual->handle($todo, $actor, Carbon::parse($time, 'Asia/Jakarta')->utc());
             }
-            $manualCount = $todo->reminders()->where('kind', ReminderKind::Manual->value)->where('status', ReminderStatus::Scheduled->value)->where('scheduled_at', '>', now())->count();
-            if ($automaticCount === 0 && $manualCount === 0) {
-                throw ValidationException::withMessages(['manual_reminders' => 'Deadline ini memerlukan minimal satu reminder manual.']);
+            
+            if ($deadlineChanged) {
+                $manualCount = $todo->reminders()->where('kind', ReminderKind::Manual->value)->where('status', ReminderStatus::Scheduled->value)->where('scheduled_at', '>', now())->count();
+                if ($automaticCount === 0 && $manualCount === 0) {
+                    throw ValidationException::withMessages(['manual_reminders' => 'Deadline ini memerlukan minimal satu reminder manual.']);
+                }
             }
             $this->activity->handle($todo->workspace, $actor, 'todo.updated', $todo, null, ['old' => $old, 'new' => $todo->only(['title', 'description', 'category_id', 'deadline_at'])]);
 
