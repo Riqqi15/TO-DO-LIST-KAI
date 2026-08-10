@@ -14,6 +14,7 @@ const events = ref([]);
 const loading = ref(false);
 const error = ref('');
 const hoveredEventId = ref(null);
+const statusFilter = ref('all');
 
 const monthOnlyLabel = computed(() => new Intl.DateTimeFormat('id-ID', { month: 'long' }).format(cursor.value));
 
@@ -70,7 +71,9 @@ const weeks = computed(() => {
         const weekEvents = events.value.filter(e => {
             const startKey = e.start_date || e.deadline_wib?.slice(0, 10);
             const endKey = e.end_date || e.deadline_wib?.slice(0, 10);
-            return startKey <= weekEndKey && endKey >= weekStartKey;
+            const dateMatch = startKey <= weekEndKey && endKey >= weekStartKey;
+            const statusMatch = statusFilter.value === 'all' || e.status === statusFilter.value;
+            return dateMatch && statusMatch;
         }).sort((a, b) => {
             const startA = a.start_date || a.deadline_wib?.slice(0, 10);
             const startB = b.start_date || b.deadline_wib?.slice(0, 10);
@@ -172,6 +175,18 @@ onMounted(loadEvents);
                 <p class="text-xs text-slate-400 mt-0.5">Progress tracking dengan rentang tanggal. Deadline WIB.</p>
             </div>
             <div class="flex items-center gap-2">
+                <Select v-model="statusFilter">
+                    <SelectTrigger class="h-8 w-[150px] text-xs font-semibold text-slate-700 border-slate-200/80 shadow-none bg-white hover:bg-slate-50 focus:ring-0">
+                        <SelectValue placeholder="Semua Status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="all">Semua Status</SelectItem>
+                        <SelectItem value="belum_dikerjakan">Belum Dikerjakan</SelectItem>
+                        <SelectItem value="sedang_dikerjakan">Sedang Dikerjakan</SelectItem>
+                        <SelectItem value="selesai">Selesai</SelectItem>
+                    </SelectContent>
+                </Select>
+                <div class="w-px h-5 bg-slate-200/80 mx-1"></div>
                 <Button variant="outline" size="icon-sm" class="size-8 rounded-lg border-slate-200/80 shadow-none hover:bg-slate-50" aria-label="Bulan sebelumnya" @click="moveMonth(-1)">
                     <ChevronLeft class="size-4 text-slate-600" />
                 </Button>
