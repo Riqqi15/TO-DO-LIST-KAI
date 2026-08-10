@@ -72,6 +72,11 @@ const durationWorked = computed(() => {
                     <p class="text-sm leading-relaxed whitespace-pre-wrap text-slate-800">{{ todo.description }}</p>
                 </div>
 
+                <div v-if="todo.status === 'selesai' && todo.result_notes" class="rounded-xl border p-4 bg-slate-50/50">
+                    <p class="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2">Hasil Kegiatan</p>
+                    <p class="text-sm leading-relaxed whitespace-pre-wrap text-slate-800">{{ todo.result_notes }}</p>
+                </div>
+
                 <div class="flex items-center gap-3 rounded-xl border p-3">
                     <CalendarClock class="size-4 text-primary" />
                     <div>
@@ -142,10 +147,6 @@ const durationWorked = computed(() => {
                         <p class="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Dibuat pada</p>
                         <p class="mt-0.5 font-mono text-xs font-medium">{{ formatDateTime(todo.created_at) }} WIB</p>
                     </div>
-                </div>
-                <div v-if="todo.status === 'selesai' && todo.result_notes" class="mt-4 rounded-xl bg-slate-50/50 p-4 border">
-                    <p class="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">Hasil Kegiatan</p>
-                    <p class="text-sm leading-relaxed whitespace-pre-wrap">{{ todo.result_notes }}</p>
                 </div>
             </div>
 
