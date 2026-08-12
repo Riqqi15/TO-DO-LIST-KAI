@@ -3,6 +3,7 @@
 namespace App\Notifications\Todo;
 
 use App\Domain\Todo\Models\Todo;
+use App\Support\Wib;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
@@ -20,7 +21,7 @@ class TodoReminderNotification extends Notification
 
     public function toMail(object $notifiable): MailMessage
     {
-        $deadlineWib = $this->todo->deadline_at->copy()->timezone('Asia/Jakarta')->format('d M Y H:i').' WIB';
+        $deadlineWib = Wib::format($this->todo->deadline_at, 'd M Y H:i').' WIB';
 
         return (new MailMessage)
             ->subject('Reminder task: '.$this->todo->title)

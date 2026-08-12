@@ -5,20 +5,20 @@ namespace App\Domain\Reminder\Actions;
 use App\Domain\ActivityLog\Actions\RecordActivity;
 use App\Domain\Reminder\Enums\ReminderKind;
 use App\Domain\Reminder\Models\TodoReminder;
+use App\Domain\Shared\Concerns\AuthorizesDomainAction;
 use App\Models\User;
-use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Validation\ValidationException;
 
 class DeleteManualReminder
 {
+    use AuthorizesDomainAction;
+
     public function __construct(private RecordActivity $activity) {}
 
     public function handle(TodoReminder $reminder, User $actor): void
     {
         $todo = $reminder->todo;
-        if (! $actor->can('update', $todo)) {
-            throw new AuthorizationException;
-        }
+        $this->authorizeAbility($actor, 'update', $todo);
         if ($reminder->kind !== ReminderKind::Manual) {
             throw ValidationException::withMessages(['reminder' => 'Reminder otomatis tidak dapat dihapus manual.']);
         }

@@ -3,22 +3,22 @@
 namespace App\Domain\StickyNote\Actions;
 
 use App\Domain\ActivityLog\Actions\RecordActivity;
+use App\Domain\Shared\Concerns\AuthorizesDomainAction;
 use App\Domain\StickyNote\Models\StickyNote;
 use App\Domain\Workspace\Models\Workspace;
 use App\Models\User;
-use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class ReorderPinnedStickyNotes
 {
+    use AuthorizesDomainAction;
+
     public function __construct(private RecordActivity $activity) {}
 
     public function handle(Workspace $workspace, User $actor, array $noteIds): void
     {
-        if (! $workspace->hasMember($actor)) {
-            throw new AuthorizationException;
-        }
+        $this->authorizeWorkspaceMember($workspace, $actor);
 
         DB::transaction(function () use ($workspace, $actor, $noteIds) {
             $pinned = StickyNote::query()

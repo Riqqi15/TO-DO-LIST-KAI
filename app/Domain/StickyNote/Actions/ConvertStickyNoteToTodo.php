@@ -4,23 +4,23 @@ namespace App\Domain\StickyNote\Actions;
 
 use App\Domain\ActivityLog\Actions\RecordActivity;
 use App\Domain\Category\Models\Category;
+use App\Domain\Shared\Concerns\AuthorizesDomainAction;
 use App\Domain\StickyNote\Models\StickyNote;
 use App\Domain\Todo\Actions\CreateTodo;
 use App\Domain\Todo\Models\Todo;
 use App\Models\User;
-use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class ConvertStickyNoteToTodo
 {
+    use AuthorizesDomainAction;
+
     public function __construct(private CreateTodo $createTodo, private RecordActivity $activity) {}
 
     public function handle(StickyNote $note, User $actor, Category $category, array $data, array $manualReminders = []): Todo
     {
-        if (! $actor->can('update', $note)) {
-            throw new AuthorizationException;
-        }
+        $this->authorizeAbility($actor, 'update', $note);
         if ($note->converted_to_todo_id) {
             throw ValidationException::withMessages(['note' => 'Catatan ini sudah pernah dijadikan task.']);
         }

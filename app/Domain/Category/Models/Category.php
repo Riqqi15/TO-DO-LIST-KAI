@@ -5,6 +5,7 @@ namespace App\Domain\Category\Models;
 use App\Domain\Todo\Models\Todo;
 use App\Domain\Workspace\Models\Workspace;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -16,6 +17,17 @@ class Category extends Model
     protected function casts(): array
     {
         return ['is_system' => 'boolean'];
+    }
+
+    /**
+     * System categories plus the custom categories of a single workspace.
+     */
+    public function scopeAvailableForWorkspace(Builder $query, Workspace $workspace): void
+    {
+        $query->where('is_system', true)
+            ->orWhere('workspace_id', $workspace->id)
+            ->orderByDesc('is_system')
+            ->orderBy('name');
     }
 
     public function workspace(): BelongsTo

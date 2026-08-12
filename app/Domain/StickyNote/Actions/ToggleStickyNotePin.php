@@ -3,20 +3,20 @@
 namespace App\Domain\StickyNote\Actions;
 
 use App\Domain\ActivityLog\Actions\RecordActivity;
+use App\Domain\Shared\Concerns\AuthorizesDomainAction;
 use App\Domain\StickyNote\Models\StickyNote;
 use App\Models\User;
-use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\DB;
 
 class ToggleStickyNotePin
 {
+    use AuthorizesDomainAction;
+
     public function __construct(private RecordActivity $activity) {}
 
     public function handle(StickyNote $note, User $actor): StickyNote
     {
-        if (! $actor->can('update', $note)) {
-            throw new AuthorizationException;
-        }
+        $this->authorizeAbility($actor, 'update', $note);
 
         return DB::transaction(function () use ($note, $actor) {
             $lockedNote = StickyNote::query()->lockForUpdate()->findOrFail($note->id);

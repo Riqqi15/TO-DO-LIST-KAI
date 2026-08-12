@@ -3,10 +3,12 @@
 namespace App\Domain\Todo\Models;
 
 use App\Domain\Category\Models\Category;
+use App\Domain\Reminder\Enums\ReminderStatus;
 use App\Domain\Reminder\Models\TodoReminder;
 use App\Domain\Todo\Enums\TodoStatus;
 use App\Domain\Workspace\Models\Workspace;
 use App\Models\User;
+use DateTimeInterface;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -37,7 +39,18 @@ class Todo extends Model
 
     public function reminders(): HasMany
     {
-        return $this->hasMany(\App\Domain\Reminder\Models\TodoReminder::class);
+        return $this->hasMany(TodoReminder::class);
+    }
+
+    /**
+     * Cancel manual reminders scheduled at or after the given moment.
+     */
+    public function cancelManualRemindersFrom(DateTimeInterface $from): void
+    {
+        $this->reminders()
+            ->manual()
+            ->where('scheduled_at', '>=', $from)
+            ->update(['status' => ReminderStatus::Cancelled->value, 'cancelled_at' => now()]);
     }
 
     public function notes(): HasMany

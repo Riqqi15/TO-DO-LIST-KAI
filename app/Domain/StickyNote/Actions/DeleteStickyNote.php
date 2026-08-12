@@ -3,19 +3,19 @@
 namespace App\Domain\StickyNote\Actions;
 
 use App\Domain\ActivityLog\Actions\RecordActivity;
+use App\Domain\Shared\Concerns\AuthorizesDomainAction;
 use App\Domain\StickyNote\Models\StickyNote;
 use App\Models\User;
-use Illuminate\Auth\Access\AuthorizationException;
 
 class DeleteStickyNote
 {
+    use AuthorizesDomainAction;
+
     public function __construct(private RecordActivity $activity) {}
 
     public function handle(StickyNote $note, User $actor): void
     {
-        if (! $actor->can('delete', $note)) {
-            throw new AuthorizationException;
-        }
+        $this->authorizeAbility($actor, 'delete', $note);
         $this->activity->handle($note->workspace, $actor, 'sticky_note.deleted', $note, $note->only(['id', 'content', 'color']));
         $note->delete();
     }

@@ -6,22 +6,22 @@ use App\Domain\ActivityLog\Actions\RecordActivity;
 use App\Domain\Reminder\Enums\ReminderKind;
 use App\Domain\Reminder\Enums\ReminderStatus;
 use App\Domain\Reminder\Models\TodoReminder;
+use App\Domain\Shared\Concerns\AuthorizesDomainAction;
 use App\Domain\Todo\Enums\TodoStatus;
 use App\Domain\Todo\Models\Todo;
 use App\Models\User;
-use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Carbon;
 use Illuminate\Validation\ValidationException;
 
 class CreateManualReminder
 {
+    use AuthorizesDomainAction;
+
     public function __construct(private RecordActivity $activity) {}
 
     public function handle(Todo $todo, User $actor, Carbon $scheduledAt): TodoReminder
     {
-        if (! $actor->can('update', $todo)) {
-            throw new AuthorizationException;
-        }
+        $this->authorizeAbility($actor, 'update', $todo);
         if ($todo->status === TodoStatus::Selesai) {
             throw ValidationException::withMessages(['scheduled_at' => 'Task selesai tidak dapat memiliki reminder aktif.']);
         }

@@ -4,19 +4,19 @@ namespace App\Domain\Category\Actions;
 
 use App\Domain\ActivityLog\Actions\RecordActivity;
 use App\Domain\Category\Models\Category;
+use App\Domain\Shared\Concerns\AuthorizesDomainAction;
 use App\Models\User;
-use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Validation\ValidationException;
 
 class DeleteCategory
 {
+    use AuthorizesDomainAction;
+
     public function __construct(private RecordActivity $activity) {}
 
     public function handle(Category $category, User $actor): void
     {
-        if (! $actor->can('delete', $category)) {
-            throw new AuthorizationException;
-        }
+        $this->authorizeAbility($actor, 'delete', $category);
         if ($category->todos()->exists()) {
             throw ValidationException::withMessages(['category' => 'Kategori tidak dapat dihapus selama masih digunakan task.']);
         }

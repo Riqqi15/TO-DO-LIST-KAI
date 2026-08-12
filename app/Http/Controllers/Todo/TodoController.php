@@ -14,9 +14,9 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Todo\ChangeTodoStatusRequest;
 use App\Http\Requests\Todo\StoreTodoRequest;
 use App\Http\Requests\Todo\UpdateTodoRequest;
+use App\Support\Wib;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Carbon;
 
 class TodoController extends Controller
 {
@@ -38,7 +38,7 @@ class TodoController extends Controller
 
     public function status(ChangeTodoStatusRequest $request, Todo $todo, ChangeTodoStatus $action): RedirectResponse
     {
-        $statusAt = Carbon::parse($request->validated('status_at'), 'Asia/Jakarta')->utc();
+        $statusAt = Wib::toUtc($request->validated('status_at'));
         $action->handle(
             $todo, 
             $request->user(), 

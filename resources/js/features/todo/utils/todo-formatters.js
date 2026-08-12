@@ -1,4 +1,7 @@
 import { TODO_STATUSES } from '@/features/todo/constants/todo-options';
+import { durationBetween, formatWibDateTime, toWibDateTimeInput } from '@/lib/wib';
+
+export { toWibDateTimeInput };
 
 export const statusLabel = (status) => TODO_STATUSES.find((item) => item.value === status)?.label ?? status;
 
@@ -10,71 +13,23 @@ export const statusTone = (status) => ({
 
 export const formatDateTime = (value) => {
     if (!value) return '-';
-    const date = new Date(value);
-    if (Number.isNaN(date.getTime())) return value;
-    return new Intl.DateTimeFormat('id-ID', {
-        weekday: 'long',
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-        timeZone: 'Asia/Jakarta',
-    }).format(date).replace('.', ':');
+
+    return formatWibDateTime(value) ?? value;
 };
+
+export const formatShortDate = formatDateTime;
 
 export const formatDuration = (start, end) => {
     if (!start) return '-';
-    const startDate = new Date(start);
-    const endDate = end ? new Date(end) : new Date();
-    const diffMs = endDate.getTime() - startDate.getTime();
-    if (diffMs < 0) return 'Tidak valid';
-
-    const totalMins = Math.floor(diffMs / 60000);
-
-    const days = Math.floor(totalMins / (24 * 60));
-    const hours = Math.floor((totalMins % (24 * 60)) / 60);
-    const mins = totalMins % 60;
+    const duration = durationBetween(start, end ?? new Date());
+    if (!duration) return 'Tidak valid';
 
     const parts = [];
-    if (days > 0) parts.push(`${days} hari`);
-    
-    if (days === 0 || hours > 0) {
-        parts.push(`${hours} jam`);
-    }
-    
-    parts.push(`${mins} menit`);
-    
+    if (duration.days > 0) parts.push(`${duration.days} hari`);
+    if (duration.days === 0 || duration.hours > 0) parts.push(`${duration.hours} jam`);
+    parts.push(`${duration.minutes} menit`);
+
     return parts.join(' ');
-};
-
-export const formatShortDate = (value) => {
-    if (!value) return '-';
-    const date = new Date(value);
-    return new Intl.DateTimeFormat('id-ID', {
-        weekday: 'long',
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-        timeZone: 'Asia/Jakarta',
-    }).format(date).replace('.', ':');
-};
-
-export const toWibDateTimeInput = (value = new Date()) => {
-    const date = value instanceof Date ? value : new Date(value);
-    if (Number.isNaN(date.getTime())) return '';
-    const parts = Object.fromEntries(new Intl.DateTimeFormat('en-CA', {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-        hourCycle: 'h23',
-        timeZone: 'Asia/Jakarta',
-    }).formatToParts(date).map(({ type, value: part }) => [type, part]));
-    return `${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}`;
 };
 
 export const statusDateMeta = (todo) => {

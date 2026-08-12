@@ -3,20 +3,20 @@
 namespace App\Domain\Workspace\Actions;
 
 use App\Domain\ActivityLog\Actions\RecordActivity;
+use App\Domain\Shared\Concerns\AuthorizesDomainAction;
 use App\Domain\Workspace\Models\Workspace;
 use App\Models\User;
-use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Validation\ValidationException;
 
 class UpdateTeamCapacity
 {
+    use AuthorizesDomainAction;
+
     public function __construct(private RecordActivity $activity) {}
 
     public function handle(Workspace $workspace, User $actor, int $limit): Workspace
     {
-        if (! $workspace->isTeam() || ! $workspace->isOwner($actor)) {
-            throw new AuthorizationException;
-        }
+        $this->authorizeTeamOwner($workspace, $actor);
         if (! in_array($limit, [5, 10], true)) {
             throw ValidationException::withMessages(['member_limit' => 'Kapasitas tim hanya dapat diatur menjadi 5 atau 10 anggota.']);
         }

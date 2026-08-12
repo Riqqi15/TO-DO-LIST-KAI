@@ -3,20 +3,20 @@
 namespace App\Domain\Workspace\Actions;
 
 use App\Domain\ActivityLog\Actions\RecordActivity;
+use App\Domain\Shared\Concerns\AuthorizesDomainAction;
 use App\Domain\Workspace\Models\Workspace;
 use App\Models\User;
-use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Validation\ValidationException;
 
 class RemoveTeamMember
 {
+    use AuthorizesDomainAction;
+
     public function __construct(private RecordActivity $activity) {}
 
     public function handle(Workspace $workspace, User $owner, User $member): void
     {
-        if (! $workspace->isTeam() || ! $workspace->isOwner($owner)) {
-            throw new AuthorizationException;
-        }
+        $this->authorizeTeamOwner($workspace, $owner);
         if ($owner->is($member)) {
             throw ValidationException::withMessages(['user_id' => 'Pemilik harus memindahkan kepemilikan sebelum keluar.']);
         }

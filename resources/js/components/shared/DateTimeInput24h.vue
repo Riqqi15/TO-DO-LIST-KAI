@@ -1,6 +1,7 @@
 <script setup>
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
+import { wibDateTimeParts } from '@/lib/wib';
 import { Clock } from '@lucide/vue';
 import { computed, ref, watch } from 'vue';
 
@@ -55,14 +56,9 @@ const incMinute = () => { minuteVal.value = (minuteVal.value + 1) % 60; emitUpda
 const decMinute = () => { minuteVal.value = (minuteVal.value - 1 + 60) % 60; emitUpdate(); };
 
 const setNow = () => {
-    const now = new Date();
-    const parts = new Intl.DateTimeFormat('en-CA', {
-        hour: '2-digit', minute: '2-digit', hourCycle: 'h23', timeZone: 'Asia/Jakarta',
-    }).formatToParts(now);
-    const h = parts.find(p => p.type === 'hour')?.value ?? '0';
-    const m = parts.find(p => p.type === 'minute')?.value ?? '0';
-    hourVal.value = Number(h);
-    minuteVal.value = Number(m);
+    const parts = wibDateTimeParts();
+    hourVal.value = Number(parts.hour);
+    minuteVal.value = Number(parts.minute);
     emitUpdate();
 };
 

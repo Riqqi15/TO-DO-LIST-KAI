@@ -3,22 +3,22 @@
 namespace App\Domain\Workspace\Actions;
 
 use App\Domain\ActivityLog\Actions\RecordActivity;
+use App\Domain\Shared\Concerns\AuthorizesDomainAction;
 use App\Domain\Workspace\Models\TeamInvite;
 use App\Domain\Workspace\Models\Workspace;
 use App\Models\User;
-use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class GenerateTeamInviteCode
 {
+    use AuthorizesDomainAction;
+
     public function __construct(private RecordActivity $activity) {}
 
     public function handle(Workspace $workspace, User $actor): array
     {
-        if (! $workspace->isTeam() || ! $workspace->isOwner($actor)) {
-            throw new AuthorizationException;
-        }
+        $this->authorizeTeamOwner($workspace, $actor);
 
         return DB::transaction(function () use ($workspace, $actor) {
             $workspace->invites()->whereNull('revoked_at')->update(['revoked_at' => now()]);
