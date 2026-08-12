@@ -5,11 +5,13 @@ namespace App\Http\Controllers\Todo;
 use App\Domain\ActivityLog\Models\ActivityLog;
 use App\Domain\Category\Models\Category;
 use App\Domain\StickyNote\Models\StickyNote;
+use App\Domain\Todo\Enums\TodoStatus;
 use App\Domain\Todo\Models\Todo;
 use App\Domain\Workspace\Models\Workspace;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -17,6 +19,12 @@ class TodoPageController extends Controller
 {
     public function index(Request $request): Response
     {
+        $request->validate([
+            'workspace' => ['sometimes', 'integer'],
+            'status' => ['sometimes', Rule::enum(TodoStatus::class)],
+            'category' => ['sometimes', 'integer'],
+        ]);
+
         $workspaces = Workspace::query()
             ->whereHas('membershipRows', fn ($query) => $query->where('user_id', $request->user()->id))
             ->with(['members:id,name,email'])
