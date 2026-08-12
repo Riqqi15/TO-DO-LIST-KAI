@@ -16,8 +16,8 @@ Route::get('/app', [TodoPageController::class, 'index'])
     ->name('todo.index');
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::put('/profile', [ProfileController::class, 'updateProfile'])->name('profile.update');
-    Route::put('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password.update');
+    Route::put('/profile', [ProfileController::class, 'updateProfile'])->middleware('throttle:10,1')->name('profile.update');
+    Route::put('/profile/password', [ProfileController::class, 'updatePassword'])->middleware('throttle:6,1')->name('profile.password.update');
     Route::post('/teams', [TeamController::class, 'store'])->name('teams.store');
     Route::post('/teams/join', [TeamController::class, 'join'])->middleware('throttle:10,1')->name('teams.join');
     Route::post('/workspaces/{workspace}/invite', [TeamController::class, 'generateInvite'])->middleware('throttle:10,1')->name('teams.invite');
