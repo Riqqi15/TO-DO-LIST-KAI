@@ -16,6 +16,7 @@ import TaskList from '@/features/todo/components/TaskList.vue';
 import { TODO_STATUSES } from '@/features/todo/constants/todo-options';
 import { deadlineMeta } from '@/features/todo/utils/todo-formatters';
 import AppLayout from '@/layouts/AppLayout.vue';
+import { notifyRequestError } from '@/lib/request-errors';
 import { router, usePage } from '@inertiajs/vue3';
 import { Activity, ArrowDownNarrowWide, CalendarDays, CheckCircle2, CircleDashed, Clock, FileText, Filter, FlaskConical, Globe, Hourglass, LayoutGrid, MessageSquareQuote, PanelLeft, Plus, Search, Sparkles, UserPlus, List, Circle, CircleDot, SlidersHorizontal } from '@lucide/vue';
 import { useSessionStorage } from '@vueuse/core';
@@ -78,7 +79,11 @@ const editTodo = (todo) => { selectedTodo.value = todo; formTodo.value = todo; f
 const openTodo = (todo) => router.visit(`/todos/${todo.id}`);
 const openCalendarTodo = (todo) => router.visit(`/todos/${todo.id}`);
 const askDeleteTodo = (todo) => { selectedTodo.value = todo; deleteOpen.value = true; };
-const deleteTodo = () => router.delete(`/todos/${selectedTodo.value.id}`, { preserveScroll: true, onSuccess: () => { deleteOpen.value = false; selectedTodo.value = null; } });
+const deleteTodo = () => router.delete(`/todos/${selectedTodo.value.id}`, {
+    preserveScroll: true,
+    onSuccess: () => { deleteOpen.value = false; selectedTodo.value = null; },
+    onError: (errors) => notifyRequestError(errors, 'Task tidak dapat dihapus.'),
+});
 const changeStatus = (todo, nextStatus) => {
     router.visit(`/todos/${todo.id}`);
 };

@@ -9,11 +9,11 @@ import { Label } from '@/components/ui/label';
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
 import { Textarea } from '@/components/ui/textarea';
 import StickyNoteCard from '@/features/todo/components/StickyNoteCard.vue';
+import { notifyRequestError } from '@/lib/request-errors';
 import { router, useForm } from '@inertiajs/vue3';
 import { LoaderCircle, Pin, Plus, Search, StickyNote } from '@lucide/vue';
 import Sortable from 'sortablejs';
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
-import { toast } from 'vue-sonner';
 
 const props = defineProps({
     notes: { type: Array, default: () => [] },
@@ -99,9 +99,9 @@ const initializeSortable = () => {
             reorderProcessing.value = true;
             router.patch(`/workspaces/${props.workspaceId}/sticky-notes/reorder`, { note_ids: orderedIds }, {
                 preserveScroll: true,
-                onError: () => {
+                onError: (errors) => {
                     localNotes.value = previous;
-                    toast.error('Urutan pin tidak tersimpan. Posisi sebelumnya dipulihkan.');
+                    notifyRequestError(errors, 'Urutan pin tidak tersimpan. Posisi sebelumnya dipulihkan.');
                 },
                 onFinish: () => {
                     reorderProcessing.value = false;
@@ -134,7 +134,13 @@ const openEdit = (note) => {
     editorOpen.value = true;
 };
 const submit = () => {
-    const options = { preserveScroll: true, onSuccess: () => { editorOpen.value = false; form.reset(); } };
+    const options = {
+        preserveScroll: true,
+        onSuccess: () => { editorOpen.value = false; form.reset(); },
+        onError: (errors) => {
+            if (!errors.content) notifyRequestError(errors, 'Sticky note tidak dapat disimpan.');
+        },
+    };
     if (selected.value) form.patch(`/sticky-notes/${selected.value.id}`, options);
     else form.post(`/workspaces/${props.workspaceId}/sticky-notes`, options);
 };
@@ -142,12 +148,16 @@ const togglePin = (note) => {
     pinBusyId.value = note.id;
     router.patch(`/sticky-notes/${note.id}/pin`, {}, {
         preserveScroll: true,
-        onError: () => toast.error('Status pin tidak dapat diubah.'),
+        onError: (errors) => notifyRequestError(errors, 'Status pin tidak dapat diubah.'),
         onFinish: () => { pinBusyId.value = null; },
     });
 };
 const confirmDelete = (note) => { selected.value = note; deleteOpen.value = true; };
-const remove = () => router.delete(`/sticky-notes/${selected.value.id}`, { preserveScroll: true, onSuccess: () => { deleteOpen.value = false; } });
+const remove = () => router.delete(`/sticky-notes/${selected.value.id}`, {
+    preserveScroll: true,
+    onSuccess: () => { deleteOpen.value = false; },
+    onError: (errors) => notifyRequestError(errors, 'Sticky note tidak dapat dihapus.'),
+});
 </script>
 
 <template>

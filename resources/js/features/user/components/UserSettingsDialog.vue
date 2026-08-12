@@ -5,6 +5,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { notifyRequestError } from '@/lib/request-errors';
 import { useForm } from '@inertiajs/vue3';
 import { KeyRound, LoaderCircle, User } from '@lucide/vue';
 import { ref, watch } from 'vue';
@@ -45,6 +46,9 @@ const submitProfile = () => {
         onSuccess: () => {
             profileForm.clearErrors();
         },
+        onError: (errors) => {
+            if (!errors.name && !errors.email) notifyRequestError(errors, 'Profil tidak dapat diperbarui.');
+        },
     });
 };
 
@@ -54,6 +58,9 @@ const submitPassword = () => {
         onSuccess: () => {
             passwordForm.reset();
             passwordForm.clearErrors();
+        },
+        onError: (errors) => {
+            if (!errors.current_password && !errors.password) notifyRequestError(errors, 'Kata sandi tidak dapat diperbarui.');
         },
     });
 };
