@@ -5,6 +5,8 @@ namespace App\Jobs;
 use App\Domain\Reminder\Actions\SendDueReminders;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
+use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class ProcessDueReminders implements ShouldQueue
 {
@@ -17,5 +19,12 @@ class ProcessDueReminders implements ShouldQueue
     public function handle(SendDueReminders $action): void
     {
         $action->handle();
+    }
+
+    public function failed(?Throwable $exception): void
+    {
+        Log::error('Job pengiriman reminder gagal setelah semua percobaan.', [
+            'exception' => $exception?->getMessage(),
+        ]);
     }
 }

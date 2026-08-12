@@ -1,5 +1,6 @@
 <script setup>
 import FieldError from '@/components/shared/FieldError.vue';
+import { notifyRequestError } from '@/lib/request-errors';
 import {
     AlertDialog,
     AlertDialogAction,
@@ -67,7 +68,9 @@ const saveStoredInvite = (teamId, code, expiresAt) => {
             code,
             expires_at: expiresAt || new Date(Date.now() + 5 * 60 * 1000).toISOString(),
         }));
-    } catch {}
+    } catch (exception) {
+        console.warn('Kode tim tidak dapat disimpan ke localStorage:', exception);
+    }
 };
 
 const loadStoredInvite = (teamId) => {
@@ -81,7 +84,10 @@ const loadStoredInvite = (teamId) => {
         } else {
             localStorage.removeItem(`kai_invite_${teamId}`);
         }
-    } catch {}
+    } catch (exception) {
+        console.warn('Kode tim tersimpan tidak dapat dibaca dan akan dibuang:', exception);
+        localStorage.removeItem(`kai_invite_${teamId}`);
+    }
     return '';
 };
 
@@ -252,12 +258,16 @@ const deleteCategory = () => {
             categoryDeleteOpen.value = false;
             selectedCategory.value = null;
         },
+        onError: (errors) => notifyRequestError(errors, 'Kategori tidak dapat dihapus.'),
     });
 };
 
 const generateInvite = () => {
     if (!selectedTeam.value) return;
-    router.post(`/workspaces/${selectedTeam.value.id}/invite`, {}, { preserveScroll: true });
+    router.post(`/workspaces/${selectedTeam.value.id}/invite`, {}, {
+        preserveScroll: true,
+        onError: (errors) => notifyRequestError(errors, 'Kode tim tidak dapat dibuat.'),
+    });
 };
 
 const copyInvite = async () => {
@@ -266,14 +276,20 @@ const copyInvite = async () => {
     try {
         await navigator.clipboard.writeText(codeToCopy);
         toast.success('Kode tim disalin.');
-    } catch {
+    } catch (exception) {
+        console.error('Clipboard gagal menyalin kode tim:', exception);
         toast.error('Kode tidak dapat disalin. Salin kode secara manual.');
     }
 };
 
 const updateCapacity = () => {
     if (!selectedTeam.value) return;
-    capacityForm.patch(`/workspaces/${selectedTeam.value.id}/capacity`, { preserveScroll: true });
+    capacityForm.patch(`/workspaces/${selectedTeam.value.id}/capacity`, {
+        preserveScroll: true,
+        onError: (errors) => {
+            if (!errors.member_limit) notifyRequestError(errors, 'Kapasitas tim tidak dapat diperbarui.');
+        },
+    });
 };
 
 const leaveTeam = () => {
@@ -283,6 +299,7 @@ const leaveTeam = () => {
             leaveTeamOpen.value = false;
             selectedTeam.value = null;
         },
+        onError: (errors) => notifyRequestError(errors, 'Anda tidak dapat keluar dari tim ini.'),
     });
 };
 
@@ -296,6 +313,9 @@ const openDeleteTeam = () => {
 const deleteTeam = () => {
     if (!selectedTeam.value) return;
     deleteTeamForm.delete(`/workspaces/${selectedTeam.value.id}`, {
+        onError: (errors) => {
+            if (!errors.confirmation) notifyRequestError(errors, 'Tim tidak dapat dihapus.');
+        },
         onSuccess: () => {
             deleteTeamOpen.value = false;
             selectedTeam.value = null;

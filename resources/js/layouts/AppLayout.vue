@@ -5,8 +5,10 @@ import { Sheet, SheetContent, SheetTitle, SheetTrigger } from '@/components/ui/s
 import { Toaster } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import UserSettingsDialog from '@/features/user/components/UserSettingsDialog.vue';
+import { usePage } from '@inertiajs/vue3';
 import { Menu } from '@lucide/vue';
-import { ref } from 'vue';
+import { computed, ref, watch } from 'vue';
+import { toast } from 'vue-sonner';
 
 defineProps({
     title: { type: String, default: '' },
@@ -21,6 +23,11 @@ defineProps({
 });
 
 const emit = defineEmits(['navigate', 'switch-workspace']);
+const page = usePage();
+const flashError = computed(() => page.props.flash?.error ?? '');
+watch(flashError, (message) => {
+    if (message) toast.error(message);
+}, { immediate: true });
 const mobileOpen = ref(false);
 const sidebarOpen = ref(true); // Default open as requested
 const userSettingsOpen = ref(false);
