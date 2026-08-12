@@ -8,6 +8,7 @@ use App\Domain\Todo\Models\Todo;
 use App\Domain\Workspace\Enums\WorkspaceRole;
 use App\Domain\Workspace\Enums\WorkspaceType;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -55,6 +56,18 @@ class Workspace extends Model
     public function stickyNotes(): HasMany
     {
         return $this->hasMany(StickyNote::class);
+    }
+
+    /**
+     * Workspaces the user belongs to, ordered for the workspace switcher.
+     */
+    public function scopeForMember(Builder $query, User $user): void
+    {
+        $query->whereHas('membershipRows', fn (Builder $rows) => $rows->where('user_id', $user->id))
+            ->with(['members:id,name,email'])
+            ->withCount('membershipRows')
+            ->orderBy('type')
+            ->orderBy('name');
     }
 
     public function isTeam(): bool

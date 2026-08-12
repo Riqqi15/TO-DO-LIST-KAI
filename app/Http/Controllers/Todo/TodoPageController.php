@@ -8,6 +8,8 @@ use App\Domain\StickyNote\Models\StickyNote;
 use App\Domain\Todo\Models\Todo;
 use App\Domain\Workspace\Models\Workspace;
 use App\Http\Controllers\Controller;
+use App\Support\Wib;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -17,11 +19,7 @@ class TodoPageController extends Controller
 {
     public function index(Request $request): Response
     {
-        $workspaces = Workspace::query()
-            ->whereHas('membershipRows', fn ($query) => $query->where('user_id', $request->user()->id))
-            ->with(['members:id,name,email'])
-            ->withCount('membershipRows')
-            ->orderBy('type')->orderBy('name')->get();
+        $workspaces = Workspace::query()->forMember($request->user())->get();
 
         $workspace = $request->filled('workspace')
             ? $workspaces->firstWhere('id', $request->integer('workspace'))
@@ -33,7 +31,7 @@ class TodoPageController extends Controller
         $notes = collect();
         $activities = collect();
         if ($workspace) {
-            $categories = Category::where('is_system', true)->orWhere('workspace_id', $workspace->id)->orderByDesc('is_system')->orderBy('name')->get();
+            $categories = $this->categoriesFor($workspace);
             $todosQuery = Todo::where('workspace_id', $workspace->id)->with(['category:id,name,slug,is_system', 'creator:id,name', 'reminders', 'notes.creator'])->orderBy('deadline_at');
             if ($request->filled('status')) {
                 $todosQuery->where('status', $request->string('status')->toString());
@@ -58,7 +56,7 @@ class TodoPageController extends Controller
             'todos' => $todos,
             'stickyNotes' => $notes,
             'activities' => $activities,
-            'timezone' => 'Asia/Jakarta',
+            'timezone' => Wib::TIMEZONE,
         ]);
     }
 
@@ -67,21 +65,17 @@ class TodoPageController extends Controller
         $todo->load(['category', 'creator', 'reminders', 'notes.creator']);
         abort_unless($todo->workspace->hasMember($request->user()), 403);
 
-        $workspaces = Workspace::query()
-            ->whereHas('membershipRows', fn ($query) => $query->where('user_id', $request->user()->id))
-            ->with(['members:id,name,email'])
-            ->withCount('membershipRows')
-            ->orderBy('type')->orderBy('name')->get();
+        $workspaces = Workspace::query()->forMember($request->user())->get();
 
         $activeWorkspace = $workspaces->firstWhere('id', $todo->workspace_id);
-        $categories = Category::where('is_system', true)->orWhere('workspace_id', $activeWorkspace->id)->orderByDesc('is_system')->orderBy('name')->get();
+        $categories = $this->categoriesFor($activeWorkspace);
 
         return Inertia::render('Todo/Show', [
             'workspaces' => $workspaces,
             'activeWorkspace' => $activeWorkspace,
             'categories' => $categories,
             'todo' => $this->todoPayload($todo),
-            'timezone' => 'Asia/Jakarta',
+            'timezone' => Wib::TIMEZONE,
         ]);
     }
 
@@ -115,14 +109,19 @@ class TodoPageController extends Controller
                 'title' => $todo->title,
                 'status' => $todo->status->value,
                 'category' => $todo->category?->name,
-                'start_date' => $start->copy()->timezone('Asia/Jakarta')->format('Y-m-d'),
-                'end_date' => $end->copy()->timezone('Asia/Jakarta')->format('Y-m-d'),
+                'start_date' => Wib::formatDate($start),
+                'end_date' => Wib::formatDate($end),
                 'deadline_at' => $todo->deadline_at->toIso8601String(),
-                'deadline_wib' => $todo->deadline_at->copy()->timezone('Asia/Jakarta')->format('Y-m-d H:i'),
+                'deadline_wib' => Wib::format($todo->deadline_at),
             ];
         });
 
-        return response()->json(['timezone' => 'Asia/Jakarta', 'events' => $events]);
+        return response()->json(['timezone' => Wib::TIMEZONE, 'events' => $events]);
+    }
+
+    private function categoriesFor(Workspace $workspace): Collection
+    {
+        return Category::query()->availableForWorkspace($workspace)->get();
     }
 
     private function todoPayload(Todo $todo): array
@@ -131,7 +130,7 @@ class TodoPageController extends Controller
             ...$todo->toArray(),
             'status' => $todo->status->value,
             'deadline_at' => $todo->deadline_at->toIso8601String(),
-            'deadline_wib' => $todo->deadline_at->copy()->timezone('Asia/Jakarta')->format('Y-m-d H:i'),
+            'deadline_wib' => Wib::format($todo->deadline_at),
             'started_at' => $todo->started_at?->toIso8601String(),
             'completed_at' => $todo->completed_at?->toIso8601String(),
             'result_notes' => $todo->result_notes,

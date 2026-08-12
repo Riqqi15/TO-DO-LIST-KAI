@@ -1,5 +1,6 @@
 <script setup>
 import FieldError from '@/components/shared/FieldError.vue';
+import StatusAlert from '@/components/shared/StatusAlert.vue';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
@@ -17,7 +18,7 @@ const submit = () => form.post('/login', { onFinish: () => form.reset('password'
 <template>
     <Head title="Masuk" />
     <AuthLayout title="Masuk ke workspace" description="Kelola task pribadi dan tim dari satu dashboard.">
-        <div v-if="status" class="mb-5 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm font-medium text-emerald-800">{{ status }}</div>
+        <StatusAlert :status="status" />
         <form class="space-y-5" @submit.prevent="submit">
             <div class="space-y-2">
                 <Label for="email">Email</Label>

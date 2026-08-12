@@ -37,6 +37,8 @@ const colors = [
 ];
 const colorOrder = Object.fromEntries(colors.map((c, i) => [c.value, i]));
 const noteClass = (color) => colors.find((item) => item.value === color)?.class ?? colors[0].class;
+const byNewest = (a, b) => new Date(b.created_at) - new Date(a.created_at);
+const byColorThenNewest = (a, b) => (colorOrder[a.color] === colorOrder[b.color] ? byNewest(a, b) : colorOrder[a.color] - colorOrder[b.color]);
 
 const searchQuery = ref('');
 const colorFilter = ref('');
@@ -53,28 +55,14 @@ const displayNotes = computed(() => {
 });
 
 const pinnedNotes = computed(() => {
-    let notes = displayNotes.value.filter(n => n.pinned_at);
-    if (sortBy.value === 'color') {
-        notes.sort((a, b) => {
-            if (colorOrder[a.color] !== colorOrder[b.color]) return colorOrder[a.color] - colorOrder[b.color];
-            return new Date(b.created_at) - new Date(a.created_at);
-        });
-    } else {
-        notes.sort((a, b) => (a.pin_order ?? 0) - (b.pin_order ?? 0));
-    }
+    const notes = displayNotes.value.filter(n => n.pinned_at);
+    notes.sort(sortBy.value === 'color' ? byColorThenNewest : (a, b) => (a.pin_order ?? 0) - (b.pin_order ?? 0));
     return notes;
 });
 
 const ordinaryNotes = computed(() => {
-    let notes = displayNotes.value.filter(n => !n.pinned_at);
-    if (sortBy.value === 'color') {
-        notes.sort((a, b) => {
-            if (colorOrder[a.color] !== colorOrder[b.color]) return colorOrder[a.color] - colorOrder[b.color];
-            return new Date(b.created_at) - new Date(a.created_at);
-        });
-    } else {
-        notes.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-    }
+    const notes = displayNotes.value.filter(n => !n.pinned_at);
+    notes.sort(sortBy.value === 'color' ? byColorThenNewest : byNewest);
     return notes;
 });
 const canDragPin = computed(() => sortBy.value === 'newest' && colorFilter.value === '' && searchQuery.value === '');

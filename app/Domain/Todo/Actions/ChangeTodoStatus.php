@@ -4,29 +4,28 @@ namespace App\Domain\Todo\Actions;
 
 use App\Domain\ActivityLog\Actions\RecordActivity;
 use App\Domain\Reminder\Actions\SyncAutomaticReminders;
-use App\Domain\Reminder\Enums\ReminderKind;
 use App\Domain\Reminder\Enums\ReminderStatus;
+use App\Domain\Shared\Concerns\AuthorizesDomainAction;
 use App\Domain\Todo\Enums\TodoStatus;
 use App\Domain\Todo\Models\Todo;
+use App\Domain\Todo\Support\TodoDeadline;
 use App\Models\User;
-use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class ChangeTodoStatus
 {
+    use AuthorizesDomainAction;
+
     public function __construct(private SyncAutomaticReminders $automatic, private RecordActivity $activity) {}
 
     public function handle(Todo $todo, User $actor, TodoStatus $status, Carbon $statusAt, ?string $resultNotes = null): Todo
     {
-        if (! $actor->can('update', $todo)) {
-            throw new AuthorizationException;
-        }
+        $this->authorizeAbility($actor, 'update', $todo);
 
-        $now = now();
-        if ($status === TodoStatus::BelumDikerjakan && $statusAt->lt($now->copy()->addMinutes(5))) {
-            throw ValidationException::withMessages(['status_at' => 'Deadline minimal 5 menit dari sekarang.']);
+        if ($status === TodoStatus::BelumDikerjakan) {
+            TodoDeadline::assertLeadTime($statusAt, 'status_at');
         }
         if ($status !== TodoStatus::BelumDikerjakan && $todo->deadline_at && $statusAt->gt($todo->deadline_at)) {
             throw ValidationException::withMessages(['status_at' => 'Tanggal status tidak boleh melebihi deadline.']);
@@ -48,10 +47,7 @@ class ChangeTodoStatus
                     'completed_at' => null,
                     'result_notes' => null,
                 ]);
-                $todo->reminders()
-                    ->where('kind', ReminderKind::Manual->value)
-                    ->where('scheduled_at', '>=', $statusAt)
-                    ->update(['status' => ReminderStatus::Cancelled->value, 'cancelled_at' => now()]);
+                $todo->cancelManualRemindersFrom($statusAt);
                 $this->automatic->handle($todo);
                 $this->reactivateValidManualReminders($todo);
             } elseif ($status === TodoStatus::SedangDikerjakan) {
@@ -81,7 +77,7 @@ class ChangeTodoStatus
     private function reactivateValidManualReminders(Todo $todo): void
     {
         $todo->reminders()
-            ->where('kind', ReminderKind::Manual->value)
+            ->manual()
             ->where('scheduled_at', '>', now())
             ->where('scheduled_at', '<', $todo->deadline_at)
             ->update(['status' => ReminderStatus::Scheduled->value, 'cancelled_at' => null]);

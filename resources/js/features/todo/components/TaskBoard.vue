@@ -2,11 +2,12 @@
 import { Badge } from '@/components/ui/badge';
 import { TODO_STATUSES } from '@/features/todo/constants/todo-options';
 import TaskCard from '@/features/todo/components/TaskCard.vue';
+import { groupTodosByStatus } from '@/features/todo/utils/todo-grouping';
 import { computed } from 'vue';
 
 const props = defineProps({ todos: { type: Array, default: () => [] } });
 const emit = defineEmits(['open', 'edit', 'delete', 'status']);
-const grouped = computed(() => Object.fromEntries(TODO_STATUSES.map((status) => [status.value, props.todos.filter((todo) => todo.status === status.value)])));
+const grouped = computed(() => groupTodosByStatus(props.todos));
 </script>
 
 <template>

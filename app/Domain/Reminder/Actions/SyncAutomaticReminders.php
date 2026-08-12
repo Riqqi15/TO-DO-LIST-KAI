@@ -12,7 +12,7 @@ class SyncAutomaticReminders
 {
     public function handle(Todo $todo): int
     {
-        $todo->reminders()->whereIn('kind', [ReminderKind::AutomaticSevenDays->value, ReminderKind::AutomaticThreeDays->value])->delete();
+        $todo->reminders()->automatic()->delete();
         if ($todo->status === TodoStatus::Selesai) {
             return 0;
         }

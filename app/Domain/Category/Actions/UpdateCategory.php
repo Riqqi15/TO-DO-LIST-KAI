@@ -4,20 +4,20 @@ namespace App\Domain\Category\Actions;
 
 use App\Domain\ActivityLog\Actions\RecordActivity;
 use App\Domain\Category\Models\Category;
+use App\Domain\Shared\Concerns\AuthorizesDomainAction;
 use App\Models\User;
-use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 class UpdateCategory
 {
+    use AuthorizesDomainAction;
+
     public function __construct(private RecordActivity $activity) {}
 
     public function handle(Category $category, User $actor, string $name): Category
     {
-        if (! $actor->can('update', $category)) {
-            throw new AuthorizationException;
-        }
+        $this->authorizeAbility($actor, 'update', $category);
         $slug = Str::slug($name);
         if (Category::where('workspace_id', $category->workspace_id)->where('slug', $slug)->whereKeyNot($category->id)->exists()) {
             throw ValidationException::withMessages(['name' => 'Kategori dengan nama tersebut sudah ada.']);

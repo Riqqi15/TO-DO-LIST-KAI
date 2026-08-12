@@ -5,6 +5,7 @@ import { Card } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { byDeadlineWib, groupTodosByStatus } from '@/features/todo/utils/todo-grouping';
 import axios from 'axios';
 import { ChevronLeft, ChevronRight, LoaderCircle, RefreshCw, Zap } from '@lucide/vue';
 import { computed, onMounted, ref, watch } from 'vue';
@@ -39,13 +40,7 @@ const resetView = () => {
     statusFilter.value = 'all';
 };
 
-const tasksByStatus = computed(() => {
-    return {
-        belum_dikerjakan: props.todos.filter(t => t.status === 'belum_dikerjakan').sort((a,b) => (a.deadline_wib || '9999').localeCompare(b.deadline_wib || '9999')),
-        sedang_dikerjakan: props.todos.filter(t => t.status === 'sedang_dikerjakan').sort((a,b) => (a.deadline_wib || '9999').localeCompare(b.deadline_wib || '9999')),
-        selesai: props.todos.filter(t => t.status === 'selesai').sort((a,b) => (a.deadline_wib || '9999').localeCompare(b.deadline_wib || '9999'))
-    };
-});
+const tasksByStatus = computed(() => groupTodosByStatus(props.todos, byDeadlineWib));
 
 const jumpToSpecificTask = (task) => {
     const dateStr = task.start_date || task.deadline_wib?.slice(0, 10);
