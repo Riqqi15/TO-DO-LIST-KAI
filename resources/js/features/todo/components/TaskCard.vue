@@ -41,11 +41,20 @@ const statusDate = computed(() => statusDateMeta(props.todo));
             <h3 class="mt-3 line-clamp-2 break-words [overflow-wrap:anywhere] text-[15px] font-extrabold leading-5 tracking-[-0.015em]">{{ todo.title }}</h3>
             <p v-if="todo.description" class="mt-2 line-clamp-2 break-words [overflow-wrap:anywhere] text-xs leading-5 text-muted-foreground">{{ todo.description }}</p>
 
-            <div class="mt-4 flex items-center gap-2 text-xs" :class="statusDate.tone">
-                <CalendarClock class="size-3.5" />
-                <span class="font-semibold">{{ statusDate.label }}</span>
-                <span class="text-current/45">·</span>
-                <span class="font-mono font-medium">{{ statusDate.value ? formatShortDate(statusDate.value) : 'Belum tercatat' }}</span>
+            <div class="mt-4 space-y-1.5">
+                <div class="flex items-center gap-2 text-xs" :class="statusDate.tone">
+                    <CalendarClock class="size-3.5 shrink-0" />
+                    <span class="font-semibold">{{ statusDate.label }}</span>
+                    <span class="text-current/45">·</span>
+                    <span class="font-mono font-medium truncate">{{ statusDate.value ? formatShortDate(statusDate.value) : 'Belum tercatat' }}</span>
+                </div>
+                
+                <div v-if="todo.status === 'sedang_dikerjakan'" class="flex items-center gap-2 text-xs" :class="deadline.tone">
+                    <CalendarClock class="size-3.5 shrink-0" />
+                    <span class="font-semibold">Deadline</span>
+                    <span class="text-current/45">·</span>
+                    <span class="font-mono font-medium truncate">{{ todo.deadline_at ? formatShortDate(todo.deadline_at) : 'Belum diset' }}</span>
+                </div>
             </div>
 
             <div class="mt-4 flex items-center justify-between gap-3 border-t border-border/70 pt-3" @click.stop>
@@ -54,6 +63,7 @@ const statusDate = computed(() => statusDateMeta(props.todo));
                     :class="statusTone(todo.status)"
                     :model-value="todo.status"
                     aria-label="Ubah status task"
+                    @click.stop
                     @change="emit('status', todo, $event.target.value)"
                 >
                     <NativeSelectOption v-for="status in TODO_STATUSES" :key="status.value" :value="status.value">{{ status.label }}</NativeSelectOption>

@@ -30,7 +30,7 @@ const emit = defineEmits(['open', 'status']);
                 <div class="flex items-center gap-2"><span class="size-2 shrink-0 rounded-full" :style="{ background: deadlineMeta(todo).color }" /><p class="truncate text-sm font-extrabold">{{ todo.title }}</p></div>
                 <p class="mt-1 truncate pl-4 text-xs text-muted-foreground">{{ todo.category?.name ?? 'Tanpa kategori' }} · {{ todo.creator?.name ?? 'Pengguna' }}</p>
             </div>
-            <div @click.stop><NativeSelect class="h-8 w-full text-xs font-bold" :class="statusTone(todo.status)" :model-value="todo.status" @change="emit('status', todo, $event.target.value)"><NativeSelectOption v-for="status in TODO_STATUSES" :key="status.value" :value="status.value">{{ status.label }}</NativeSelectOption></NativeSelect></div>
+            <div @click.stop><NativeSelect class="h-8 w-full text-xs font-bold" :class="statusTone(todo.status)" :model-value="todo.status" @click.stop @change="emit('status', todo, $event.target.value)"><NativeSelectOption v-for="status in TODO_STATUSES" :key="status.value" :value="status.value">{{ status.label }}</NativeSelectOption></NativeSelect></div>
             <p class="font-mono text-xs" :class="deadlineMeta(todo).tone">{{ formatDateTime(todo.deadline_at) }}</p>
             <div class="flex items-center gap-2 text-xs text-muted-foreground"><Bell class="size-3.5" /><span>{{ todo.reminders?.length ?? 0 }} jadwal</span></div>
             <Button variant="ghost" size="icon-sm" class="hidden md:inline-flex" tabindex="-1"><ChevronRight class="size-4" /></Button>
