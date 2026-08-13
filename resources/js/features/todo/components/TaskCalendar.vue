@@ -9,7 +9,8 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { formatDateTime } from '@/features/todo/utils/todo-formatters';
 import { notifyAxiosError } from '@/lib/request-errors';
 import axios from 'axios';
-import { ChevronLeft, ChevronRight, LoaderCircle, RefreshCw, Zap } from '@lucide/vue';
+import { ChevronLeft, ChevronRight, LoaderCircle, RefreshCw, Zap, MessageCircle, AlertCircle, ChevronDown } from '@lucide/vue';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { computed, onMounted, ref, watch } from 'vue';
 import { useSessionStorage } from '@vueuse/core';
 
@@ -151,11 +152,18 @@ const weeks = computed(() => {
                     while (day.slots.length < slotIndex) {
                         day.slots.push(null);
                     }
+                    const parts = event.deadline_wib.slice(0, 10).split('-');
+                    const deadlineTime = new Date(parts[0], parts[1] - 1, parts[2]).getTime();
+                    const todayTime = new Date(new Date().setHours(0,0,0,0)).getTime();
+                    
                     day.slots[slotIndex] = {
                         ...event,
                         isStart: day.key === startKey,
                         isEnd: day.key === endKey,
                         isFirstDayOfEvent: day.key === startKey,
+                        hasNoteToday: event.notes?.some(n => n.date === day.key),
+                        todayNotes: event.notes?.filter(n => n.date === day.key) || [],
+                        isOverdue: event.status !== 'selesai' && todayTime > deadlineTime,
                     };
                 }
             });
@@ -194,6 +202,7 @@ const moveMonth = (amount) => { cursor.value = new Date(cursor.value.getFullYear
 const openEvent = (event) => { const todo = props.todos.find((item) => item.id === event.id); if (todo) emit('open', todo); };
 
 const getEventStyle = (slot) => {
+    // 1. Task Selesai (Hijau)
     if (slot.status === 'selesai') {
         return { backgroundColor: '#10b981', color: 'white', border: 'none' };
     }
@@ -205,26 +214,39 @@ const getEventStyle = (slot) => {
     };
     
     const end = parseDateStr(slot.end_date || slot.deadline_wib?.slice(0, 10));
+    const start = parseDateStr(slot.start_date || new Date().toISOString().slice(0, 10));
     
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const current = today.getTime();
     
-    const daysLeft = Math.ceil((end - current) / (1000 * 3600 * 24));
+    // 2. Hari H Deadline ATAU Overdue (Merah)
+    if (current >= end) {
+        return { backgroundColor: '#ef4444', color: 'white', border: 'none' }; // red-500
+    }
+
+    // 3. Default / Belum Mulai (Abu-abu)
+    // Jika status belum dikerjakan, warna akan statis abu-abu
+    if (slot.status === 'belum_dikerjakan') {
+        return { backgroundColor: '#94a3b8', color: 'white', border: 'none' }; // gray-400
+    }
     
-    let opacity = 0.15;
-    if (daysLeft <= 0) opacity = 1.0;
-    else if (daysLeft === 1) opacity = 0.85;
-    else if (daysLeft === 2) opacity = 0.70;
-    else if (daysLeft === 3) opacity = 0.50;
-    else if (daysLeft === 4) opacity = 0.30;
-    else opacity = 0.15;
+    // 4. Progress Tracking (Hanya untuk Sedang Dikerjakan)
+    const msPerDay = 1000 * 60 * 60 * 24;
+    const daysRemaining = Math.round((end - current) / msPerDay);
     
-    const textColor = opacity > 0.5 ? 'white' : '#991b1b'; // text-red-800
+    let bgColor = '';
+    if (daysRemaining >= 3) {
+        bgColor = '#3b82f6'; // blue-500 (Aman, deadline masih > 2 hari)
+    } else if (daysRemaining === 2) {
+        bgColor = '#eab308'; // yellow-500 (Warning: H-2 deadline)
+    } else {
+        bgColor = '#f97316'; // orange-500 (Urgent: H-1 deadline)
+    }
     
     return {
-        backgroundColor: `rgba(239, 68, 68, ${opacity})`,
-        color: textColor,
+        backgroundColor: bgColor,
+        color: 'white',
         border: 'none'
     };
 };
@@ -398,7 +420,7 @@ onMounted(loadEvents);
                                         <TooltipTrigger asChild>
                                             <button
                                                 type="button"
-                                                class="flex-1 h-full truncate px-2 text-[10.5px] font-semibold transition-all flex items-center"
+                                                class="flex-1 h-full truncate px-2 text-[10.5px] font-semibold transition-all flex items-center relative"
                                                 :class="[
                                                     slot.isStart ? 'rounded-l-md' : 'rounded-l-none',
                                                     slot.isEnd ? 'rounded-r-md' : 'rounded-r-none',
@@ -409,9 +431,13 @@ onMounted(loadEvents);
                                                 @mouseleave="hoveredEventId = null"
                                                 @click="openEvent(slot)"
                                             >
-                                                <span v-if="slot.isFirstDayOfEvent || day.date.getDay() === 1" class="truncate leading-none pointer-events-none">
-                                                    {{ slot.title }}
+                                                <span v-if="slot.isFirstDayOfEvent || day.date.getDay() === 1" class="truncate leading-none pointer-events-none pr-3 flex items-center gap-1.5">
+                                                    <span class="truncate">{{ slot.title }}</span>
+                                                    <span v-if="slot.isOverdue" class="bg-black/25 text-white text-[8.5px] px-1.5 py-0.5 rounded-sm uppercase font-extrabold tracking-widest shrink-0 shadow-sm leading-none">TERLAMBAT</span>
                                                 </span>
+                                                <div v-if="slot.hasNoteToday" class="absolute right-1 top-1/2 -translate-y-1/2 flex items-center gap-0.5">
+                                                    <MessageCircle class="size-3.5 opacity-90 fill-white/20 drop-shadow-sm" />
+                                                </div>
                                             </button>
                                         </TooltipTrigger>
                                         <TooltipContent hide-arrow side="top" class="max-w-xs space-y-2 p-3 bg-white border border-slate-200 shadow-md z-[60]">
@@ -419,6 +445,7 @@ onMounted(loadEvents);
                                             <div class="flex flex-wrap gap-1.5">
                                                 <Badge variant="secondary" class="text-[10px]">{{ slot.category || 'Tanpa Kategori' }}</Badge>
                                                 <Badge variant="outline" class="text-[10px] capitalize">{{ slot.status ? slot.status.replace('_', ' ') : 'Belum Dikerjakan' }}</Badge>
+                                                <Badge v-if="slot.isOverdue" class="text-[10px] font-bold uppercase tracking-wider bg-red-500 hover:bg-red-600 text-white border-transparent shadow-sm">TERLAMBAT</Badge>
                                             </div>
                                             <p v-if="slot.description" class="text-xs text-slate-500 line-clamp-3 leading-relaxed">{{ slot.description }}</p>
                                             <div class="grid grid-cols-2 gap-x-4 gap-y-2 text-[10px] mt-2 pt-2 border-t border-slate-100">
@@ -431,14 +458,52 @@ onMounted(loadEvents);
                                                     <span class="font-mono text-slate-700 font-medium">{{ slot.deadline_wib ? formatDateTime(slot.deadline_wib) : '-' }}</span>
                                                 </div>
                                             </div>
+                                            
+                                            <div v-if="slot.todayNotes && slot.todayNotes.length > 0" class="mt-3 pt-3 border-t border-slate-100 space-y-2">
+                                                <div class="flex items-center gap-1.5 text-[10px] font-bold text-primary">
+                                                    <MessageCircle class="size-3.5" />
+                                                    <span class="uppercase tracking-wider">Catatan Hari Ini</span>
+                                                </div>
+                                                <div v-for="note in slot.todayNotes" :key="note.id" class="bg-blue-50/50 p-2 rounded-lg text-xs text-slate-700 border border-blue-100/50">
+                                                    <p class="font-bold text-[9px] text-blue-500/80 mb-0.5 uppercase tracking-wider">{{ note.creator || 'Pengguna' }}</p>
+                                                    <p class="leading-relaxed line-clamp-4 break-words [overflow-wrap:anywhere]">{{ note.body }}</p>
+                                                </div>
+                                            </div>
                                         </TooltipContent>
                                     </Tooltip>
                                 </div>
                                 <div v-else class="h-[22px]"></div>
                             </template>
                             
-                            <div v-if="day.slots.length > 4" class="px-2 pt-1 text-[9px] font-medium text-slate-500">
-                                +{{ day.slots.length - 4 }} lainnya
+                            <div v-if="day.slots.slice(4).some(Boolean)" class="px-2 pt-1">
+                                <Popover>
+                                    <PopoverTrigger asChild>
+                                        <button type="button" class="text-[10px] font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded px-1.5 py-0.5 transition-colors w-full text-left flex items-center justify-between group">
+                                            <span>+{{ day.slots.slice(4).filter(Boolean).length }} lainnya</span>
+                                            <ChevronDown class="size-3 opacity-50 group-hover:opacity-100" />
+                                        </button>
+                                    </PopoverTrigger>
+                                    <PopoverContent class="w-64 p-2 shadow-xl z-[70] max-h-[300px] overflow-y-auto">
+                                        <div class="text-xs font-bold text-slate-700 mb-2 px-1 pb-1 border-b border-slate-100">
+                                            Agenda {{ day.date.toLocaleDateString('id-ID', {day: 'numeric', month: 'long', year: 'numeric'}) }}
+                                        </div>
+                                        <div class="space-y-1">
+                                            <template v-for="(slot, idx) in day.slots" :key="'popover-' + idx">
+                                                <button v-if="slot" @click="openEvent(slot)" type="button" class="w-full text-left px-2 py-1.5 rounded-md hover:bg-slate-100 transition-colors flex items-center justify-between group">
+                                                    <div class="flex items-center gap-2 overflow-hidden">
+                                                        <div class="size-2 rounded-full shrink-0" :style="{ backgroundColor: getEventStyle(slot).backgroundColor }"></div>
+                                                        <span class="text-[11px] font-medium text-slate-800 truncate">{{ slot.title }}</span>
+                                                    </div>
+                                                    <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                                                        <span v-if="slot.isOverdue" class="text-[8px] font-bold text-red-500 uppercase tracking-widest bg-red-50 px-1 py-0.5 rounded">TERLAMBAT</span>
+                                                        <AlertCircle v-if="slot.isOverdue" class="size-3 text-red-500" />
+                                                        <MessageCircle v-if="slot.hasNoteToday" class="size-3 text-slate-400" />
+                                                    </div>
+                                                </button>
+                                            </template>
+                                        </div>
+                                    </PopoverContent>
+                                </Popover>
                             </div>
                         </div>
                     </div>

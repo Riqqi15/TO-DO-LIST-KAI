@@ -119,15 +119,21 @@ class TodoPageController extends Controller
             }
 
             return [
-                'id' => $todo->id,
-                'title' => $todo->title,
-                'status' => $todo->status->value,
-                'category' => $todo->category?->name,
-                'description' => $todo->description,
-                'start_date' => $start->copy()->timezone('Asia/Jakarta')->format('Y-m-d'),
-                'end_date' => $end->copy()->timezone('Asia/Jakarta')->format('Y-m-d'),
-                'deadline_at' => $todo->deadline_at->toIso8601String(),
+                'id'           => $todo->id,
+                'title'        => $todo->title,
+                'status'       => $todo->status->value,
+                'category'     => $todo->category?->name,
+                'description'  => $todo->description,
+                'start_date'   => $start->copy()->timezone('Asia/Jakarta')->format('Y-m-d'),
+                'end_date'     => $end->copy()->timezone('Asia/Jakarta')->format('Y-m-d'),
+                'deadline_at'  => $todo->deadline_at->toIso8601String(),
                 'deadline_wib' => $todo->deadline_at->copy()->timezone('Asia/Jakarta')->format('Y-m-d H:i'),
+                'notes'        => $todo->notes->map(fn ($note) => [
+                    'id'      => $note->id,
+                    'date'    => $note->created_at->copy()->timezone('Asia/Jakarta')->format('Y-m-d'),
+                    'body'    => $note->body,
+                    'creator' => $note->creator?->name,
+                ])->values()->all(),
             ];
         });
 
