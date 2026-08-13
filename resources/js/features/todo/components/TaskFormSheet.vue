@@ -21,7 +21,7 @@ const props = defineProps({
 });
 const emit = defineEmits(['update:open', 'saved']);
 const reminderDraft = ref('');
-const form = useForm({ category_id: '', title: '', description: '', deadline_at: defaultDeadline(), manual_reminders: [] });
+const form = useForm({ category_id: '', title: '', description: '', start_date: '', deadline_at: defaultDeadline(), manual_reminders: [] });
 const editing = computed(() => Boolean(props.todo));
 const requiresManualReminder = computed(() => {
     const deadline = new Date(form.deadline_at);
@@ -35,6 +35,7 @@ const resetForm = () => {
     form.category_id = props.todo?.category_id ?? props.categories[0]?.id ?? '';
     form.title = props.todo?.title ?? '';
     form.description = props.todo?.description ?? '';
+    form.start_date = props.todo?.start_date ?? '';
     form.deadline_at = props.todo ? toDateTimeInput(props.todo) : defaultDeadline();
     form.manual_reminders = [];
     reminderDraft.value = '';
@@ -65,8 +66,9 @@ const submit = () => {
             <form id="task-form" class="min-h-0 space-y-5 overflow-y-auto px-6 py-5" @submit.prevent="submit">
                 <div class="space-y-2"><Label for="task-title">Judul task</Label><Input id="task-title" v-model="form.title" placeholder="Contoh: Siapkan laporan mingguan" maxlength="180" required autofocus class="h-11" :aria-invalid="Boolean(form.errors.title)" /><FieldError :message="form.errors.title" /></div>
                 <div class="space-y-2"><Label for="task-description">Deskripsi <span class="font-normal text-muted-foreground">(opsional)</span></Label><Textarea id="task-description" v-model="form.description" placeholder="Tambahkan konteks, hasil akhir, atau catatan penting." class="min-h-28 resize-y" :aria-invalid="Boolean(form.errors.description)" /><FieldError :message="form.errors.description" /></div>
-                <div class="grid gap-5 sm:grid-cols-2">
+                <div class="grid gap-5 sm:grid-cols-3">
                     <div class="space-y-2"><Label for="task-category">Kategori</Label><NativeSelect id="task-category" v-model="form.category_id" class="h-11 w-full" required :aria-invalid="Boolean(form.errors.category_id)"><NativeSelectOption v-for="category in categories" :key="category.id" :value="category.id">{{ category.name }}</NativeSelectOption></NativeSelect><FieldError :message="form.errors.category_id" /></div>
+                    <div class="space-y-2"><Label for="task-start-date">Tanggal Mulai (opsional)</Label><Input type="date" id="task-start-date" v-model="form.start_date" class="h-11 font-mono text-xs" :aria-invalid="Boolean(form.errors.start_date)" /><FieldError :message="form.errors.start_date" /></div>
                     <div class="space-y-2"><Label for="task-deadline">Deadline (WIB)</Label><DateTimeInput24h id="task-deadline" v-model="form.deadline_at" required class="h-11 font-mono text-xs" :aria-invalid="Boolean(form.errors.deadline_at)" /><FieldError :message="form.errors.deadline_at" /></div>
                 </div>
 

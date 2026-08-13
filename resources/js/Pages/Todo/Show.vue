@@ -27,6 +27,7 @@ const status = ref('');
 const statusAt = ref('');
 const editableTitle = ref('');
 const editableDescription = ref('');
+const editableStartDate = ref('');
 const titleErrors = ref({});
 const resultNotes = ref('');
 const reminderForm = useForm({ scheduled_at: '' });
@@ -68,7 +69,9 @@ const statusChanged = computed(() => {
 
 const detailsChanged = computed(() => {
     if (!todo.value) return false;
-    return editableTitle.value !== todo.value.title || editableDescription.value !== (todo.value.description || '');
+    return editableTitle.value !== todo.value.title || 
+           editableDescription.value !== (todo.value.description || '') ||
+           editableStartDate.value !== (todo.value.start_date || '');
 });
 
 const canSave = computed(() => detailsChanged.value || statusChanged.value);
@@ -93,6 +96,7 @@ watch(() => todo.value, (newTodo) => {
     titleErrors.value = {};
     editableTitle.value = newTodo.title;
     editableDescription.value = newTodo.description || '';
+    editableStartDate.value = newTodo.start_date || '';
     resultNotes.value = newTodo.result_notes || '';
 }, { immediate: true });
 
@@ -107,6 +111,7 @@ const saveAll = () => {
         router.put(`/todos/${todo.value.id}`, {
             title: editableTitle.value,
             description: editableDescription.value,
+            start_date: editableStartDate.value,
             category_id: todo.value.category_id,
             deadline_at: todo.value.deadline_at,
         }, {
@@ -203,8 +208,17 @@ const goBack = () => {
                 <FieldError :message="titleErrors.title" />
             </div>
 
-            <!-- Metadata: Deadline + Creator -->
-            <div class="grid gap-3 sm:grid-cols-2">
+            <!-- Metadata: Start Date + Deadline + Creator -->
+            <div class="grid gap-3 sm:grid-cols-3">
+                <div v-if="todo.start_date" class="flex items-center gap-3 rounded-lg border bg-card p-3">
+                    <div class="rounded-md bg-primary/10 p-2 text-primary">
+                        <CalendarDays class="size-4" />
+                    </div>
+                    <div>
+                        <p class="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Tanggal Mulai</p>
+                        <p class="mt-0.5 font-mono text-sm font-medium">{{ formatDateTime(todo.start_date) }}</p>
+                    </div>
+                </div>
                 <div class="flex items-center gap-3 rounded-lg border bg-card p-3">
                     <div class="rounded-md bg-primary/10 p-2 text-primary">
                         <CalendarClock class="size-4" />
@@ -274,13 +288,23 @@ const goBack = () => {
                 <section class="lg:col-span-3">
                     <h3 class="mb-3 text-xs font-bold uppercase tracking-wider text-muted-foreground">Status & Hasil</h3>
                     <div class="space-y-4 rounded-lg border bg-card p-4">
-                        <div class="grid gap-4 sm:grid-cols-2">
+                        <div class="grid gap-4 sm:grid-cols-3">
                             <div>
                                 <Label class="text-xs font-semibold mb-1.5 block">Status</Label>
                                 <NativeSelect :model-value="status" class="h-9 w-full" @change="selectStatus($event.target.value)">
                                     <NativeSelectOption v-for="option in TODO_STATUSES" :key="option.value" :value="option.value">{{ option.label }}</NativeSelectOption>
                                 </NativeSelect>
                                 <FieldError :message="statusErrors.status" />
+                            </div>
+                            <div>
+                                <Label for="edit-start-date" class="text-xs font-semibold mb-1.5 block">Tanggal Mulai</Label>
+                                <Input
+                                    id="edit-start-date"
+                                    type="date"
+                                    v-model="editableStartDate"
+                                    class="h-9 w-full font-mono text-xs"
+                                />
+                                <FieldError :message="titleErrors.start_date" />
                             </div>
                             <div>
                                 <Label for="status-at" class="text-xs font-semibold mb-1.5 block">{{ statusDateLabel }}</Label>

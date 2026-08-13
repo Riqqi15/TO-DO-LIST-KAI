@@ -3,8 +3,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { TODO_STATUSES } from '@/features/todo/constants/todo-options';
-import { deadlineMeta, formatDateTime, statusDateMeta } from '@/features/todo/utils/todo-formatters';
-import { CalendarClock, CalendarPlus, CheckCircle2, Circle, CircleDot, Clock, Pencil, UserRound, Timer } from '@lucide/vue';
+import { deadlineMeta, formatDateTime, formatShortDate, statusDateMeta } from '@/features/todo/utils/todo-formatters';
+import { CalendarClock, CalendarDays, CalendarPlus, CheckCircle2, Circle, CircleDot, Clock, Pencil, UserRound, Timer } from '@lucide/vue';
 import { computed } from 'vue';
 
 const props = defineProps({
@@ -80,6 +80,14 @@ const durationWorked = computed(() => {
                 </div>
 
                 <div class="space-y-3">
+                    <div v-if="todo.start_date" class="flex items-center gap-3 rounded-xl border p-3">
+                        <CalendarDays class="size-4 text-primary" />
+                        <div>
+                            <p class="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Tanggal Mulai</p>
+                            <p class="mt-0.5 font-mono text-xs font-medium">{{ formatShortDate(todo.start_date) }}</p>
+                        </div>
+                    </div>
+
                     <div class="flex items-center gap-3 rounded-xl border p-3">
                         <CalendarClock class="size-4 text-primary" />
                         <div>
