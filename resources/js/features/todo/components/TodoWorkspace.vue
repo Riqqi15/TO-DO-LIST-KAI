@@ -14,7 +14,7 @@ import TaskFormSheet from '@/features/todo/components/TaskFormSheet.vue';
 import TaskOverviewDialog from '@/features/todo/components/TaskOverviewDialog.vue';
 import TaskList from '@/features/todo/components/TaskList.vue';
 import { TODO_STATUSES } from '@/features/todo/constants/todo-options';
-import { deadlineMeta } from '@/features/todo/utils/todo-formatters';
+import { deadlineMeta, statusDateInput, toWibDateTimeInput } from '@/features/todo/utils/todo-formatters';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { notifyRequestError } from '@/lib/request-errors';
 import { router, usePage } from '@inertiajs/vue3';
@@ -85,7 +85,18 @@ const deleteTodo = () => router.delete(`/todos/${selectedTodo.value.id}`, {
     onError: (errors) => notifyRequestError(errors, 'Task tidak dapat dihapus.'),
 });
 const changeStatus = (todo, nextStatus) => {
-    router.visit(`/todos/${todo.id}`);
+    const defaultDate = nextStatus === 'belum_dikerjakan' 
+        ? (todo.deadline_wib?.replace(' ', 'T') || toWibDateTimeInput(todo.deadline_at)) 
+        : (statusDateInput(todo, nextStatus) || toWibDateTimeInput());
+
+    router.patch(`/todos/${todo.id}/status`, {
+        status: nextStatus,
+        status_at: defaultDate,
+        result_notes: nextStatus === 'selesai' ? (todo.result_notes || null) : null
+    }, {
+        preserveScroll: true,
+        onError: (errors) => notifyRequestError(errors, 'Status task tidak dapat diperbarui.'),
+    });
 };
 
 watch(flash, (value) => {

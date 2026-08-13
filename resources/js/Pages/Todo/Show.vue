@@ -11,6 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { TODO_STATUSES } from '@/features/todo/constants/todo-options';
 import { deadlineMeta, formatDateTime, formatDuration, reminderKindLabel, reminderStatusLabel, statusDateInput, toWibDateTimeInput } from '@/features/todo/utils/todo-formatters';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
+import { useSessionStorage } from '@vueuse/core';
 import { ArrowLeft, Bell, CalendarClock, CheckCircle2, Hourglass, LoaderCircle, Pencil, Play, Trash2, UserRound } from '@lucide/vue';
 import { notifyRequestError } from '@/lib/request-errors';
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
@@ -29,6 +30,7 @@ const statusAt = ref('');
 const editableTitle = ref('');
 const editableDescription = ref('');
 const editableStartDate = ref('');
+const editableDeadline = ref('');
 const titleErrors = ref({});
 const resultNotes = ref('');
 const reminderForm = useForm({ scheduled_at: '' });
@@ -72,7 +74,8 @@ const detailsChanged = computed(() => {
     if (!todo.value) return false;
     return editableTitle.value !== todo.value.title || 
            editableDescription.value !== (todo.value.description || '') ||
-           editableStartDate.value !== (todo.value.start_date || '');
+           editableStartDate.value !== (todo.value.start_date || '') ||
+           editableDeadline.value !== (todo.value.deadline_wib?.replace(' ', 'T') || '');
 });
 
 const canSave = computed(() => detailsChanged.value || statusChanged.value);
@@ -98,6 +101,7 @@ watch(() => todo.value, (newTodo) => {
     editableTitle.value = newTodo.title;
     editableDescription.value = newTodo.description || '';
     editableStartDate.value = newTodo.start_date || '';
+    editableDeadline.value = newTodo.deadline_wib?.replace(' ', 'T') || toWibDateTimeInput(newTodo.deadline_at);
     resultNotes.value = newTodo.result_notes || '';
 }, { immediate: true });
 
@@ -114,7 +118,7 @@ const saveAll = () => {
             description: editableDescription.value,
             start_date: editableStartDate.value,
             category_id: todo.value.category_id,
-            deadline_at: todo.value.deadline_at,
+            deadline_at: editableDeadline.value,
         }, {
             preserveScroll: true,
             onSuccess: () => {
@@ -136,9 +140,10 @@ const saveAll = () => {
 };
 
 const changeStatus = () => {
+    const finalStatusAt = status.value === 'belum_dikerjakan' ? editableDeadline.value : statusAt.value;
     router.patch(`/todos/${todo.value.id}/status`, { 
         status: status.value, 
-        status_at: statusAt.value,
+        status_at: finalStatusAt,
         result_notes: status.value === 'selesai' ? resultNotes.value : null 
     }, {
         preserveScroll: true,
@@ -186,8 +191,20 @@ const goBack = () => {
     if (window.history.length > 1) {
         window.history.back();
     } else {
-        router.visit('/todos');
+        router.visit('/app');
     }
+};
+
+// Bug fix: sidebar navigation dari Detail Task page tidak berfungsi
+// karena AppLayout tidak memiliki handler untuk @navigate dan @switch-workspace.
+// Solusi: simpan target section ke sessionStorage lalu redirect ke /app.
+const activeSection = useSessionStorage('todo_active_section', 'tasks');
+const navigate = (section) => {
+    activeSection.value = section;
+    router.visit('/app', { preserveState: false });
+};
+const switchWorkspace = (id) => {
+    router.get('/app', { workspace: id }, { preserveScroll: false, preserveState: false });
 };
 </script>
 
@@ -199,6 +216,8 @@ const goBack = () => {
         :workspaces="workspaces"
         :active-workspace="activeWorkspace"
         :categories="categories"
+        @navigate="navigate"
+        @switch-workspace="switchWorkspace"
     >
         <template #actions>
             <Button variant="outline" size="sm" class="text-destructive hover:bg-destructive hover:text-destructive-foreground border-destructive/20" @click="deleteTodo">
@@ -322,7 +341,7 @@ const goBack = () => {
                                 <FieldError :message="statusErrors.status" />
                             </div>
                             <div>
-                                <Label for="edit-start-date" class="text-xs font-semibold mb-1.5 block">Tanggal Mulai</Label>
+                                <Label for="edit-start-date" class="text-xs font-semibold mb-1.5 block">Rencana Mulai (opsional)</Label>
                                 <Input
                                     id="edit-start-date"
                                     type="date"
@@ -332,11 +351,22 @@ const goBack = () => {
                                 <FieldError :message="titleErrors.start_date" />
                             </div>
                             <div>
-                                <Label for="status-at" class="text-xs font-semibold mb-1.5 block">{{ statusDateLabel }}</Label>
-                                <DateTimeInput24h id="status-at" v-model="statusAt" class="h-9 font-mono text-xs" :title="statusDateLabel" :aria-invalid="Boolean(statusErrors.status_at)" />
-                                <p class="mt-1 text-[11px] text-muted-foreground">{{ statusDateHelp }}</p>
-                                <FieldError :message="statusErrors.status_at" />
+                                <Label for="edit-deadline" class="text-xs font-semibold mb-1.5 block">Deadline *</Label>
+                                <DateTimeInput24h 
+                                    id="edit-deadline" 
+                                    v-model="editableDeadline" 
+                                    class="h-9 font-mono text-xs" 
+                                    :aria-invalid="Boolean(titleErrors.deadline_at)" 
+                                />
+                                <FieldError :message="titleErrors.deadline_at" />
                             </div>
+                        </div>
+
+                        <div v-if="status !== 'belum_dikerjakan'" class="mt-4 p-3 bg-slate-50/50 rounded-lg border border-slate-100">
+                            <Label for="status-at" class="text-xs font-semibold mb-1.5 block">{{ status === 'selesai' ? 'Waktu Selesai Dikerjakan' : 'Waktu Mulai Dikerjakan' }}</Label>
+                            <DateTimeInput24h id="status-at" v-model="statusAt" class="h-9 font-mono text-xs max-w-xs bg-white" :aria-invalid="Boolean(statusErrors.status_at)" />
+                            <p class="mt-1.5 text-[11px] text-muted-foreground">{{ status === 'selesai' ? 'Waktu ketika task dinyatakan selesai.' : 'Waktu ketika task mulai dikerjakan.' }}</p>
+                            <FieldError :message="statusErrors.status_at" />
                         </div>
 
                         <div v-if="status === 'selesai'">

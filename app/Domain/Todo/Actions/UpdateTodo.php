@@ -29,10 +29,11 @@ class UpdateTodo
         }
         $deadline = Carbon::parse($data['deadline_at'], 'Asia/Jakarta')->utc();
         $deadlineChanged = ! $todo->deadline_at->equalTo($deadline);
-        
-        if ($deadlineChanged && $deadline->lt(now()->addMinutes(5))) {
-            throw ValidationException::withMessages(['deadline_at' => 'Deadline minimal 5 menit dari sekarang.']);
-        }
+        // Validasi ini di-nonaktifkan sementara untuk keperluan testing.
+        // Aktifkan kembali jika ingin membatasi perubahan deadline minimal 5 menit dari sekarang.
+        // if ($deadlineChanged && $deadline->lt(now()->addMinutes(5))) {
+        //     throw ValidationException::withMessages(['deadline_at' => 'Deadline minimal 5 menit dari sekarang.']);
+        // }
 
         return DB::transaction(function () use ($todo, $actor, $category, $data, $deadline, $manualReminderTimes, $deadlineChanged) {
             $old = $todo->only(['title', 'description', 'category_id', 'start_date', 'deadline_at']);

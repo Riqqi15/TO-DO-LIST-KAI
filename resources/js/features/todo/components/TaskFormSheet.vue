@@ -82,6 +82,7 @@ const submit = () => {
                     <div class="space-y-2"><Label for="task-deadline">Deadline (WIB)</Label><DateTimeInput24h id="task-deadline" v-model="form.deadline_at" required class="h-11 font-mono text-xs" :aria-invalid="Boolean(form.errors.deadline_at)" /><FieldError :message="form.errors.deadline_at" /></div>
                 </div>
 
+
                 <div class="rounded-2xl border bg-slate-50/70 p-4">
                     <div class="flex items-start gap-3"><div class="grid size-9 shrink-0 place-items-center rounded-xl bg-secondary text-primary"><BellPlus class="size-4.5" /></div><div><h3 class="text-sm font-extrabold">Reminder manual</h3><p class="mt-0.5 text-xs leading-5 text-muted-foreground">Reminder otomatis H-7 dan H-3 dibuat backend jika waktunya masih tersedia.</p></div></div>
                     <div class="mt-4 flex gap-2"><DateTimeInput24h v-model="reminderDraft" class="h-10 flex-1 font-mono text-xs" aria-label="Waktu reminder manual" /><Button type="button" variant="outline" size="icon" aria-label="Tambah reminder" @click="addReminder"><Plus class="size-4" /></Button></div>

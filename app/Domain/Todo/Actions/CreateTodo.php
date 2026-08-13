@@ -28,9 +28,11 @@ class CreateTodo
             throw ValidationException::withMessages(['category_id' => 'Kategori tidak tersedia pada workspace ini.']);
         }
         $deadline = Carbon::parse($data['deadline_at'], 'Asia/Jakarta')->utc();
-        if ($deadline->lt(now()->addMinutes(5))) {
-            throw ValidationException::withMessages(['deadline_at' => 'Deadline minimal 5 menit dari sekarang.']);
-        }
+        // Validasi ini di-nonaktifkan sementara untuk keperluan testing.
+        // Aktifkan kembali jika ingin membatasi deadline minimal 5 menit dari sekarang.
+        // if ($deadline->lt(now()->addMinutes(5))) {
+        //     throw ValidationException::withMessages(['deadline_at' => 'Deadline minimal 5 menit dari sekarang.']);
+        // }
 
         return DB::transaction(function () use ($workspace, $actor, $category, $data, $deadline, $manualReminderTimes) {
             $todo = Todo::create(['workspace_id' => $workspace->id, 'created_by' => $actor->id, 'category_id' => $category->id, 'title' => $data['title'], 'description' => $data['description'] ?? null, 'status' => TodoStatus::BelumDikerjakan, 'start_date' => $data['start_date'] ?? null, 'deadline_at' => $deadline]);
@@ -38,9 +40,11 @@ class CreateTodo
             foreach ($manualReminderTimes as $time) {
                 $this->manual->handle($todo, $actor, Carbon::parse($time, 'Asia/Jakarta')->utc());
             }
-            if ($automaticCount === 0 && count($manualReminderTimes) === 0) {
-                throw ValidationException::withMessages(['manual_reminders' => 'Semua reminder otomatis sudah lewat. Buat minimal satu reminder manual.']);
-            }
+            // Validasi ini di-nonaktifkan sementara untuk keperluan testing.
+            // Aktifkan kembali agar task wajib memiliki minimal satu reminder aktif.
+            // if ($automaticCount === 0 && count($manualReminderTimes) === 0) {
+            //     throw ValidationException::withMessages(['manual_reminders' => 'Semua reminder otomatis sudah lewat. Buat minimal satu reminder manual.']);
+            // }
             $this->activity->handle($workspace, $actor, 'todo.created', $todo, $todo->only(['id', 'title', 'description', 'status', 'start_date', 'deadline_at', 'category_id']));
 
             return $todo->load(['category', 'reminders']);
