@@ -33,7 +33,7 @@ class CreateTodo
         }
 
         return DB::transaction(function () use ($workspace, $actor, $category, $data, $deadline, $manualReminderTimes) {
-            $todo = Todo::create(['workspace_id' => $workspace->id, 'created_by' => $actor->id, 'category_id' => $category->id, 'title' => $data['title'], 'description' => $data['description'] ?? null, 'status' => TodoStatus::BelumDikerjakan, 'deadline_at' => $deadline]);
+            $todo = Todo::create(['workspace_id' => $workspace->id, 'created_by' => $actor->id, 'category_id' => $category->id, 'title' => $data['title'], 'description' => $data['description'] ?? null, 'status' => TodoStatus::BelumDikerjakan, 'start_date' => $data['start_date'] ?? null, 'deadline_at' => $deadline]);
             $automaticCount = $this->automatic->handle($todo);
             foreach ($manualReminderTimes as $time) {
                 $this->manual->handle($todo, $actor, Carbon::parse($time, 'Asia/Jakarta')->utc());
@@ -41,7 +41,7 @@ class CreateTodo
             if ($automaticCount === 0 && count($manualReminderTimes) === 0) {
                 throw ValidationException::withMessages(['manual_reminders' => 'Semua reminder otomatis sudah lewat. Buat minimal satu reminder manual.']);
             }
-            $this->activity->handle($workspace, $actor, 'todo.created', $todo, $todo->only(['id', 'title', 'description', 'status', 'deadline_at', 'category_id']));
+            $this->activity->handle($workspace, $actor, 'todo.created', $todo, $todo->only(['id', 'title', 'description', 'status', 'start_date', 'deadline_at', 'category_id']));
 
             return $todo->load(['category', 'reminders']);
         });

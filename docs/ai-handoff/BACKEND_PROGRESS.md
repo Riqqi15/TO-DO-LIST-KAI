@@ -46,7 +46,7 @@ berubah setelah snapshot ini.
   `status_at`, sedangkan `deadline_at` berubah saat task kembali ke
   `belum_dikerjakan`.
 - Tidak ada priority dan tidak ada tabel calendar event.
-- Kategori sistem: Meeting, Report Progress, Lainnya. Kategori custom yang
+- Kategori sistem: NPD ACC, G63, PR, SPK, RFQ & PO, SES / GR, Meeting, Report Progress, Lainnya. Kategori custom yang
   dipakai task tidak dapat dihapus.
 - Deadline wajib minimal lima menit dari saat penyimpanan. Input WIB dikonversi
   ke UTC; payload tampilan menyertakan `deadline_wib`.

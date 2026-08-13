@@ -22,6 +22,12 @@ return new class extends Migration
         });
 
         DB::table('categories')->insert([
+            ['name' => 'NPD ACC', 'slug' => 'npd-acc', 'is_system' => true, 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'G63', 'slug' => 'g63', 'is_system' => true, 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'PR', 'slug' => 'pr', 'is_system' => true, 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'SPK', 'slug' => 'spk', 'is_system' => true, 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'RFQ & PO', 'slug' => 'rfq-po', 'is_system' => true, 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'SES / GR', 'slug' => 'ses-gr', 'is_system' => true, 'created_at' => now(), 'updated_at' => now()],
             ['name' => 'Meeting', 'slug' => 'meeting', 'is_system' => true, 'created_at' => now(), 'updated_at' => now()],
             ['name' => 'Report Progress', 'slug' => 'report-progress', 'is_system' => true, 'created_at' => now(), 'updated_at' => now()],
             ['name' => 'Lainnya', 'slug' => 'lainnya', 'is_system' => true, 'created_at' => now(), 'updated_at' => now()],

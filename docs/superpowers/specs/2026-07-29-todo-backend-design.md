@@ -187,6 +187,12 @@ mengubah status. Task selesai dapat dibuka kembali menjadi
 
 Kategori bawaan:
 
+- NPD ACC.
+- G63.
+- PR.
+- SPK.
+- RFQ & PO.
+- SES / GR.
 - Meeting.
 - Report Progress.
 - Lainnya.

@@ -33,7 +33,7 @@ class TodoPageController extends Controller
         $notes = collect();
         $activities = collect();
         if ($workspace) {
-            $categories = Category::where('is_system', true)->orWhere('workspace_id', $workspace->id)->orderByDesc('is_system')->orderBy('name')->get();
+            $categories = Category::where('is_system', true)->orWhere('workspace_id', $workspace->id)->orderByDesc('is_system')->orderByRaw('CASE WHEN is_system = 1 THEN id ELSE 999999999 END ASC')->orderBy('name')->get();
             $todosQuery = Todo::where('workspace_id', $workspace->id)->with(['category:id,name,slug,is_system', 'creator:id,name', 'reminders', 'notes.creator'])->orderBy('deadline_at');
             if ($request->filled('status')) {
                 $todosQuery->where('status', $request->string('status')->toString());
@@ -74,7 +74,7 @@ class TodoPageController extends Controller
             ->orderBy('type')->orderBy('name')->get();
 
         $activeWorkspace = $workspaces->firstWhere('id', $todo->workspace_id);
-        $categories = Category::where('is_system', true)->orWhere('workspace_id', $activeWorkspace->id)->orderByDesc('is_system')->orderBy('name')->get();
+        $categories = Category::where('is_system', true)->orWhere('workspace_id', $activeWorkspace->id)->orderByDesc('is_system')->orderByRaw('CASE WHEN is_system = 1 THEN id ELSE 999999999 END ASC')->orderBy('name')->get();
 
         return Inertia::render('Todo/Show', [
             'workspaces' => $workspaces,
@@ -100,7 +100,7 @@ class TodoPageController extends Controller
         }
 
         $events = $query->orderBy('deadline_at')->get()->map(function (Todo $todo) {
-            $start = $todo->created_at;
+            $start = $todo->start_date ? \Illuminate\Support\Carbon::parse($todo->start_date) : $todo->created_at;
             $end = match ($todo->status->value) {
                 'selesai' => $todo->completed_at ?? $todo->deadline_at,
                 default => $todo->deadline_at,
@@ -115,6 +115,7 @@ class TodoPageController extends Controller
                 'title' => $todo->title,
                 'status' => $todo->status->value,
                 'category' => $todo->category?->name,
+                'description' => $todo->description,
                 'start_date' => $start->copy()->timezone('Asia/Jakarta')->format('Y-m-d'),
                 'end_date' => $end->copy()->timezone('Asia/Jakarta')->format('Y-m-d'),
                 'deadline_at' => $todo->deadline_at->toIso8601String(),
@@ -130,6 +131,7 @@ class TodoPageController extends Controller
         return [
             ...$todo->toArray(),
             'status' => $todo->status->value,
+            'start_date' => $todo->start_date ? $todo->start_date->format('Y-m-d') : null,
             'deadline_at' => $todo->deadline_at->toIso8601String(),
             'deadline_wib' => $todo->deadline_at->copy()->timezone('Asia/Jakarta')->format('Y-m-d H:i'),
             'started_at' => $todo->started_at?->toIso8601String(),

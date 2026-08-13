@@ -35,8 +35,8 @@ class UpdateTodo
         }
 
         return DB::transaction(function () use ($todo, $actor, $category, $data, $deadline, $manualReminderTimes, $deadlineChanged) {
-            $old = $todo->only(['title', 'description', 'category_id', 'deadline_at']);
-            $todo->update(['category_id' => $category->id, 'title' => $data['title'], 'description' => $data['description'] ?? null, 'deadline_at' => $deadline]);
+            $old = $todo->only(['title', 'description', 'category_id', 'start_date', 'deadline_at']);
+            $todo->update(['category_id' => $category->id, 'title' => $data['title'], 'description' => $data['description'] ?? null, 'start_date' => $data['start_date'] ?? null, 'deadline_at' => $deadline]);
             
             if ($deadlineChanged) {
                 $todo->reminders()->where('kind', ReminderKind::Manual->value)->where('scheduled_at', '>=', $deadline)->update(['status' => ReminderStatus::Cancelled->value, 'cancelled_at' => now()]);
@@ -53,7 +53,7 @@ class UpdateTodo
                     throw ValidationException::withMessages(['manual_reminders' => 'Deadline ini memerlukan minimal satu reminder manual.']);
                 }
             }
-            $this->activity->handle($todo->workspace, $actor, 'todo.updated', $todo, null, ['old' => $old, 'new' => $todo->only(['title', 'description', 'category_id', 'deadline_at'])]);
+            $this->activity->handle($todo->workspace, $actor, 'todo.updated', $todo, null, ['old' => $old, 'new' => $todo->only(['title', 'description', 'category_id', 'start_date', 'deadline_at'])]);
 
             return $todo->load(['category', 'reminders']);
         });
