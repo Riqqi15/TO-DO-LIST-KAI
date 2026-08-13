@@ -34,11 +34,12 @@ const props = defineProps({
     required: false,
     skipCheck: true,
   },
+  hideArrow: { type: Boolean, required: false, default: false },
 });
 
 const emits = defineEmits(["escapeKeyDown", "pointerDownOutside"]);
 
-const delegatedProps = reactiveOmit(props, "class");
+const delegatedProps = reactiveOmit(props, "class", "hideArrow");
 const forwarded = useForwardPropsEmits(delegatedProps, emits);
 </script>
 
@@ -57,6 +58,7 @@ const forwarded = useForwardPropsEmits(delegatedProps, emits);
       <slot />
 
       <TooltipArrow
+        v-if="!props.hideArrow"
         class="bg-foreground fill-foreground z-50 size-2.5 translate-y-[calc(-50%_-_2px)] rotate-45 rounded-xs"
       />
     </TooltipContent>

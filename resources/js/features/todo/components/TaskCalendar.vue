@@ -5,6 +5,8 @@ import { Card } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { formatDateTime } from '@/features/todo/utils/todo-formatters';
 import axios from 'axios';
 import { ChevronLeft, ChevronRight, LoaderCircle, RefreshCw, Zap } from '@lucide/vue';
 import { computed, onMounted, ref, watch } from 'vue';
@@ -233,6 +235,7 @@ onMounted(loadEvents);
 </script>
 
 <template>
+    <TooltipProvider :delay-duration="300">
     <Card class="overflow-hidden border border-slate-200/80 shadow-none bg-white rounded-xl">
         <!-- Calendar Header -->
         <div class="flex flex-col gap-3 border-b border-slate-100 px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
@@ -390,22 +393,45 @@ onMounted(loadEvents);
                                     'pr-1': slot.isEnd,
                                     '-mr-px z-10': !slot.isEnd
                                 }">
-                                    <button
-                                        type="button"
-                                        class="flex-1 h-full truncate px-2 text-[10.5px] font-semibold transition-all flex items-center hover:brightness-90"
-                                        :class="[
-                                            slot.isStart ? 'rounded-l-md' : 'rounded-l-none',
-                                            slot.isEnd ? 'rounded-r-md' : 'rounded-r-none',
-                                        ]"
-                                        :style="getEventStyle(slot)"
-                                        @mouseenter="hoveredEventId = slot.id"
-                                        @mouseleave="hoveredEventId = null"
-                                        @click="openEvent(slot)"
-                                    >
-                                        <span v-if="slot.isFirstDayOfEvent || day.date.getDay() === 1" class="truncate leading-none">
-                                            {{ slot.title }}
-                                        </span>
-                                    </button>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <button
+                                                type="button"
+                                                class="flex-1 h-full truncate px-2 text-[10.5px] font-semibold transition-all flex items-center"
+                                                :class="[
+                                                    slot.isStart ? 'rounded-l-md' : 'rounded-l-none',
+                                                    slot.isEnd ? 'rounded-r-md' : 'rounded-r-none',
+                                                    hoveredEventId === slot.id ? 'brightness-90 shadow-sm opacity-100 z-20' : ''
+                                                ]"
+                                                :style="getEventStyle(slot)"
+                                                @mouseenter="hoveredEventId = slot.id"
+                                                @mouseleave="hoveredEventId = null"
+                                                @click="openEvent(slot)"
+                                            >
+                                                <span v-if="slot.isFirstDayOfEvent || day.date.getDay() === 1" class="truncate leading-none pointer-events-none">
+                                                    {{ slot.title }}
+                                                </span>
+                                            </button>
+                                        </TooltipTrigger>
+                                        <TooltipContent hide-arrow side="top" class="max-w-xs space-y-2 p-3 bg-white border border-slate-200 shadow-md z-[60]">
+                                            <p class="font-bold text-sm text-slate-900">{{ slot.title }}</p>
+                                            <div class="flex flex-wrap gap-1.5">
+                                                <Badge variant="secondary" class="text-[10px]">{{ slot.category || 'Tanpa Kategori' }}</Badge>
+                                                <Badge variant="outline" class="text-[10px] capitalize">{{ slot.status ? slot.status.replace('_', ' ') : 'Belum Dikerjakan' }}</Badge>
+                                            </div>
+                                            <p v-if="slot.description" class="text-xs text-slate-500 line-clamp-3 leading-relaxed">{{ slot.description }}</p>
+                                            <div class="grid grid-cols-2 gap-x-4 gap-y-2 text-[10px] mt-2 pt-2 border-t border-slate-100">
+                                                <div>
+                                                    <span class="font-semibold text-slate-400 block uppercase tracking-wider mb-0.5">Mulai</span>
+                                                    <span class="font-mono text-slate-700 font-medium">{{ slot.start_date ? new Date(slot.start_date).toLocaleDateString('id-ID', {day: 'numeric', month: 'short', year: 'numeric'}) : '-' }}</span>
+                                                </div>
+                                                <div>
+                                                    <span class="font-semibold text-slate-400 block uppercase tracking-wider mb-0.5">Deadline</span>
+                                                    <span class="font-mono text-slate-700 font-medium">{{ slot.deadline_wib ? formatDateTime(slot.deadline_wib) : '-' }}</span>
+                                                </div>
+                                            </div>
+                                        </TooltipContent>
+                                    </Tooltip>
                                 </div>
                                 <div v-else class="h-[22px]"></div>
                             </template>
@@ -424,4 +450,5 @@ onMounted(loadEvents);
             </div>
         </div>
     </Card>
+    </TooltipProvider>
 </template>
