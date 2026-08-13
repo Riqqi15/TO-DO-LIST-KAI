@@ -12,6 +12,7 @@ import { TODO_STATUSES } from '@/features/todo/constants/todo-options';
 import { deadlineMeta, formatDateTime, formatDuration, reminderKindLabel, reminderStatusLabel, statusDateInput, toWibDateTimeInput } from '@/features/todo/utils/todo-formatters';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
 import { ArrowLeft, Bell, CalendarClock, CheckCircle2, Hourglass, LoaderCircle, Pencil, Play, Trash2, UserRound } from '@lucide/vue';
+import { notifyRequestError } from '@/lib/request-errors';
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 
@@ -123,9 +124,10 @@ const saveAll = () => {
                     saveProcessing.value = false;
                 }
             },
-            onError: (errors) => { 
-                titleErrors.value = errors; 
+            onError: (errors) => {
+                titleErrors.value = errors;
                 saveProcessing.value = false;
+                if (!errors.title && !errors.description) notifyRequestError(errors, 'Perubahan task tidak dapat disimpan.');
             },
         });
     } else if (shouldUpdateStatus) {
@@ -140,22 +142,45 @@ const changeStatus = () => {
         result_notes: status.value === 'selesai' ? resultNotes.value : null 
     }, {
         preserveScroll: true,
-        onError: (errors) => { statusErrors.value = errors; },
+        onError: (errors) => {
+            statusErrors.value = errors;
+            if (!errors.status && !errors.status_at && !errors.result_notes) notifyRequestError(errors, 'Status task tidak dapat diperbarui.');
+        },
         onFinish: () => { saveProcessing.value = false; },
     });
 };
 
 const deleteTodo = () => {
     if (confirm(`Hapus task "${todo.value.title}"? Tindakan ini tidak dapat dibatalkan.`)) {
-        router.delete(`/todos/${todo.value.id}`);
+        router.delete(`/todos/${todo.value.id}`, {
+            onError: (errors) => notifyRequestError(errors, 'Task tidak dapat dihapus.'),
+        });
     }
 };
 
-const addReminder = () => reminderForm.post(`/todos/${todo.value.id}/reminders`, { preserveScroll: true, onSuccess: () => reminderForm.reset() });
-const deleteReminder = (reminder) => router.delete(`/reminders/${reminder.id}`, { preserveScroll: true });
+const addReminder = () => reminderForm.post(`/todos/${todo.value.id}/reminders`, {
+    preserveScroll: true,
+    onSuccess: () => reminderForm.reset(),
+    onError: (errors) => {
+        if (!errors.scheduled_at) notifyRequestError(errors, 'Reminder tidak dapat dibuat.');
+    },
+});
+const deleteReminder = (reminder) => router.delete(`/reminders/${reminder.id}`, {
+    preserveScroll: true,
+    onError: (errors) => notifyRequestError(errors, 'Reminder tidak dapat dihapus.'),
+});
 
-const addNote = () => noteForm.post(`/todos/${todo.value.id}/notes`, { preserveScroll: true, onSuccess: () => noteForm.reset() });
-const deleteNote = (note) => router.delete(`/notes/${note.id}`, { preserveScroll: true });
+const addNote = () => noteForm.post(`/todos/${todo.value.id}/notes`, {
+    preserveScroll: true,
+    onSuccess: () => noteForm.reset(),
+    onError: (errors) => {
+        if (!errors.body) notifyRequestError(errors, 'Catatan tidak dapat ditambahkan.');
+    },
+});
+const deleteNote = (note) => router.delete(`/notes/${note.id}`, {
+    preserveScroll: true,
+    onError: (errors) => notifyRequestError(errors, 'Catatan tidak dapat dihapus.'),
+});
 
 const goBack = () => {
     if (window.history.length > 1) {

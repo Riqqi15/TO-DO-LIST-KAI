@@ -14,12 +14,8 @@ class DeleteTodoNote
 
     public function handle(TodoNote $note, User $actor): void
     {
-        // Only the creator or workspace admin can delete the note.
-        // Assuming workspace admin check requires passing the workspace. 
-        // For now, let's allow creator, and also rely on the Controller's Policy.
-        // Actually, $actor->can('delete', $note) would be ideal. But let's check here:
         $todo = $note->todo;
-        if ($note->created_by !== $actor->id && ! $todo->workspace->hasAdmin($actor)) {
+        if ($note->created_by !== $actor->id && ! $todo->workspace->isOwner($actor)) {
             throw new AuthorizationException;
         }
 

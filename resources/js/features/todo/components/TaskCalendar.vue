@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { formatDateTime } from '@/features/todo/utils/todo-formatters';
+import { notifyAxiosError } from '@/lib/request-errors';
 import axios from 'axios';
 import { ChevronLeft, ChevronRight, LoaderCircle, RefreshCw, Zap } from '@lucide/vue';
 import { computed, onMounted, ref, watch } from 'vue';
@@ -182,8 +183,8 @@ const loadEvents = async () => {
     try {
         const response = await axios.get(`/workspaces/${props.workspaceId}/calendar`, { params: { from, to } });
         events.value = response.data.events ?? [];
-    } catch {
-        error.value = 'Kalender tidak dapat dimuat.';
+    } catch (exception) {
+        error.value = notifyAxiosError(exception, 'Kalender tidak dapat dimuat.');
     } finally {
         loading.value = false;
     }

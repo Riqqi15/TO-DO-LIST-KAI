@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
 import { Textarea } from '@/components/ui/textarea';
 import { defaultDeadline, toDateTimeInput } from '@/features/todo/utils/todo-formatters';
+import { notifyRequestError } from '@/lib/request-errors';
 import { useForm } from '@inertiajs/vue3';
 import { BellPlus, LoaderCircle, Plus, X } from '@lucide/vue';
 import { computed, ref, watch } from 'vue';
@@ -49,7 +50,16 @@ const addReminder = () => {
     reminderDraft.value = '';
 };
 const submit = () => {
-    const options = { preserveScroll: true, onSuccess: () => { emit('update:open', false); emit('saved'); } };
+    const inlineFields = ['title', 'description', 'category_id', 'deadline_at'];
+    const options = {
+        preserveScroll: true,
+        onSuccess: () => { emit('update:open', false); emit('saved'); },
+        onError: (errors) => {
+            if (!Object.keys(errors).some((field) => inlineFields.includes(field))) {
+                notifyRequestError(errors, 'Task tidak dapat disimpan.');
+            }
+        },
+    };
     if (editing.value) form.put(`/todos/${props.todo.id}`, options);
     else form.post(`/workspaces/${props.workspaceId}/todos`, options);
 };

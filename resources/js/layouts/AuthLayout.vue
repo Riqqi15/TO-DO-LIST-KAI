@@ -1,5 +1,6 @@
 <script setup>
 import kaiLogo from '@/assets/kai-logo.svg';
+import { Toaster } from '@/components/ui/sonner';
 import { BadgeCheck, BellRing, CalendarDays, CheckCheck } from '@lucide/vue';
 
 defineProps({
@@ -61,5 +62,7 @@ defineProps({
                 </div>
             </div>
         </section>
+
+        <Toaster position="top-right" close-button rich-colors />
     </main>
 </template>

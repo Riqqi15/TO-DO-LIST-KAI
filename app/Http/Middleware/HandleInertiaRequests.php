@@ -47,6 +47,7 @@ class HandleInertiaRequests extends Middleware
             ],
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),
+                'error' => fn () => $request->session()->get('error'),
                 'workspace_id' => fn () => $request->session()->get('workspace_id'),
                 'team_invite' => fn () => $request->session()->get('team_invite'),
                 'todo_id' => fn () => $request->session()->get('todo_id'),
