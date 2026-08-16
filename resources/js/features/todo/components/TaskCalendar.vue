@@ -213,42 +213,31 @@ const getEventStyle = (slot) => {
         return new Date(parts[0], parts[1] - 1, parts[2]).getTime();
     };
     
-    const end = parseDateStr(slot.end_date || slot.deadline_wib?.slice(0, 10));
-    const start = parseDateStr(slot.start_date || new Date().toISOString().slice(0, 10));
+    // Hitung jarak H-x berdasarkan deadline_wib (bukan end_date visual kalender)
+    const end = parseDateStr(slot.deadline_wib?.slice(0, 10) || slot.end_date);
     
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    const current = today.getTime();
+    const currentDay = today.getTime();
     
     // 2. Hari H Deadline ATAU Overdue (Merah)
-    if (current >= end) {
+    if (currentDay >= end) {
         return { backgroundColor: '#ef4444', color: 'white', border: 'none' }; // red-500
     }
-
-    // 3. Default / Belum Mulai (Abu-abu)
-    // Jika status belum dikerjakan, warna akan statis abu-abu
-    if (slot.status === 'belum_dikerjakan') {
-        return { backgroundColor: '#94a3b8', color: 'white', border: 'none' }; // gray-400
-    }
     
-    // 4. Progress Tracking (Hanya untuk Sedang Dikerjakan)
+    // 3. Peringatan Deadline (H-3, H-2, H-1) - berlaku untuk semua status yang belum selesai
     const msPerDay = 1000 * 60 * 60 * 24;
-    const daysRemaining = Math.round((end - current) / msPerDay);
+    const daysRemaining = Math.round((end - currentDay) / msPerDay);
     
-    let bgColor = '';
-    if (daysRemaining >= 3) {
-        bgColor = '#3b82f6'; // blue-500 (Aman, deadline masih > 2 hari)
-    } else if (daysRemaining === 2) {
-        bgColor = '#eab308'; // yellow-500 (Warning: H-2 deadline)
-    } else {
-        bgColor = '#f97316'; // orange-500 (Urgent: H-1 deadline)
+    if (daysRemaining === 3 || daysRemaining === 2) {
+        return { backgroundColor: '#eab308', color: 'white', border: 'none' }; // yellow-500 (Warning: H-3 atau H-2)
+    } else if (daysRemaining === 1) {
+        return { backgroundColor: '#f97316', color: 'white', border: 'none' }; // orange-500 (Urgent: H-1 deadline)
     }
     
-    return {
-        backgroundColor: bgColor,
-        color: 'white',
-        border: 'none'
-    };
+    // 4. Default / Belum H-3 (Abu-abu)
+    // Tetap abu-abu meskipun sedang dikerjakan atau belum dikerjakan
+    return { backgroundColor: '#94a3b8', color: 'white', border: 'none' }; // gray-400
 };
 
 watch(() => props.workspaceId, loadEvents);
