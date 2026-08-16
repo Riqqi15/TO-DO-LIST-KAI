@@ -421,10 +421,8 @@ onMounted(loadEvents);
                                                 @click="openEvent(slot)"
                                             >
                                                 <span v-if="slot.isFirstDayOfEvent || day.date.getDay() === 1" class="truncate leading-none pointer-events-none pr-3 flex items-center gap-1.5">
-                                                    <span class="truncate">
-                                                        <span v-if="slot.category" class="font-extrabold opacity-85 mr-1">[{{ slot.category }}]</span>
-                                                        {{ slot.title }}
-                                                    </span>
+                                                    <span v-if="slot.category" class="bg-black/20 text-white text-[8px] px-1.5 py-0.5 rounded uppercase font-extrabold tracking-wider shrink-0 leading-none">{{ slot.category }}</span>
+                                                    <span class="truncate">{{ slot.title }}</span>
                                                     <span v-if="slot.isOverdue" class="bg-black/25 text-white text-[8.5px] px-1.5 py-0.5 rounded-sm uppercase font-extrabold tracking-widest shrink-0 shadow-sm leading-none">TERLAMBAT</span>
                                                 </span>
                                                 <div v-if="slot.hasNoteToday" class="absolute right-1 top-1/2 -translate-y-1/2 flex items-center gap-0.5">
@@ -484,9 +482,9 @@ onMounted(loadEvents);
                                                 <button v-if="slot" @click="openEvent(slot)" type="button" class="w-full text-left px-2 py-1.5 rounded-md hover:bg-slate-100 transition-colors flex items-center justify-between group">
                                                     <div class="flex items-center gap-2 overflow-hidden">
                                                         <div class="size-2 rounded-full shrink-0" :style="{ backgroundColor: getEventStyle(slot).backgroundColor }"></div>
-                                                        <span class="text-[11px] font-medium text-slate-800 truncate">
-                                                            <span v-if="slot.category" class="font-bold text-slate-500 mr-1">[{{ slot.category }}]</span>
-                                                            {{ slot.title }}
+                                                        <span class="text-[11px] font-medium text-slate-800 truncate flex items-center gap-1.5">
+                                                            <span v-if="slot.category" class="bg-slate-100 text-slate-500 border border-slate-200 text-[8px] px-1.5 py-0.5 rounded uppercase font-bold tracking-wider shrink-0 leading-none">{{ slot.category }}</span>
+                                                            <span class="truncate">{{ slot.title }}</span>
                                                         </span>
                                                     </div>
                                                     <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
