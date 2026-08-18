@@ -312,6 +312,9 @@ onMounted(loadEvents);
                                     <div v-if="tasksByStatus.belum_dikerjakan.length === 0" class="flex h-full items-center justify-center text-sm text-slate-400 py-10">Tidak ada task</div>
                                     <div v-else class="space-y-1">
                                         <button v-for="t in tasksByStatus.belum_dikerjakan" :key="t.id" @click="jumpToSpecificTask(t)" class="w-full flex flex-col text-left px-4 py-2.5 rounded-lg hover:bg-slate-100 hover:shadow-sm border border-transparent hover:border-slate-200 transition-all">
+                                            <div class="mb-1.5 flex items-center">
+                                                <span class="bg-indigo-50 text-indigo-700 border border-indigo-100 text-[10px] px-2 py-0.5 rounded-md uppercase font-bold tracking-wider">{{ t.category?.name || 'TANPA KATEGORI' }}</span>
+                                            </div>
                                             <span class="text-sm font-semibold text-slate-700">{{ t.title }}</span>
                                             <span class="text-xs text-slate-400 mt-0.5">{{ t.deadline_wib ? 'Deadline: ' + new Date(t.deadline_wib).toLocaleDateString('id-ID', {weekday: 'long', day: 'numeric', month: 'short', year: 'numeric'}) : 'Tanpa Tenggat' }}</span>
                                         </button>
@@ -321,6 +324,9 @@ onMounted(loadEvents);
                                     <div v-if="tasksByStatus.sedang_dikerjakan.length === 0" class="flex h-full items-center justify-center text-sm text-slate-400 py-10">Tidak ada task</div>
                                     <div v-else class="space-y-1">
                                         <button v-for="t in tasksByStatus.sedang_dikerjakan" :key="t.id" @click="jumpToSpecificTask(t)" class="w-full flex flex-col text-left px-4 py-2.5 rounded-lg hover:bg-slate-100 hover:shadow-sm border border-transparent hover:border-slate-200 transition-all">
+                                            <div class="mb-1.5 flex items-center">
+                                                <span class="bg-indigo-50 text-indigo-700 border border-indigo-100 text-[10px] px-2 py-0.5 rounded-md uppercase font-bold tracking-wider">{{ t.category?.name || 'TANPA KATEGORI' }}</span>
+                                            </div>
                                             <span class="text-sm font-semibold text-blue-700">{{ t.title }}</span>
                                             <span class="text-xs text-slate-400 mt-0.5">{{ t.started_at ? 'Mulai dikerjakan: ' + new Date(t.started_at).toLocaleDateString('id-ID', {weekday: 'long', day: 'numeric', month: 'short', year: 'numeric'}) : 'Belum dimulai' }}</span>
                                         </button>
@@ -330,6 +336,9 @@ onMounted(loadEvents);
                                     <div v-if="tasksByStatus.selesai.length === 0" class="flex h-full items-center justify-center text-sm text-slate-400 py-10">Tidak ada task</div>
                                     <div v-else class="space-y-1">
                                         <button v-for="t in tasksByStatus.selesai" :key="t.id" @click="jumpToSpecificTask(t)" class="w-full flex flex-col text-left px-4 py-2.5 rounded-lg hover:bg-slate-100 hover:shadow-sm border border-transparent hover:border-slate-200 transition-all">
+                                            <div class="mb-1.5 flex items-center">
+                                                <span class="bg-indigo-50 text-indigo-700 border border-indigo-100 text-[10px] px-2 py-0.5 rounded-md uppercase font-bold tracking-wider">{{ t.category?.name || 'TANPA KATEGORI' }}</span>
+                                            </div>
                                             <span class="text-sm font-semibold text-emerald-700">{{ t.title }}</span>
                                             <span class="text-xs text-slate-400 mt-0.5">{{ t.completed_at ? 'Selesai pada: ' + new Date(t.completed_at).toLocaleDateString('id-ID', {weekday: 'long', day: 'numeric', month: 'short', year: 'numeric'}) : 'Selesai' }}</span>
                                         </button>
