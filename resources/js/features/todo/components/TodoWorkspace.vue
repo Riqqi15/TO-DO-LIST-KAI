@@ -57,7 +57,7 @@ const counts = computed(() => ({
     pending: todos.value.filter((todo) => todo.status === 'belum_dikerjakan').length,
     ongoing: todos.value.filter((todo) => todo.status === 'sedang_dikerjakan').length,
     done: todos.value.filter((todo) => todo.status === 'selesai').length,
-    urgent: todos.value.filter((todo) => ['Terlambat', 'Kurang dari 24 jam'].includes(deadlineMeta(todo).label)).length,
+    urgent: todos.value.filter((todo) => ['Terlambat', 'H-1 Deadline', 'H-2 Deadline', 'H-3 Deadline'].includes(deadlineMeta(todo).label)).length,
 }));
 const header = computed(() => ({
     tasks: { eyebrow: 'Pusat produktivitas', title: activeWorkspace.value?.name ?? 'Tasks', description: `${counts.value.total} task di workspace ini` },

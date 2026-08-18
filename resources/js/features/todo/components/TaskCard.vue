@@ -13,6 +13,17 @@ const props = defineProps({ todo: { type: Object, required: true } });
 const emit = defineEmits(['open', 'edit', 'delete', 'status']);
 const deadline = computed(() => deadlineMeta(props.todo));
 const statusDate = computed(() => statusDateMeta(props.todo));
+
+const durationText = computed(() => {
+    const formatDate = (val) => {
+        if (!val) return '?';
+        const d = new Date(val);
+        return new Intl.DateTimeFormat('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }).format(d);
+    };
+    const start = formatDate(props.todo.start_date);
+    const end = formatDate(props.todo.deadline_wib?.slice(0, 10) || props.todo.deadline_at);
+    return `${start} - ${end}`;
+});
 </script>
 
 <template>
@@ -39,21 +50,28 @@ const statusDate = computed(() => statusDateMeta(props.todo));
             </div>
 
             <h3 class="mt-3 line-clamp-2 break-words [overflow-wrap:anywhere] text-[15px] font-extrabold leading-5 tracking-[-0.015em]">{{ todo.title }}</h3>
-            <p v-if="todo.description" class="mt-2 line-clamp-2 break-words [overflow-wrap:anywhere] text-xs leading-5 text-muted-foreground">{{ todo.description }}</p>
+            <p v-if="todo.description && todo.description !== todo.category?.name" class="mt-2 line-clamp-2 break-words [overflow-wrap:anywhere] text-xs leading-5 text-muted-foreground">{{ todo.description }}</p>
 
             <div class="mt-4 space-y-1.5">
-                <div class="flex items-center gap-2 text-xs" :class="statusDate.tone">
+                <div v-if="todo.status === 'selesai'" class="flex items-center gap-2 text-xs text-emerald-700">
                     <CalendarClock class="size-3.5 shrink-0" />
-                    <span class="font-semibold">{{ statusDate.label }}</span>
+                    <span class="font-semibold">Selesai</span>
                     <span class="text-current/45">·</span>
-                    <span class="font-mono font-medium truncate">{{ statusDate.value ? formatShortDate(statusDate.value) : 'Belum tercatat' }}</span>
+                    <span class="font-mono font-medium truncate">{{ todo.completed_at ? formatShortDate(todo.completed_at) : 'Belum tercatat' }}</span>
                 </div>
                 
-                <div v-if="todo.status === 'sedang_dikerjakan'" class="flex items-center gap-2 text-xs" :class="deadline.tone">
+                <div v-if="todo.status === 'sedang_dikerjakan'" class="flex items-center gap-2 text-xs text-blue-700">
                     <CalendarClock class="size-3.5 shrink-0" />
-                    <span class="font-semibold">Deadline</span>
+                    <span class="font-semibold">Mulai</span>
                     <span class="text-current/45">·</span>
-                    <span class="font-mono font-medium truncate">{{ todo.deadline_at ? formatShortDate(todo.deadline_at) : 'Belum diset' }}</span>
+                    <span class="font-mono font-medium truncate">{{ todo.started_at ? formatShortDate(todo.started_at) : 'Belum tercatat' }}</span>
+                </div>
+
+                <div v-if="todo.status !== 'selesai'" class="flex items-center gap-2 text-xs" :class="deadline.tone">
+                    <CalendarClock class="size-3.5 shrink-0" />
+                    <span class="font-semibold">Durasi</span>
+                    <span class="text-current/45">·</span>
+                    <span class="font-mono font-medium truncate">{{ durationText }}</span>
                 </div>
             </div>
 

@@ -96,18 +96,38 @@ export const statusDateInput = (todo, status) => {
 
 export const deadlineMeta = (todo) => {
     if (todo.status === 'selesai') {
-        return { label: 'Selesai', color: '#12806a', tone: 'text-emerald-700', icon: 'check' };
-    }
-    if (todo.status === 'sedang_dikerjakan') {
-        return { label: 'Sedang Dikerjakan', color: '#3b82f6', tone: 'text-blue-600', icon: 'activity' };
+        return { label: 'Selesai', color: '#10b981', tone: 'text-emerald-700', icon: 'check' };
     }
 
-    const deadline = new Date(todo.deadline_at);
-    const hours = (deadline.getTime() - Date.now()) / 3_600_000;
-    if (hours < 0) return { label: 'Terlambat', color: '#c23b3b', tone: 'text-red-700', icon: 'alert' };
-    if (hours <= 24) return { label: 'Kurang dari 24 jam', color: '#c23b3b', tone: 'text-red-700', icon: 'clock' };
-    if (hours <= 72) return { label: 'Mendekati deadline', color: '#b76e00', tone: 'text-amber-700', icon: 'clock' };
-    return { label: 'Terjadwal', color: '#64748b', tone: 'text-slate-500', icon: 'calendar' };
+    const parseDateStr = (dateStr) => {
+        if (!dateStr) return new Date().getTime();
+        const parts = dateStr.substring(0, 10).split('-');
+        return new Date(parts[0], parts[1] - 1, parts[2]).getTime();
+    };
+
+    const end = parseDateStr(todo.deadline_wib || todo.deadline_at);
+    
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const currentDay = today.getTime();
+    
+    if (currentDay >= end) {
+        return { label: 'Terlambat', color: '#ef4444', tone: 'text-red-600', icon: 'alert' };
+    }
+
+    const msPerDay = 1000 * 60 * 60 * 24;
+    const daysRemaining = Math.round((end - currentDay) / msPerDay);
+    
+    if (daysRemaining === 1) {
+        return { label: 'H-1 Deadline', color: '#f97316', tone: 'text-orange-600', icon: 'clock' };
+    } else if (daysRemaining === 2 || daysRemaining === 3) {
+        return { label: `H-${daysRemaining} Deadline`, color: '#eab308', tone: 'text-yellow-600', icon: 'clock' };
+    }
+
+    if (todo.status === 'sedang_dikerjakan') {
+        return { label: 'Sedang Dikerjakan', color: '#94a3b8', tone: 'text-blue-600', icon: 'activity' };
+    }
+    return { label: 'Terjadwal', color: '#94a3b8', tone: 'text-slate-500', icon: 'calendar' };
 };
 
 export const defaultDeadline = (days = 1) => {
