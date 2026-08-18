@@ -278,7 +278,7 @@ onMounted(loadEvents);
                         </SelectContent>
                     </Select>
                 </div>
-                <p class="text-xs text-slate-400 mt-0.5">Progress tracking dengan rentang tanggal. Deadline WIB.</p>
+                <p class="text-xs text-slate-400 mt-0.5">Pantau ritme kerja dan durasi pengerjaan task</p>
             </div>
             <div class="flex items-center gap-2">
                 <Select v-model="categoryFilter">
