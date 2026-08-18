@@ -127,27 +127,44 @@ watch(todos, (items) => {
         @switch-workspace="switchWorkspace"
     >
         <template #actions>
-            <Button v-if="activeWorkspace && ['tasks', 'calendar'].includes(activeSection)" class="font-bold shadow-sm shadow-primary/15" @click="createTodo"><Plus class="size-4" /><span class="hidden sm:inline">Buat task</span><span class="sm:hidden">Task</span></Button>
+            <Button v-if="activeWorkspace && ['tasks', 'calendar'].includes(activeSection)" class="font-bold shadow-md shadow-primary/25 bg-gradient-to-r from-primary to-indigo-600 hover:from-primary/90 hover:to-indigo-600/90 transition-all duration-300 hover:-translate-y-0.5" @click="createTodo"><Plus class="size-4" /><span class="hidden sm:inline">Buat task</span><span class="sm:hidden">Task</span></Button>
         </template>
 
         <div v-if="!activeWorkspace" class="grid min-h-[65vh] place-items-center"><Card class="max-w-md border-dashed p-9 text-center shadow-none"><div class="mx-auto grid size-12 place-items-center rounded-2xl bg-secondary text-primary"><Sparkles class="size-5" /></div><h2 class="mt-4 text-lg font-extrabold">Workspace belum tersedia</h2><p class="mt-2 text-sm leading-6 text-muted-foreground">Verifikasi email untuk membuat workspace personal, lalu muat ulang halaman.</p></Card></div>
 
         <template v-else-if="activeSection === 'tasks'">
             <div class="mb-5 grid grid-cols-2 gap-3 xl:grid-cols-5">
-                <Card class="border-border/80 p-4 shadow-none"><div class="flex items-center justify-between"><p class="text-xs font-bold text-muted-foreground">Semua task</p><LayoutGrid class="size-4 text-primary" /></div><p class="mt-3 font-mono text-2xl font-semibold">{{ counts.total }}</p></Card>
-                <Card class="border-border/80 p-4 shadow-none"><div class="flex items-center justify-between"><p class="text-xs font-bold text-muted-foreground">Belum dikerjakan</p><Circle class="size-4 text-slate-400" /></div><p class="mt-3 font-mono text-2xl font-semibold">{{ counts.pending }}</p></Card>
-                <Card class="border-border/80 p-4 shadow-none"><div class="flex items-center justify-between"><p class="text-xs font-bold text-muted-foreground">Sedang dikerjakan</p><CircleDot class="size-4 text-blue-600" /></div><p class="mt-3 font-mono text-2xl font-semibold">{{ counts.ongoing }}</p></Card>
-                <Card class="border-border/80 p-4 shadow-none"><div class="flex items-center justify-between"><p class="text-xs font-bold text-muted-foreground">Mendesak</p><CalendarDays class="size-4 text-red-600" /></div><p class="mt-3 font-mono text-2xl font-semibold">{{ counts.urgent }}</p></Card>
-                <Card class="border-border/80 p-4 shadow-none"><div class="flex items-center justify-between"><p class="text-xs font-bold text-muted-foreground">Selesai</p><CheckCircle2 class="size-4 text-emerald-600" /></div><p class="mt-3 font-mono text-2xl font-semibold">{{ counts.done }}</p></Card>
+                <Card class="border-slate-200/60 bg-white/80 backdrop-blur-md p-4 shadow-sm transition-all duration-300 hover:shadow-md hover:-translate-y-1 hover:border-slate-300/80"><div class="flex items-center justify-between"><p class="text-xs font-bold text-muted-foreground">Semua task</p><LayoutGrid class="size-4 text-primary" /></div><p class="mt-3 font-mono text-2xl font-semibold">{{ counts.total }}</p></Card>
+                <Card class="border-slate-200/60 bg-white/80 backdrop-blur-md p-4 shadow-sm transition-all duration-300 hover:shadow-md hover:-translate-y-1 hover:border-slate-300/80"><div class="flex items-center justify-between"><p class="text-xs font-bold text-muted-foreground">Belum dikerjakan</p><Circle class="size-4 text-slate-400" /></div><p class="mt-3 font-mono text-2xl font-semibold">{{ counts.pending }}</p></Card>
+                <Card class="border-slate-200/60 bg-white/80 backdrop-blur-md p-4 shadow-sm transition-all duration-300 hover:shadow-md hover:-translate-y-1 hover:border-slate-300/80"><div class="flex items-center justify-between"><p class="text-xs font-bold text-muted-foreground">Sedang dikerjakan</p><CircleDot class="size-4 text-blue-600" /></div><p class="mt-3 font-mono text-2xl font-semibold">{{ counts.ongoing }}</p></Card>
+                <Card class="border-slate-200/60 bg-white/80 backdrop-blur-md p-4 shadow-sm transition-all duration-300 hover:shadow-md hover:-translate-y-1 hover:border-slate-300/80"><div class="flex items-center justify-between"><p class="text-xs font-bold text-muted-foreground">Mendesak</p><CalendarDays class="size-4 text-red-600" /></div><p class="mt-3 font-mono text-2xl font-semibold">{{ counts.urgent }}</p></Card>
+                <Card class="border-slate-200/60 bg-white/80 backdrop-blur-md p-4 shadow-sm transition-all duration-300 hover:shadow-md hover:-translate-y-1 hover:border-slate-300/80"><div class="flex items-center justify-between"><p class="text-xs font-bold text-muted-foreground">Selesai</p><CheckCircle2 class="size-4 text-emerald-600" /></div><p class="mt-3 font-mono text-2xl font-semibold">{{ counts.done }}</p></Card>
             </div>
 
             <Card class="mb-5 border-border/80 p-3 shadow-none">
                 <div class="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
                     <div class="flex flex-1 flex-col gap-2 sm:flex-row">
-                        <div class="relative min-w-0 flex-1 sm:max-w-md"><Search class="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" /><Input v-model="search" class="h-10 pl-9" placeholder="Cari judul atau deskripsi..." /></div>
-                        <div class="flex gap-2"><NativeSelect v-model="categoryFilter" aria-label="Filter kategori" class="h-10 min-w-40 flex-1"><NativeSelectOption value="">Semua kategori</NativeSelectOption><NativeSelectOption v-for="category in categories" :key="category.id" :value="category.id">{{ category.name }}</NativeSelectOption></NativeSelect><NativeSelect v-model="statusFilter" aria-label="Filter status" class="h-10 min-w-40 flex-1"><NativeSelectOption value="">Semua status</NativeSelectOption><NativeSelectOption v-for="status in TODO_STATUSES" :key="status.value" :value="status.value">{{ status.label }}</NativeSelectOption></NativeSelect></div>
+                        <div class="relative min-w-0 flex-1 sm:max-w-md"><Search class="absolute left-3 top-1/2 z-10 size-4 -translate-y-1/2 text-muted-foreground pointer-events-none" /><Input v-model="search" placeholder="Cari judul atau deskripsi..." class="h-10 bg-white/80 backdrop-blur-sm border-slate-200/60 shadow-sm transition-shadow hover:shadow-md focus:shadow-md pl-9" /></div>
+                        <div class="flex gap-2">
+                            <NativeSelect v-model="categoryFilter" aria-label="Filter kategori" class="h-10 min-w-32 flex-1 bg-white/80 backdrop-blur-sm border-slate-200/60 shadow-sm transition-shadow hover:shadow-md rounded-md">
+                                <NativeSelectOption value="">Semua kategori</NativeSelectOption>
+                                <NativeSelectOption v-for="category in categories" :key="category.id" :value="category.id">{{ category.name }}</NativeSelectOption>
+                            </NativeSelect>
+                            <NativeSelect v-model="statusFilter" aria-label="Filter status" class="h-10 min-w-32 flex-1 bg-white/80 backdrop-blur-sm border-slate-200/60 shadow-sm transition-shadow hover:shadow-md rounded-md">
+                                <NativeSelectOption value="">Semua status</NativeSelectOption>
+                                <NativeSelectOption v-for="status in TODO_STATUSES" :key="status.value" :value="status.value">{{ status.label }}</NativeSelectOption>
+                            </NativeSelect>
+                        </div>
                     </div>
-                    <Tabs :model-value="viewMode" @update:model-value="setView"><TabsList class="grid h-10 w-full grid-cols-2 xl:w-auto"><TabsTrigger value="board" aria-label="Board"><LayoutGrid class="size-4" /><span class="hidden sm:inline">Board</span></TabsTrigger><TabsTrigger value="list" aria-label="Daftar"><List class="size-4" /><span class="hidden sm:inline">Daftar</span></TabsTrigger></TabsList></Tabs>
+                    
+                    <div class="flex items-center self-end sm:self-auto">
+                        <Tabs :model-value="viewMode" @update:model-value="setView">
+                            <TabsList class="grid h-10 w-full grid-cols-2 xl:w-auto bg-white/60 border border-slate-200/40 shadow-sm">
+                                <TabsTrigger value="board" aria-label="Board"><LayoutGrid class="size-4" /><span class="hidden sm:inline">Board</span></TabsTrigger>
+                                <TabsTrigger value="list" aria-label="Daftar"><List class="size-4" /><span class="hidden sm:inline">Daftar</span></TabsTrigger>
+                            </TabsList>
+                        </Tabs>
+                    </div>
                 </div>
                 <div v-if="search || categoryFilter || statusFilter" class="mt-3 flex items-center gap-2 border-t pt-3 text-xs text-muted-foreground"><SlidersHorizontal class="size-3.5" /><span>Menampilkan {{ filteredTodos.length }} dari {{ todos.length }} task</span><Button variant="link" size="xs" class="ml-auto h-auto p-0 text-xs" @click="search = ''; categoryFilter = ''; statusFilter = ''">Reset filter</Button></div>
             </Card>

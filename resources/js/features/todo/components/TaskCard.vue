@@ -28,7 +28,7 @@ const durationText = computed(() => {
 
 <template>
     <Card
-        class="deadline-rail group cursor-pointer border-border/90 shadow-none transition duration-200 hover:-translate-y-0.5 hover:border-primary/25 hover:shadow-md hover:shadow-slate-200/50"
+        class="deadline-rail group cursor-pointer border-slate-200/60 bg-white/95 backdrop-blur-sm shadow-sm transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/5 hover:border-primary/30"
         :style="{ '--deadline-color': deadline.color }"
         @click="emit('open', todo)"
     >
