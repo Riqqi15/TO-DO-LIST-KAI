@@ -400,16 +400,17 @@ onMounted(loadEvents);
                         <!-- Task Events -->
                         <div class="flex-1 mt-0.5 space-y-[2px] pb-2">
                             <template v-for="(slot, idx) in day.slots.slice(0, 4)" :key="idx">
-                                <div v-if="slot" class="relative h-[22px] flex" :class="{
-                                    'pl-1': slot.isStart,
-                                    'pr-1': slot.isEnd,
-                                    '-mr-px z-10': !slot.isEnd
-                                }">
+                                <div v-if="slot" class="relative h-[22px] flex" :class="[
+                                    slot.isStart ? 'pl-1' : '',
+                                    slot.isEnd ? 'pr-1' : '',
+                                    !slot.isEnd ? '-mr-px' : '',
+                                    (slot.isFirstDayOfEvent || day.date.getDay() === 1) ? 'z-20' : (!slot.isEnd ? 'z-10' : '')
+                                ]">
                                     <Tooltip>
                                         <TooltipTrigger asChild>
                                             <button
                                                 type="button"
-                                                class="flex-1 h-full truncate px-2 text-[10.5px] font-semibold transition-all flex items-center relative"
+                                                class="flex-1 h-full px-2 text-[10.5px] font-semibold transition-all flex items-center relative whitespace-nowrap"
                                                 :class="[
                                                     slot.isStart ? 'rounded-l-md' : 'rounded-l-none',
                                                     slot.isEnd ? 'rounded-r-md' : 'rounded-r-none',
@@ -420,9 +421,8 @@ onMounted(loadEvents);
                                                 @mouseleave="hoveredEventId = null"
                                                 @click="openEvent(slot)"
                                             >
-                                                <span v-if="slot.isFirstDayOfEvent || day.date.getDay() === 1" class="truncate leading-none pointer-events-none pr-3 flex items-center gap-1.5">
-                                                    <span v-if="slot.category" class="bg-black/20 text-white text-[8px] px-1.5 py-0.5 rounded uppercase font-extrabold tracking-wider shrink-0 leading-none">{{ slot.category }}</span>
-                                                    <span class="truncate">{{ slot.title }}</span>
+                                                <span v-if="slot.isFirstDayOfEvent || day.date.getDay() === 1" class="leading-none pointer-events-none pr-3 flex items-center gap-1.5 whitespace-nowrap overflow-visible">
+                                                    <span class="text-white text-[11px] uppercase font-extrabold tracking-widest">{{ slot.category || 'TANPA KATEGORI' }}</span>
                                                     <span v-if="slot.isOverdue" class="bg-black/25 text-white text-[8.5px] px-1.5 py-0.5 rounded-sm uppercase font-extrabold tracking-widest shrink-0 shadow-sm leading-none">TERLAMBAT</span>
                                                 </span>
                                                 <div v-if="slot.hasNoteToday" class="absolute right-1 top-1/2 -translate-y-1/2 flex items-center gap-0.5">
