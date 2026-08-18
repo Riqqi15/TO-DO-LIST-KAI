@@ -14,7 +14,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { computed, onMounted, ref, watch } from 'vue';
 import { useSessionStorage } from '@vueuse/core';
 
-const props = defineProps({ workspaceId: { type: [Number, String], required: true }, todos: { type: Array, default: () => [] } });
+const props = defineProps({ workspaceId: { type: [Number, String], required: true }, todos: { type: Array, default: () => [] }, categories: { type: Array, default: () => [] } });
 const emit = defineEmits(['open']);
 
 // Convert stored string back to Date for cursor
@@ -35,11 +35,7 @@ const isQuickJumpOpen = ref(false);
 const previousCursor = ref(null);
 
 const uniqueCategories = computed(() => {
-    const cats = new Set();
-    events.value.forEach(e => {
-        if (e.category) cats.add(e.category);
-    });
-    return Array.from(cats).sort();
+    return props.categories.map(c => c.name);
 });
 
 const resetView = () => {
@@ -134,7 +130,7 @@ const weeks = computed(() => {
             const endKey = e.end_date || e.deadline_wib?.slice(0, 10);
             const dateMatch = startKey <= weekEndKey && endKey >= weekStartKey;
             const statusMatch = statusFilter.value === 'all' || e.status === statusFilter.value;
-            const categoryMatch = categoryFilter.value === 'all' || e.category === categoryFilter.value || (!e.category && categoryFilter.value === 'none');
+            const categoryMatch = categoryFilter.value === 'all' || e.category === categoryFilter.value;
             return dateMatch && statusMatch && categoryMatch;
         }).sort((a, b) => {
             const startA = a.start_date || a.deadline_wib?.slice(0, 10);
@@ -291,7 +287,6 @@ onMounted(loadEvents);
                     </SelectTrigger>
                     <SelectContent>
                         <SelectItem value="all">Semua Kategori</SelectItem>
-                        <SelectItem value="none">Tanpa Kategori</SelectItem>
                         <SelectItem v-for="cat in uniqueCategories" :key="cat" :value="cat">{{ cat }}</SelectItem>
                     </SelectContent>
                 </Select>

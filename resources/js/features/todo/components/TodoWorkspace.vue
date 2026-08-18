@@ -156,7 +156,7 @@ watch(todos, (items) => {
             <TaskList v-else :todos="filteredTodos" @open="openTodo" @status="changeStatus" />
         </template>
 
-        <TaskCalendar v-else-if="activeSection === 'calendar'" :workspace-id="activeWorkspace.id" :todos="todos" @open="openCalendarTodo" />
+        <TaskCalendar v-else-if="activeSection === 'calendar'" :workspace-id="activeWorkspace.id" :todos="todos" :categories="categories" @open="openCalendarTodo" />
         <StickyNotesPanel v-else-if="activeSection === 'notes'" :notes="stickyNotes" :workspace-id="activeWorkspace.id" />
         <ActivityPanel v-else-if="activeSection === 'activity'" :activities="activities" />
 
