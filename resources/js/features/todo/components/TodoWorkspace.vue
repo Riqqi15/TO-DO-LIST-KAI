@@ -61,7 +61,7 @@ const counts = computed(() => ({
 }));
 const header = computed(() => ({
     tasks: { eyebrow: 'Pusat produktivitas', title: activeWorkspace.value?.name ?? 'Tasks', description: `${counts.value.total} task di workspace ini` },
-    calendar: { eyebrow: 'Jadwal kerja', title: 'Kalender deadline', description: 'Lihat ritme kerja berdasarkan deadline task' },
+    calendar: { eyebrow: 'Jadwal kerja', title: 'Kalender Jadwal', description: 'Pantau ritme kerja dan durasi pengerjaan task Anda' },
     notes: { eyebrow: 'Ruang ide', title: 'Sticky Notes', description: `${stickyNotes.value.length} catatan di workspace ini` },
     activity: { eyebrow: 'Jejak perubahan', title: 'Activity', description: 'Riwayat permanen workspace' },
 }[activeSection.value]));
