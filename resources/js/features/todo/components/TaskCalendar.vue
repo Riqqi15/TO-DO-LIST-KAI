@@ -30,8 +30,17 @@ const loading = ref(false);
 const error = ref('');
 const hoveredEventId = ref(null);
 const statusFilter = useSessionStorage('todo_calendar_status', 'all');
+const categoryFilter = useSessionStorage('todo_calendar_category', 'all');
 const isQuickJumpOpen = ref(false);
 const previousCursor = ref(null);
+
+const uniqueCategories = computed(() => {
+    const cats = new Set();
+    events.value.forEach(e => {
+        if (e.category) cats.add(e.category);
+    });
+    return Array.from(cats).sort();
+});
 
 const resetView = () => {
     if (previousCursor.value) {
@@ -41,6 +50,7 @@ const resetView = () => {
         cursor.value = new Date();
     }
     statusFilter.value = 'all';
+    categoryFilter.value = 'all';
 };
 
 const tasksByStatus = computed(() => {
@@ -124,7 +134,8 @@ const weeks = computed(() => {
             const endKey = e.end_date || e.deadline_wib?.slice(0, 10);
             const dateMatch = startKey <= weekEndKey && endKey >= weekStartKey;
             const statusMatch = statusFilter.value === 'all' || e.status === statusFilter.value;
-            return dateMatch && statusMatch;
+            const categoryMatch = categoryFilter.value === 'all' || e.category === categoryFilter.value || (!e.category && categoryFilter.value === 'none');
+            return dateMatch && statusMatch && categoryMatch;
         }).sort((a, b) => {
             const startA = a.start_date || a.deadline_wib?.slice(0, 10);
             const startB = b.start_date || b.deadline_wib?.slice(0, 10);
@@ -274,6 +285,17 @@ onMounted(loadEvents);
                 <p class="text-xs text-slate-400 mt-0.5">Progress tracking dengan rentang tanggal. Deadline WIB.</p>
             </div>
             <div class="flex items-center gap-2">
+                <Select v-model="categoryFilter">
+                    <SelectTrigger class="h-8 w-[160px] text-xs font-semibold text-slate-700 border-slate-200/80 shadow-none bg-white hover:bg-slate-50 focus:ring-0">
+                        <SelectValue placeholder="Semua Kategori" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="all">Semua Kategori</SelectItem>
+                        <SelectItem value="none">Tanpa Kategori</SelectItem>
+                        <SelectItem v-for="cat in uniqueCategories" :key="cat" :value="cat">{{ cat }}</SelectItem>
+                    </SelectContent>
+                </Select>
+
                 <Select v-model="statusFilter">
                     <SelectTrigger class="h-8 w-[150px] text-xs font-semibold text-slate-700 border-slate-200/80 shadow-none bg-white hover:bg-slate-50 focus:ring-0">
                         <SelectValue placeholder="Semua Status" />
@@ -349,7 +371,7 @@ onMounted(loadEvents);
                     </DialogContent>
                 </Dialog>
 
-                <Button v-if="previousCursor || statusFilter !== 'all'" variant="ghost" size="sm" class="h-8 rounded-lg px-3 text-xs font-semibold text-slate-500 hover:text-slate-700 hover:bg-slate-100" @click="resetView">
+                <Button v-if="previousCursor || statusFilter !== 'all' || categoryFilter !== 'all'" variant="ghost" size="sm" class="h-8 rounded-lg px-3 text-xs font-semibold text-slate-500 hover:text-slate-700 hover:bg-slate-100" @click="resetView">
                     Kembali
                 </Button>
 
