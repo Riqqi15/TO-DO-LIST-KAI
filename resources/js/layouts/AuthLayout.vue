@@ -63,6 +63,7 @@ defineProps({
             </div>
         </section>
 
-        <Toaster position="top-right" close-button rich-colors />
     </main>
+
+    <Toaster position="top-right" close-button rich-colors />
 </template>
