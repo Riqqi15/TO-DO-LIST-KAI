@@ -3,7 +3,7 @@
 namespace App\Domain\Workspace\Models;
 
 use App\Domain\Category\Models\Category;
-use App\Domain\StickyNote\Models\StickyNote;
+
 use App\Domain\Todo\Models\Todo;
 use App\Domain\Workspace\Enums\WorkspaceRole;
 use App\Domain\Workspace\Enums\WorkspaceType;
@@ -52,10 +52,7 @@ class Workspace extends Model
         return $this->hasMany(Todo::class);
     }
 
-    public function stickyNotes(): HasMany
-    {
-        return $this->hasMany(StickyNote::class);
-    }
+
 
     public function isTeam(): bool
     {

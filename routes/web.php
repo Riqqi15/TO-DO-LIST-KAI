@@ -2,7 +2,6 @@
 
 use App\Http\Controllers\Category\CategoryController;
 use App\Http\Controllers\Reminder\ReminderController;
-use App\Http\Controllers\StickyNote\StickyNoteController;
 use App\Http\Controllers\Todo\TodoController;
 use App\Http\Controllers\Todo\TodoPageController;
 use App\Http\Controllers\User\ProfileController;
@@ -43,9 +42,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/todos/{todo}/notes', [\App\Http\Controllers\Todo\TodoNoteController::class, 'store'])->name('todos.notes.store');
     Route::delete('/notes/{note}', [\App\Http\Controllers\Todo\TodoNoteController::class, 'destroy'])->name('todos.notes.destroy');
 
-    Route::post('/workspaces/{workspace}/sticky-notes', [StickyNoteController::class, 'store'])->name('sticky-notes.store');
-    Route::patch('/sticky-notes/{note}', [StickyNoteController::class, 'update'])->name('sticky-notes.update');
-    Route::patch('/sticky-notes/{note}/pin', [StickyNoteController::class, 'togglePin'])->name('sticky-notes.pin');
-    Route::patch('/workspaces/{workspace}/sticky-notes/reorder', [StickyNoteController::class, 'reorder'])->name('sticky-notes.reorder');
-    Route::delete('/sticky-notes/{note}', [StickyNoteController::class, 'destroy'])->name('sticky-notes.destroy');
+    // Route::post('/workspaces/{workspace}/sticky-notes', [StickyNoteController::class, 'store'])->name('sticky-notes.store');
+    // Route::patch('/sticky-notes/{note}', [StickyNoteController::class, 'update'])->name('sticky-notes.update');
+    // Route::patch('/sticky-notes/{note}/pin', [StickyNoteController::class, 'togglePin'])->name('sticky-notes.pin');
+    // Route::patch('/workspaces/{workspace}/sticky-notes/reorder', [StickyNoteController::class, 'reorder'])->name('sticky-notes.reorder');
+    // Route::delete('/sticky-notes/{note}', [StickyNoteController::class, 'destroy'])->name('sticky-notes.destroy');
 });
