@@ -30,7 +30,7 @@ const emit = defineEmits(['navigate', 'switch-workspace', 'close', 'open-setting
 const navigation = [
     { id: 'tasks', label: 'Tugas', icon: LayoutDashboard },
     { id: 'calendar', label: 'Kalender', icon: CalendarDays },
-    { id: 'notes', label: 'Catatan', icon: StickyNote },
+    { id: 'notes', label: 'Catatan Harian', icon: StickyNote },
     { id: 'activity', label: 'Aktivitas', icon: Activity },
 ];
 

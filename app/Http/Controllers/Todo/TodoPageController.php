@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Todo;
 
 use App\Domain\ActivityLog\Models\ActivityLog;
 use App\Domain\Category\Models\Category;
-use App\Domain\StickyNote\Models\StickyNote;
+
 use App\Domain\Todo\Enums\TodoStatus;
 use App\Domain\Todo\Models\Todo;
 use App\Domain\Workspace\Models\Workspace;
@@ -38,7 +38,6 @@ class TodoPageController extends Controller
 
         $categories = collect();
         $todos = collect();
-        $notes = collect();
         $activities = collect();
         if ($workspace) {
             $categories = Category::where('is_system', true)->orWhere('workspace_id', $workspace->id)->orderByDesc('is_system')->orderByRaw('CASE WHEN is_system = 1 THEN id ELSE 999999999 END ASC')->orderBy('name')->get();
@@ -50,12 +49,7 @@ class TodoPageController extends Controller
                 $todosQuery->where('category_id', $request->integer('category'));
             }
             $todos = $todosQuery->get()->map(fn (Todo $todo) => $this->todoPayload($todo));
-            $notes = StickyNote::where('workspace_id', $workspace->id)
-                ->with('creator:id,name')
-                ->orderByRaw('CASE WHEN pinned_at IS NULL THEN 1 ELSE 0 END')
-                ->orderBy('pin_order')
-                ->orderByDesc('created_at')
-                ->get();
+
             $activities = ActivityLog::where('workspace_id', $workspace->id)->with('actor:id,name')->latest('created_at')->limit(100)->get();
         }
 
@@ -64,7 +58,6 @@ class TodoPageController extends Controller
             'activeWorkspace' => $workspace,
             'categories' => $categories,
             'todos' => $todos,
-            'stickyNotes' => $notes,
             'activities' => $activities,
             'timezone' => 'Asia/Jakarta',
         ]);

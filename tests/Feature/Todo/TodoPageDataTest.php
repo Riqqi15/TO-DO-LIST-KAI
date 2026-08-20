@@ -4,7 +4,7 @@ namespace Tests\Feature\Todo;
 
 use App\Domain\ActivityLog\Models\ActivityLog;
 use App\Domain\Category\Models\Category;
-use App\Domain\StickyNote\Models\StickyNote;
+
 use App\Domain\Todo\Actions\CreateTodo;
 use App\Domain\Workspace\Actions\ProvisionPersonalWorkspace;
 use App\Models\User;
@@ -26,9 +26,7 @@ class TodoPageDataTest extends TestCase
         $todo = app(CreateTodo::class)->handle($workspace, $user, $category, ['title' => 'Task tampil', 'deadline_at' => now('Asia/Jakarta')->addDays(14)->format('Y-m-d H:i:s')]);
         $startedAt = now()->subHour()->startOfMinute();
         $todo->update(['status' => 'sedang_dikerjakan', 'started_at' => $startedAt]);
-        StickyNote::create(['workspace_id' => $workspace->id, 'created_by' => $user->id, 'content' => 'Biasa']);
-        StickyNote::create(['workspace_id' => $workspace->id, 'created_by' => $user->id, 'content' => 'Prioritas', 'pinned_at' => now(), 'pin_order' => 0]);
-
+        
         $this->actingAs($user)->get(route('todo.index', ['workspace' => $workspace->id]))
             ->assertInertia(fn (Assert $page) => $page
                 ->component('Todo/Index')
@@ -36,7 +34,6 @@ class TodoPageDataTest extends TestCase
                 ->has('todos', 1)
                 ->where('todos.0.started_at', $startedAt->toIso8601String())
                 ->where('todos.0.completed_at', null)
-                ->where('stickyNotes.0.content', 'Prioritas')
                 ->where('timezone', 'Asia/Jakarta'));
         $this->actingAs($user)->get(route('todo.index', ['workspace' => $other->id]))->assertForbidden();
     }

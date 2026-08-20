@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import ActivityPanel from '@/features/todo/components/ActivityPanel.vue';
-import StickyNotesPanel from '@/features/todo/components/StickyNotesPanel.vue';
+import TaskNotesPanel from '@/features/todo/components/TaskNotesPanel.vue';
 import TaskBoard from '@/features/todo/components/TaskBoard.vue';
 import TaskCalendar from '@/features/todo/components/TaskCalendar.vue';
 import TaskFormSheet from '@/features/todo/components/TaskFormSheet.vue';
@@ -29,7 +29,6 @@ const workspaces = computed(() => props.value.workspaces ?? []);
 const activeWorkspace = computed(() => props.value.activeWorkspace ?? null);
 const categories = computed(() => props.value.categories ?? []);
 const todos = computed(() => props.value.todos ?? []);
-const stickyNotes = computed(() => props.value.stickyNotes ?? []);
 const activities = computed(() => props.value.activities ?? []);
 const flash = computed(() => props.value.flash ?? {});
 const user = computed(() => props.value.auth?.user ?? null);
@@ -62,7 +61,7 @@ const counts = computed(() => ({
 const header = computed(() => ({
     tasks: { eyebrow: 'Pusat produktivitas', title: activeWorkspace.value?.name ?? 'Tasks', description: `${counts.value.total} task di workspace ini` },
     calendar: { eyebrow: 'Jadwal kerja', title: 'Kalender Jadwal', description: 'Pantau ritme kerja dan durasi pengerjaan task' },
-    notes: { eyebrow: 'Ruang ide', title: 'Sticky Notes', description: `${stickyNotes.value.length} catatan di workspace ini` },
+    notes: { eyebrow: 'Ruang ide', title: 'Catatan Harian', description: 'Catatan khusus untuk setiap task' },
     activity: { eyebrow: 'Jejak perubahan', title: 'Activity', description: 'Riwayat permanen workspace' },
 }[activeSection.value]));
 
@@ -174,7 +173,7 @@ watch(todos, (items) => {
         </template>
 
         <TaskCalendar v-else-if="activeSection === 'calendar'" :workspace-id="activeWorkspace.id" :todos="todos" :categories="categories" @open="openCalendarTodo" />
-        <StickyNotesPanel v-else-if="activeSection === 'notes'" :notes="stickyNotes" :workspace-id="activeWorkspace.id" />
+        <TaskNotesPanel v-else-if="activeSection === 'notes'" :todos="todos" :workspace-id="activeWorkspace.id" :categories="categories" />
         <ActivityPanel v-else-if="activeSection === 'activity'" :activities="activities" />
 
         <TaskFormSheet v-if="activeWorkspace" v-model:open="formOpen" :todo="formTodo" :workspace-id="activeWorkspace.id" :categories="categories" />
