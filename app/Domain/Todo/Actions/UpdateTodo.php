@@ -27,7 +27,11 @@ class UpdateTodo
         if (! $category->is_system && $category->workspace_id !== $todo->workspace_id) {
             throw ValidationException::withMessages(['category_id' => 'Kategori tidak tersedia pada workspace ini.']);
         }
-        $deadline = Carbon::parse($data['deadline_at'], 'Asia/Jakarta')->utc();
+        if ($category->name === 'G63') {
+            $deadline = $todo->created_at->copy()->addDays(30);
+        } else {
+            $deadline = Carbon::parse($data['deadline_at'], 'Asia/Jakarta')->utc();
+        }
         $deadlineChanged = ! $todo->deadline_at->equalTo($deadline);
         // Validasi ini di-nonaktifkan sementara untuk keperluan testing.
         // Aktifkan kembali jika ingin membatasi perubahan deadline minimal 5 menit dari sekarang.

@@ -41,8 +41,22 @@ const resetForm = () => {
     form.manual_reminders = [];
     reminderDraft.value = '';
 };
+
+const isG63 = computed(() => {
+    const category = props.categories.find(c => c.id === form.category_id);
+    return category?.name === 'G63';
+});
+
 watch(() => [props.open, props.todo], () => { if (props.open) resetForm(); }, { deep: true });
 watch(() => props.categories, () => { if (!form.category_id) form.category_id = props.categories[0]?.id ?? ''; }, { deep: true });
+watch(isG63, (val) => {
+    if (val) {
+        const baseDate = editing.value ? new Date(props.todo.created_at) : new Date();
+        baseDate.setDate(baseDate.getDate() + 30);
+        const pad = (n) => n.toString().padStart(2, '0');
+        form.deadline_at = `${baseDate.getFullYear()}-${pad(baseDate.getMonth()+1)}-${pad(baseDate.getDate())}T${pad(baseDate.getHours())}:${pad(baseDate.getMinutes())}`;
+    }
+}, { immediate: true });
 
 const addReminder = () => {
     if (!reminderDraft.value || form.manual_reminders.includes(reminderDraft.value)) return;
@@ -79,7 +93,7 @@ const submit = () => {
                 <div class="grid gap-5 sm:grid-cols-3">
                     <div class="space-y-2"><Label for="task-category">Kategori</Label><NativeSelect id="task-category" v-model="form.category_id" class="h-11 w-full" required :aria-invalid="Boolean(form.errors.category_id)"><NativeSelectOption v-for="category in categories" :key="category.id" :value="category.id">{{ category.name }}</NativeSelectOption></NativeSelect><FieldError :message="form.errors.category_id" /></div>
                     <div class="space-y-2"><Label for="task-start-date">Tanggal Mulai (opsional)</Label><Input type="date" id="task-start-date" v-model="form.start_date" class="h-11 font-mono text-xs" :aria-invalid="Boolean(form.errors.start_date)" /><FieldError :message="form.errors.start_date" /></div>
-                    <div class="space-y-2"><Label for="task-deadline">Deadline (WIB)</Label><DateTimeInput24h id="task-deadline" v-model="form.deadline_at" required class="h-11 font-mono text-xs" :aria-invalid="Boolean(form.errors.deadline_at)" /><FieldError :message="form.errors.deadline_at" /></div>
+                    <div class="space-y-2"><Label for="task-deadline">Deadline (WIB)</Label><DateTimeInput24h id="task-deadline" v-model="form.deadline_at" required class="h-11 font-mono text-xs" :aria-invalid="Boolean(form.errors.deadline_at)" :disabled="isG63" /><FieldError :message="form.errors.deadline_at" /><p v-if="isG63" class="text-[10px] text-muted-foreground mt-1">Terkunci otomatis 30 hari dari pembuatan task.</p></div>
                 </div>
 
 

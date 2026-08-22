@@ -27,7 +27,11 @@ class CreateTodo
         if (! $category->is_system && $category->workspace_id !== $workspace->id) {
             throw ValidationException::withMessages(['category_id' => 'Kategori tidak tersedia pada workspace ini.']);
         }
-        $deadline = Carbon::parse($data['deadline_at'], 'Asia/Jakarta')->utc();
+        if ($category->name === 'G63') {
+            $deadline = now()->addDays(30);
+        } else {
+            $deadline = Carbon::parse($data['deadline_at'], 'Asia/Jakarta')->utc();
+        }
         if ($deadline->lt(now()->addMinutes(5))) {
              throw ValidationException::withMessages(['deadline_at' => 'Deadline minimal 5 menit dari sekarang.']);
         }

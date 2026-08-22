@@ -26,6 +26,8 @@ const workspaces = computed(() => props.value.workspaces ?? []);
 const activeWorkspace = computed(() => props.value.activeWorkspace ?? null);
 const categories = computed(() => props.value.categories ?? []);
 
+const isG63 = computed(() => todo.value?.category?.name === 'G63');
+
 const status = ref('');
 const statusAt = ref('');
 const editableTitle = ref('');
@@ -358,8 +360,9 @@ const switchWorkspace = (id) => {
                                     v-model="editableDeadline" 
                                     class="h-9 font-mono text-xs" 
                                     :aria-invalid="Boolean(titleErrors.deadline_at)" 
-                                    :disabled="status !== 'belum_dikerjakan'"
+                                    :disabled="status !== 'belum_dikerjakan' || isG63"
                                 />
+                                <p v-if="isG63" class="text-[10px] text-muted-foreground mt-1">Terkunci 30 hari dari pembuatan task.</p>
                                 <FieldError :message="titleErrors.deadline_at" />
                             </div>
                         </div>
