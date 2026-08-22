@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { getCategoryColor } from '@/lib/utils';
+import { getCategoryColor, getContrastTextColor } from '@/lib/utils';
 import { formatDateTime } from '@/features/todo/utils/todo-formatters';
 import { notifyAxiosError } from '@/lib/request-errors';
 import axios from 'axios';
@@ -119,7 +119,7 @@ const weeks = computed(() => {
         const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
         return { date, key, current: date.getMonth() === month, slots: [] };
     });
-
+    const gridStartKey = dayArray[0].key;
     const weeks = [];
     for (let i = 0; i < 6; i++) {
         const weekDays = dayArray.slice(i * 7, (i + 1) * 7);
@@ -147,6 +147,7 @@ const weeks = computed(() => {
         weekEvents.forEach(event => {
             const startKey = event.start_date || event.deadline_wib?.slice(0, 10);
             const endKey = event.end_date || event.deadline_wib?.slice(0, 10);
+            const firstVisibleKey = startKey < gridStartKey ? gridStartKey : startKey;
             
             let slotIndex = slots.findIndex(slotEnd => slotEnd < startKey);
             if (slotIndex === -1) {
@@ -169,6 +170,7 @@ const weeks = computed(() => {
                         isStart: day.key === startKey,
                         isEnd: day.key === endKey,
                         isFirstDayOfEvent: day.key === startKey,
+                        isFirstVisibleDay: day.key === firstVisibleKey,
                         hasNoteToday: event.notes?.some(n => n.date === day.key),
                         todayNotes: event.notes?.filter(n => n.date === day.key) || [],
                         isOverdue: event.status !== 'selesai' && todayTime > deadlineTime,
@@ -212,7 +214,7 @@ const openEvent = (event) => { const todo = props.todos.find((item) => item.id =
 const getEventStyle = (slot) => {
     // 1. Task Selesai (Hijau)
     if (slot.status === 'selesai') {
-        return { backgroundColor: '#10b981', color: 'white', border: 'none' };
+        return { backgroundColor: '#10b981', color: 'white', border: '1px solid rgba(0,0,0,0.1)' };
     }
     
     const parseDateStr = (dateStr) => {
@@ -230,7 +232,7 @@ const getEventStyle = (slot) => {
     
     // 2. Hari H Deadline ATAU Overdue (Merah)
     if (currentDay >= end) {
-        return { backgroundColor: '#ef4444', color: 'white', border: 'none' }; // red-500
+        return { backgroundColor: '#ef4444', color: 'white', border: '1px solid rgba(0,0,0,0.1)' }; // red-500
     }
     
     // 3. Peringatan Deadline (H-3, H-2, H-1) - berlaku untuk semua status yang belum selesai
@@ -238,22 +240,26 @@ const getEventStyle = (slot) => {
     const daysRemaining = Math.round((end - currentDay) / msPerDay);
     
     if (daysRemaining === 3 || daysRemaining === 2) {
-        return { backgroundColor: '#eab308', color: 'white', border: 'none' }; // yellow-500 (Warning: H-3 atau H-2)
+        return { backgroundColor: '#eab308', color: 'white', border: '1px solid rgba(0,0,0,0.1)' }; // yellow-500 (Warning: H-3 atau H-2)
     } else if (daysRemaining === 1) {
-        return { backgroundColor: '#f97316', color: 'white', border: 'none' }; // orange-500 (Urgent: H-1 deadline)
+        return { backgroundColor: '#f97316', color: 'white', border: '1px solid rgba(0,0,0,0.1)' }; // orange-500 (Urgent: H-1 deadline)
     }
     
     // 4. Default / Belum H-3
     // Tetap warna default meskipun sedang dikerjakan atau belum dikerjakan
     const catName = slot.category?.toLowerCase() || '';
     if (catName.includes('spk') || catName.includes('laporan')) {
-        return { backgroundColor: '#1e40af', color: 'white', border: 'none' }; // Navy (blue-800)
+        return { backgroundColor: '#1e40af', color: 'white', border: '1px solid rgba(0,0,0,0.1)' }; // Navy (blue-800)
     }
     if (catName === 'g63' || catName === 'g61') {
-        return { backgroundColor: '#b45309', color: 'white', border: 'none' }; // Brown (amber-700)
+        return { backgroundColor: '#b45309', color: 'white', border: '1px solid rgba(0,0,0,0.1)' }; // Brown (amber-700)
     }
     
-    return { backgroundColor: '#94a3b8', color: 'white', border: 'none' }; // Gray (slate-400)
+    if (slot.category_color) {
+        return { backgroundColor: slot.category_color, color: getContrastTextColor(slot.category_color), border: '1px solid rgba(0,0,0,0.15)' }; 
+    }
+    
+    return { backgroundColor: '#94a3b8', color: 'white', border: '1px solid rgba(0,0,0,0.1)' }; // Gray (slate-400)
 };
 
 watch(() => props.workspaceId, loadEvents);
@@ -339,7 +345,7 @@ onMounted(loadEvents);
                                     <div v-else class="space-y-1">
                                         <button v-for="t in tasksByStatus.belum_dikerjakan" :key="t.id" @click="jumpToSpecificTask(t)" class="w-full flex flex-col text-left px-4 py-2.5 rounded-lg hover:bg-slate-100 hover:shadow-sm border border-transparent hover:border-slate-200 transition-all">
                                             <div class="mb-1.5 flex items-center">
-                                                <span :class="[getCategoryColor(t.category?.name), 'border text-[10px] px-2 py-0.5 rounded-md uppercase font-bold tracking-wider']">{{ t.category?.name || 'TANPA KATEGORI' }}</span>
+                                                <span :class="[getCategoryColor(t.category?.name, t.category?.color).class, 'border text-[10px] px-2 py-0.5 rounded-md uppercase font-bold tracking-wider']" :style="getCategoryColor(t.category?.name, t.category?.color).style">{{ t.category?.name || 'TANPA KATEGORI' }}</span>
                                             </div>
                                             <span class="text-sm font-semibold text-slate-700">{{ t.title }}</span>
                                             <span class="text-xs text-slate-400 mt-0.5">{{ t.deadline_wib ? 'Deadline: ' + new Date(t.deadline_wib).toLocaleDateString('id-ID', {weekday: 'long', day: 'numeric', month: 'short', year: 'numeric'}) : 'Tanpa Tenggat' }}</span>
@@ -351,7 +357,7 @@ onMounted(loadEvents);
                                     <div v-else class="space-y-1">
                                         <button v-for="t in tasksByStatus.sedang_dikerjakan" :key="t.id" @click="jumpToSpecificTask(t)" class="w-full flex flex-col text-left px-4 py-2.5 rounded-lg hover:bg-slate-100 hover:shadow-sm border border-transparent hover:border-slate-200 transition-all">
                                             <div class="mb-1.5 flex items-center">
-                                                <span :class="[getCategoryColor(t.category?.name), 'border text-[10px] px-2 py-0.5 rounded-md uppercase font-bold tracking-wider']">{{ t.category?.name || 'TANPA KATEGORI' }}</span>
+                                                <span :class="[getCategoryColor(t.category?.name, t.category?.color).class, 'border text-[10px] px-2 py-0.5 rounded-md uppercase font-bold tracking-wider']" :style="getCategoryColor(t.category?.name, t.category?.color).style">{{ t.category?.name || 'TANPA KATEGORI' }}</span>
                                             </div>
                                             <span class="text-sm font-semibold text-blue-700">{{ t.title }}</span>
                                             <span class="text-xs text-slate-400 mt-0.5">{{ t.started_at ? 'Mulai dikerjakan: ' + new Date(t.started_at).toLocaleDateString('id-ID', {weekday: 'long', day: 'numeric', month: 'short', year: 'numeric'}) : 'Belum dimulai' }}</span>
@@ -363,7 +369,7 @@ onMounted(loadEvents);
                                     <div v-else class="space-y-1">
                                         <button v-for="t in tasksByStatus.selesai" :key="t.id" @click="jumpToSpecificTask(t)" class="w-full flex flex-col text-left px-4 py-2.5 rounded-lg hover:bg-slate-100 hover:shadow-sm border border-transparent hover:border-slate-200 transition-all">
                                             <div class="mb-1.5 flex items-center">
-                                                <span :class="[getCategoryColor(t.category?.name), 'border text-[10px] px-2 py-0.5 rounded-md uppercase font-bold tracking-wider']">{{ t.category?.name || 'TANPA KATEGORI' }}</span>
+                                                <span :class="[getCategoryColor(t.category?.name, t.category?.color).class, 'border text-[10px] px-2 py-0.5 rounded-md uppercase font-bold tracking-wider']" :style="getCategoryColor(t.category?.name, t.category?.color).style">{{ t.category?.name || 'TANPA KATEGORI' }}</span>
                                             </div>
                                             <span class="text-sm font-semibold text-emerald-700">{{ t.title }}</span>
                                             <span class="text-xs text-slate-400 mt-0.5">{{ t.completed_at ? 'Selesai pada: ' + new Date(t.completed_at).toLocaleDateString('id-ID', {weekday: 'long', day: 'numeric', month: 'short', year: 'numeric'}) : 'Selesai' }}</span>
@@ -456,9 +462,9 @@ onMounted(loadEvents);
                                                 @mouseleave="hoveredEventId = null"
                                                 @click="openEvent(slot)"
                                             >
-                                                <span v-if="slot.isFirstDayOfEvent || day.date.getDay() === 1" class="leading-none pointer-events-none pr-3 flex items-center gap-1.5 whitespace-nowrap overflow-visible">
-                                                    <span class="text-white text-[11px] uppercase font-extrabold tracking-widest">{{ slot.category || 'TANPA KATEGORI' }}</span>
-                                                    <span v-if="slot.isOverdue" class="bg-black/25 text-white text-[8.5px] px-1.5 py-0.5 rounded-sm uppercase font-extrabold tracking-widest shrink-0 shadow-sm leading-none">TERLAMBAT</span>
+                                                <span v-if="slot.isFirstVisibleDay" class="leading-none pointer-events-none pr-3 flex items-center gap-1.5 whitespace-nowrap overflow-visible">
+                                                    <span class="text-current text-[11px] uppercase font-extrabold tracking-widest">{{ slot.category || 'TANPA KATEGORI' }}</span>
+                                                    <span v-if="slot.isOverdue" class="bg-black/20 text-current text-[8.5px] px-1.5 py-0.5 rounded-sm uppercase font-extrabold tracking-widest shrink-0 shadow-sm leading-none">TERLAMBAT</span>
                                                 </span>
                                                 <div v-if="slot.hasNoteToday" class="absolute right-1 top-1/2 -translate-y-1/2 flex items-center gap-0.5">
                                                     <MessageCircle class="size-3.5 opacity-90 fill-white/20 drop-shadow-sm" />
@@ -468,7 +474,7 @@ onMounted(loadEvents);
                                         <TooltipContent hide-arrow side="top" class="max-w-xs space-y-2 p-3 bg-white border border-slate-200 shadow-md z-[60]">
                                             <p class="font-bold text-sm text-slate-900">{{ slot.title }}</p>
                                             <div class="flex flex-wrap gap-1.5">
-                                                <Badge variant="secondary" :class="['text-[10px]', getCategoryColor(slot.category)]">{{ slot.category || 'Tanpa Kategori' }}</Badge>
+                                                <Badge variant="secondary" :class="['text-[10px]', getCategoryColor(slot.category, slot.category_color).class]" :style="getCategoryColor(slot.category, slot.category_color).style">{{ slot.category || 'Tanpa Kategori' }}</Badge>
                                                 <Badge variant="outline" class="text-[10px] capitalize">{{ slot.status ? slot.status.replace('_', ' ') : 'Belum Dikerjakan' }}</Badge>
                                                 <Badge v-if="slot.isOverdue" class="text-[10px] font-bold uppercase tracking-wider bg-red-500 hover:bg-red-600 text-white border-transparent shadow-sm">TERLAMBAT</Badge>
                                             </div>
@@ -518,7 +524,7 @@ onMounted(loadEvents);
                                                     <div class="flex items-center gap-2 overflow-hidden">
                                                         <div class="size-2 rounded-full shrink-0" :style="{ backgroundColor: getEventStyle(slot).backgroundColor }"></div>
                                                         <span class="text-[11px] font-medium text-slate-800 truncate flex items-center gap-1.5">
-                                                            <span v-if="slot.category" :class="[getCategoryColor(slot.category), 'border text-[8px] px-1.5 py-0.5 rounded uppercase font-bold tracking-wider shrink-0 leading-none']">{{ slot.category }}</span>
+                                                            <span v-if="slot.category" :class="[getCategoryColor(slot.category, slot.category_color).class, 'border text-[8px] px-1.5 py-0.5 rounded uppercase font-bold tracking-wider shrink-0 leading-none']" :style="getCategoryColor(slot.category, slot.category_color).style">{{ slot.category }}</span>
                                                             <span class="truncate">{{ slot.title }}</span>
                                                         </span>
                                                     </div>
