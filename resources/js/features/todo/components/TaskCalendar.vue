@@ -247,10 +247,10 @@ const getEventStyle = (slot) => {
     // Tetap warna default meskipun sedang dikerjakan atau belum dikerjakan
     const catName = slot.category?.toLowerCase() || '';
     if (catName.includes('spk') || catName.includes('laporan')) {
-        return { backgroundColor: '#1e3a8a', color: 'white', border: 'none' }; // Navy (blue-900)
+        return { backgroundColor: '#1e40af', color: 'white', border: 'none' }; // Navy (blue-800)
     }
     if (catName === 'g63' || catName === 'g61') {
-        return { backgroundColor: '#92400e', color: 'white', border: 'none' }; // Brown (amber-800)
+        return { backgroundColor: '#b45309', color: 'white', border: 'none' }; // Brown (amber-700)
     }
     
     return { backgroundColor: '#94a3b8', color: 'white', border: 'none' }; // Gray (slate-400)

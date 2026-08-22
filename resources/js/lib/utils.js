@@ -11,11 +11,11 @@ export function getCategoryColor(categoryName) {
     const name = categoryName.toLowerCase();
     
     if (name.includes('spk') || name.includes('laporan')) {
-        return 'bg-blue-900 text-white hover:bg-blue-900/90 border-transparent'; // Navy
+        return 'bg-blue-800 text-white hover:bg-blue-800/90 border-transparent'; // Navy
     }
     
     if (name === 'g63' || name === 'g61') {
-        return 'bg-amber-800 text-white hover:bg-amber-800/90 border-transparent'; // Brown
+        return 'bg-amber-700 text-white hover:bg-amber-700/90 border-transparent'; // Brown
     }
     
     return 'bg-secondary text-secondary-foreground hover:bg-secondary/80 border-transparent'; // Gray (Default)
