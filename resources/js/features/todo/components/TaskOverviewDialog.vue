@@ -60,7 +60,7 @@ const durationWorked = computed(() => {
         <DialogContent v-if="todo" class="sm:max-w-3xl">
             <DialogHeader>
                 <div class="mb-2 flex flex-wrap items-center gap-2">
-                    <Badge variant="secondary" :class="getCategoryColor(todo.category?.name)">{{ todo.category?.name ?? 'Tanpa kategori' }}</Badge>
+                    <Badge variant="secondary" :class="getCategoryColor(todo.category).class" :style="getCategoryColor(todo.category).style">{{ todo.category?.name ?? 'Tanpa kategori' }}</Badge>
                     <Badge variant="outline" :style="{ borderColor: deadlineMeta(todo).color, color: deadlineMeta(todo).color }">{{ deadlineMeta(todo).label }}</Badge>
                 </div>
                 <DialogTitle class="text-xl font-extrabold leading-7">{{ todo.title }}</DialogTitle>

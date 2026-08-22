@@ -241,7 +241,7 @@ const switchWorkspace = (id) => {
                 </Button>
 
                 <div class="flex flex-wrap items-center gap-2 mb-2">
-                    <Badge variant="secondary" :class="['font-semibold', getCategoryColor(todo.category?.name)]">{{ todo.category?.name ?? 'Tanpa kategori' }}</Badge>
+                    <Badge variant="secondary" :class="['font-semibold', getCategoryColor(todo.category).class]" :style="getCategoryColor(todo.category).style">{{ todo.category?.name ?? 'Tanpa kategori' }}</Badge>
                     <Badge variant="outline" :style="{ borderColor: deadlineMeta(todo).color, color: deadlineMeta(todo).color }">{{ deadlineMeta(todo).label }}</Badge>
                 </div>
 
