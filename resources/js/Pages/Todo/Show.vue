@@ -10,6 +10,7 @@ import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
 import { TODO_STATUSES } from '@/features/todo/constants/todo-options';
 import { deadlineMeta, formatDateTime, formatDuration, reminderKindLabel, reminderStatusLabel, statusDateInput, toWibDateTimeInput } from '@/features/todo/utils/todo-formatters';
+import { getCategoryColor } from '@/lib/utils';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
 import { useSessionStorage } from '@vueuse/core';
 import { ArrowLeft, Bell, CalendarClock, CheckCircle2, Hourglass, LoaderCircle, Pencil, Play, Trash2, UserRound } from '@lucide/vue';
@@ -238,7 +239,7 @@ const switchWorkspace = (id) => {
                 </Button>
 
                 <div class="flex flex-wrap items-center gap-2 mb-2">
-                    <Badge variant="secondary" class="font-semibold">{{ todo.category?.name ?? 'Tanpa kategori' }}</Badge>
+                    <Badge variant="secondary" :class="['font-semibold', getCategoryColor(todo.category?.name)]">{{ todo.category?.name ?? 'Tanpa kategori' }}</Badge>
                     <Badge variant="outline" :style="{ borderColor: deadlineMeta(todo).color, color: deadlineMeta(todo).color }">{{ deadlineMeta(todo).label }}</Badge>
                 </div>
 

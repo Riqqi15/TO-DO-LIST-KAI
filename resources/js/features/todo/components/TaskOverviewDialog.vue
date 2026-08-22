@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { TODO_STATUSES } from '@/features/todo/constants/todo-options';
 import { deadlineMeta, formatDateTime, formatShortDate, statusDateMeta } from '@/features/todo/utils/todo-formatters';
+import { getCategoryColor } from '@/lib/utils';
 import { CalendarClock, CalendarDays, CalendarPlus, CheckCircle2, Circle, CircleDot, Clock, Pencil, UserRound, Timer } from '@lucide/vue';
 import { computed } from 'vue';
 
@@ -59,7 +60,7 @@ const durationWorked = computed(() => {
         <DialogContent v-if="todo" class="sm:max-w-3xl">
             <DialogHeader>
                 <div class="mb-2 flex flex-wrap items-center gap-2">
-                    <Badge variant="secondary">{{ todo.category?.name ?? 'Tanpa kategori' }}</Badge>
+                    <Badge variant="secondary" :class="getCategoryColor(todo.category?.name)">{{ todo.category?.name ?? 'Tanpa kategori' }}</Badge>
                     <Badge variant="outline" :style="{ borderColor: deadlineMeta(todo).color, color: deadlineMeta(todo).color }">{{ deadlineMeta(todo).label }}</Badge>
                 </div>
                 <DialogTitle class="text-xl font-extrabold leading-7">{{ todo.title }}</DialogTitle>

@@ -6,6 +6,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
 import { TODO_STATUSES } from '@/features/todo/constants/todo-options';
 import { deadlineMeta, formatShortDate, statusDateMeta, statusTone } from '@/features/todo/utils/todo-formatters';
+import { getCategoryColor } from '@/lib/utils';
 import { Bell, CalendarClock, MoreHorizontal, Pencil, Trash2 } from '@lucide/vue';
 import { computed } from 'vue';
 
@@ -34,7 +35,7 @@ const durationText = computed(() => {
     >
         <CardContent class="p-4 pl-5">
             <div class="flex items-start justify-between gap-3">
-                <Badge variant="secondary" class="max-w-[75%] truncate font-semibold">{{ todo.category?.name ?? 'Tanpa kategori' }}</Badge>
+                <Badge variant="secondary" :class="['max-w-[75%] truncate font-semibold', getCategoryColor(todo.category?.name)]">{{ todo.category?.name ?? 'Tanpa kategori' }}</Badge>
                 <DropdownMenu>
                     <DropdownMenuTrigger as-child>
                         <Button variant="ghost" size="icon-sm" class="-mr-1 -mt-1 opacity-70 hover:opacity-100" aria-label="Aksi task" @click.stop>
