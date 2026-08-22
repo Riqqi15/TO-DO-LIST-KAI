@@ -1,5 +1,6 @@
 <script setup>
 import FieldError from '@/components/shared/FieldError.vue';
+import { getCategoryColor } from '@/lib/utils';
 import { notifyRequestError } from '@/lib/request-errors';
 import {
     AlertDialog,
@@ -465,13 +466,13 @@ const deleteTeam = () => {
 
             <CollapsibleContent class="space-y-0.5 pt-0.5">
                 <div v-for="category in systemCategories" :key="category.id" class="flex h-8 items-center gap-2 rounded-md px-2.5 text-xs font-medium text-muted-foreground">
-                    <span class="size-1.5 rounded-full bg-slate-300" />
+                    <span :class="['size-1.5 rounded-full', getCategoryColor(category.name)]" />
                     <span class="min-w-0 flex-1 truncate">{{ category.name }}</span>
                     <span class="text-[9px] font-normal text-muted-foreground/60">Sistem</span>
                 </div>
 
                 <div v-for="category in customCategories" :key="category.id" class="group flex h-8 items-center gap-1 rounded-md px-2.5 text-xs font-medium text-muted-foreground hover:bg-sidebar-accent hover:text-foreground">
-                    <span class="size-1.5 rounded-full bg-primary/70" />
+                    <span :class="['size-1.5 rounded-full', getCategoryColor(category.name)]" />
                     <span class="min-w-0 flex-1 truncate">{{ category.name }}</span>
                     <div class="flex items-center opacity-0 transition-opacity group-hover:opacity-100">
                         <Button variant="ghost" size="icon-xs" class="h-6 w-6" :aria-label="`Ubah kategori ${category.name}`" @click="openEditCategory(category)">
