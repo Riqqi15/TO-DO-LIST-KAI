@@ -245,7 +245,7 @@ const availableYears = [currentYear - 1, currentYear, currentYear + 1, currentYe
                         </div>
                         
                         <div class="flex w-full items-center justify-between mt-auto pt-2 border-t border-slate-100">
-                            <Badge variant="secondary" :class="['text-[10px]', getCategoryColor(task.category?.name)]">{{ task.category?.name ?? 'Tanpa kategori' }}</Badge>
+                            <Badge variant="secondary" :class="['text-[10px]', getCategoryColor(task.category).class]" :style="getCategoryColor(task.category).style">{{ task.category?.name ?? 'Tanpa kategori' }}</Badge>
                             <div class="flex items-center gap-1.5 text-xs font-bold text-slate-600 bg-slate-100 px-2 py-1 rounded-md">
                                 <FileText class="size-3.5" /> 
                                 <span>{{ task.notes?.length || 0 }} <span class="font-normal text-slate-500">Catatan</span></span>
@@ -265,7 +265,7 @@ const availableYears = [currentYear - 1, currentYear, currentYear + 1, currentYe
                         Kembali ke Daftar Task
                     </Button>
                     <div class="flex items-center gap-2">
-                        <Badge variant="secondary" :class="['text-[10px]', getCategoryColor(selectedTask.category?.name)]">{{ selectedTask.category?.name ?? 'Tanpa kategori' }}</Badge>
+                        <Badge variant="secondary" :class="['text-[10px]', getCategoryColor(selectedTask.category).class]" :style="getCategoryColor(selectedTask.category).style">{{ selectedTask.category?.name ?? 'Tanpa kategori' }}</Badge>
                         <component :is="getStatusIcon(selectedTask.status)" class="size-4 shrink-0" :class="getStatusColor(selectedTask.status)" />
                     </div>
                 </div>

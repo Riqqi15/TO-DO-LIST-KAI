@@ -35,7 +35,7 @@ const durationText = computed(() => {
     >
         <CardContent class="p-4 pl-5">
             <div class="flex items-start justify-between gap-3">
-                <Badge variant="secondary" :class="['max-w-[75%] truncate font-semibold', getCategoryColor(todo.category?.name)]">{{ todo.category?.name ?? 'Tanpa kategori' }}</Badge>
+                <Badge variant="secondary" :class="['max-w-[75%] truncate font-semibold', getCategoryColor(todo.category).class]" :style="getCategoryColor(todo.category).style">{{ todo.category?.name ?? 'Tanpa kategori' }}</Badge>
                 <DropdownMenu>
                     <DropdownMenuTrigger as-child>
                         <Button variant="ghost" size="icon-sm" class="-mr-1 -mt-1 opacity-70 hover:opacity-100" aria-label="Aksi task" @click.stop>

@@ -144,10 +144,10 @@ const deleteTeamOpen = ref(false);
 const selectedTeam = ref(null);
 const selectedCategory = ref(null);
 
-const teamForm = useForm({ name: '' });
+const teamForm = useForm({ name: '', color: '#3b82f6' });
 const joinForm = useForm({ code: '' });
-const categoryForm = useForm({ name: '' });
-const editCategoryForm = useForm({ name: '' });
+const categoryForm = useForm({ name: '', color: '#3b82f6' });
+const editCategoryForm = useForm({ name: '', color: '#3b82f6' });
 const capacityForm = useForm({ member_limit: 5 });
 const deleteTeamForm = useForm({ confirmation: '' });
 
@@ -174,7 +174,38 @@ const openJoinTeam = () => {
     joinTeamOpen.value = true;
 };
 
+const generateRandomColor = () => {
+    // Hindari warna-warna gelap/standar yang nabrak
+    const h = Math.floor(Math.random() * 360);
+    const s = Math.floor(Math.random() * (100 - 60 + 1) + 60); // 60-100%
+    const l = Math.floor(Math.random() * (85 - 50 + 1) + 50); // 50-85%
+    
+    // Konversi HSL ke Hex
+    let s_c = s / 100;
+    let l_c = l / 100;
+    
+    let c = (1 - Math.abs(2 * l_c - 1)) * s_c;
+    let x = c * (1 - Math.abs((h / 60) % 2 - 1));
+    let m = l_c - c/2;
+    let r = 0, g = 0, b = 0;
+    
+    if (0 <= h && h < 60) { r = c; g = x; b = 0; }
+    else if (60 <= h && h < 120) { r = x; g = c; b = 0; }
+    else if (120 <= h && h < 180) { r = 0; g = c; b = x; }
+    else if (180 <= h && h < 240) { r = 0; g = x; b = c; }
+    else if (240 <= h && h < 300) { r = x; g = 0; b = c; }
+    else if (300 <= h && h < 360) { r = c; g = 0; b = x; }
+    
+    r = Math.round((r + m) * 255).toString(16).padStart(2, '0');
+    g = Math.round((g + m) * 255).toString(16).padStart(2, '0');
+    b = Math.round((b + m) * 255).toString(16).padStart(2, '0');
+    
+    return `#${r}${g}${b}`;
+};
+
 const openCreateCategory = () => {
+    categoryForm.name = '';
+    categoryForm.color = generateRandomColor();
     categoryForm.clearErrors();
     createCategoryOpen.value = true;
 };
@@ -182,6 +213,7 @@ const openCreateCategory = () => {
 const openEditCategory = (category) => {
     selectedCategory.value = category;
     editCategoryForm.name = category.name;
+    editCategoryForm.color = category.color || generateRandomColor();
     editCategoryForm.clearErrors();
     editCategoryOpen.value = true;
 };
@@ -466,13 +498,13 @@ const deleteTeam = () => {
 
             <CollapsibleContent class="space-y-0.5 pt-0.5">
                 <div v-for="category in systemCategories" :key="category.id" class="flex h-8 items-center gap-2 rounded-md px-2.5 text-xs font-medium text-muted-foreground">
-                    <span :class="['size-1.5 rounded-full', getCategoryColor(category.name)]" />
+                    <span :class="['size-1.5 rounded-full', getCategoryColor(category).class]" :style="getCategoryColor(category).style" />
                     <span class="min-w-0 flex-1 truncate">{{ category.name }}</span>
                     <span class="text-[9px] font-normal text-muted-foreground/60">Sistem</span>
                 </div>
 
                 <div v-for="category in customCategories" :key="category.id" class="group flex h-8 items-center gap-1 rounded-md px-2.5 text-xs font-medium text-muted-foreground hover:bg-sidebar-accent hover:text-foreground">
-                    <span :class="['size-1.5 rounded-full', getCategoryColor(category.name)]" />
+                    <span :class="['size-1.5 rounded-full', getCategoryColor(category).class]" :style="getCategoryColor(category).style" />
                     <span class="min-w-0 flex-1 truncate">{{ category.name }}</span>
                     <div class="flex items-center opacity-0 transition-opacity group-hover:opacity-100">
                         <Button variant="ghost" size="icon-xs" class="h-6 w-6" :aria-label="`Ubah kategori ${category.name}`" @click="openEditCategory(category)">
@@ -534,10 +566,20 @@ const deleteTeam = () => {
                     <DialogTitle>Tambah kategori</DialogTitle>
                     <DialogDescription>Kategori baru tersedia di {{ activeWorkspace?.name }}.</DialogDescription>
                 </DialogHeader>
-                <form id="create-category-form" class="space-y-2" @submit.prevent="createCategory">
-                    <Label for="sidebar-category-name">Nama kategori</Label>
-                    <Input id="sidebar-category-name" v-model="categoryForm.name" maxlength="80" placeholder="Contoh: Laporan mingguan" required :aria-invalid="Boolean(categoryForm.errors.name)" />
-                    <FieldError :message="categoryForm.errors.name" />
+                <form id="create-category-form" class="space-y-4" @submit.prevent="createCategory">
+                    <div class="space-y-2">
+                        <Label for="sidebar-category-name">Nama kategori</Label>
+                        <Input id="sidebar-category-name" v-model="categoryForm.name" maxlength="80" placeholder="Contoh: Laporan mingguan" required :aria-invalid="Boolean(categoryForm.errors.name)" />
+                        <FieldError :message="categoryForm.errors.name" />
+                    </div>
+                    <div class="space-y-2">
+                        <Label for="sidebar-category-color">Warna (Opsional)</Label>
+                        <div class="flex items-center gap-3">
+                            <input id="sidebar-category-color" type="color" v-model="categoryForm.color" class="size-10 cursor-pointer rounded-md border-0 p-0 shadow-sm" />
+                            <Input v-model="categoryForm.color" class="flex-1 font-mono uppercase" maxlength="7" placeholder="#FFFFFF" pattern="^#[a-fA-F0-9]{6}$" />
+                        </div>
+                        <FieldError :message="categoryForm.errors.color" />
+                    </div>
                 </form>
                 <DialogFooter>
                     <Button variant="outline" @click="createCategoryOpen = false">Batal</Button>
@@ -554,10 +596,20 @@ const deleteTeam = () => {
                     <DialogTitle>Ubah nama kategori</DialogTitle>
                     <DialogDescription>Perubahan berlaku pada seluruh tugas yang memakai kategori ini.</DialogDescription>
                 </DialogHeader>
-                <form id="edit-category-form" class="space-y-2" @submit.prevent="updateCategory">
-                    <Label for="sidebar-category-edit-name">Nama kategori</Label>
-                    <Input id="sidebar-category-edit-name" v-model="editCategoryForm.name" maxlength="80" required :aria-invalid="Boolean(editCategoryForm.errors.name)" />
-                    <FieldError :message="editCategoryForm.errors.name" />
+                <form id="edit-category-form" class="space-y-4" @submit.prevent="updateCategory">
+                    <div class="space-y-2">
+                        <Label for="sidebar-category-edit-name">Nama kategori</Label>
+                        <Input id="sidebar-category-edit-name" v-model="editCategoryForm.name" maxlength="80" required :aria-invalid="Boolean(editCategoryForm.errors.name)" />
+                        <FieldError :message="editCategoryForm.errors.name" />
+                    </div>
+                    <div class="space-y-2">
+                        <Label for="sidebar-category-edit-color">Warna (Opsional)</Label>
+                        <div class="flex items-center gap-3">
+                            <input id="sidebar-category-edit-color" type="color" v-model="editCategoryForm.color" class="size-10 cursor-pointer rounded-md border-0 p-0 shadow-sm" />
+                            <Input v-model="editCategoryForm.color" class="flex-1 font-mono uppercase" maxlength="7" placeholder="#FFFFFF" pattern="^#[a-fA-F0-9]{6}$" />
+                        </div>
+                        <FieldError :message="editCategoryForm.errors.color" />
+                    </div>
                 </form>
                 <DialogFooter>
                     <Button variant="outline" @click="editCategoryOpen = false">Batal</Button>
