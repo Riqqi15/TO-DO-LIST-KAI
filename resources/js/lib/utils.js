@@ -11,7 +11,7 @@ export function getCategoryColor(categoryName) {
     const name = categoryName.toLowerCase();
     
     if (name.includes('spk') || name.includes('laporan')) {
-        return 'bg-slate-800 text-white hover:bg-slate-800/90 border-transparent'; // Navy
+        return 'bg-blue-900 text-white hover:bg-blue-900/90 border-transparent'; // Navy
     }
     
     if (name === 'g63' || name === 'g61') {
