@@ -243,9 +243,17 @@ const getEventStyle = (slot) => {
         return { backgroundColor: '#f97316', color: 'white', border: 'none' }; // orange-500 (Urgent: H-1 deadline)
     }
     
-    // 4. Default / Belum H-3 (Abu-abu)
-    // Tetap abu-abu meskipun sedang dikerjakan atau belum dikerjakan
-    return { backgroundColor: '#94a3b8', color: 'white', border: 'none' }; // gray-400
+    // 4. Default / Belum H-3
+    // Tetap warna default meskipun sedang dikerjakan atau belum dikerjakan
+    const catName = slot.category?.toLowerCase() || '';
+    if (catName.includes('spk') || catName.includes('laporan')) {
+        return { backgroundColor: '#1e293b', color: 'white', border: 'none' }; // Navy (slate-800)
+    }
+    if (catName === 'g63' || catName === 'g61') {
+        return { backgroundColor: '#92400e', color: 'white', border: 'none' }; // Brown (amber-800)
+    }
+    
+    return { backgroundColor: '#94a3b8', color: 'white', border: 'none' }; // Gray (slate-400)
 };
 
 watch(() => props.workspaceId, loadEvents);
