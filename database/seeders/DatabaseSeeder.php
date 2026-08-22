@@ -12,6 +12,7 @@ class DatabaseSeeder extends Seeder
         DB::table('categories')->insert([
             ['name' => 'NPD ACC', 'slug' => 'npd-acc', 'is_system' => true, 'created_at' => now(), 'updated_at' => now()],
             ['name' => 'G63', 'slug' => 'g63', 'is_system' => true, 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'G61', 'slug' => 'g61', 'is_system' => true, 'created_at' => now(), 'updated_at' => now()],
             ['name' => 'SPK', 'slug' => 'spk', 'is_system' => true, 'created_at' => now(), 'updated_at' => now()],
             ['name' => 'Laporan Pendahuluan', 'slug' => 'laporan-pendahuluan', 'is_system' => true, 'created_at' => now(), 'updated_at' => now()],
             ['name' => 'Laporan Draft', 'slug' => 'laporan-draft', 'is_system' => true, 'created_at' => now(), 'updated_at' => now()],
