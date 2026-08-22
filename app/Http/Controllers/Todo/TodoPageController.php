@@ -41,7 +41,7 @@ class TodoPageController extends Controller
         $activities = collect();
         if ($workspace) {
             $categories = Category::where('is_system', true)->orWhere('workspace_id', $workspace->id)->orderByDesc('is_system')->orderByRaw('CASE WHEN is_system = 1 THEN id ELSE 999999999 END ASC')->orderBy('name')->get();
-            $todosQuery = Todo::where('workspace_id', $workspace->id)->with(['category:id,name,slug,is_system', 'creator:id,name', 'reminders', 'notes.creator'])->orderBy('deadline_at');
+            $todosQuery = Todo::where('workspace_id', $workspace->id)->with(['category:id,name,slug,color,is_system', 'creator:id,name', 'reminders', 'notes.creator'])->orderBy('deadline_at');
             if ($request->filled('status')) {
                 $todosQuery->where('status', $request->string('status')->toString());
             }
@@ -90,7 +90,7 @@ class TodoPageController extends Controller
     {
         abort_unless($workspace->hasMember($request->user()), 403);
         $validated = $request->validate(['from' => ['nullable', 'date'], 'to' => ['nullable', 'date', 'after_or_equal:from']]);
-        $query = $workspace->todos()->with(['category:id,name', 'notes.creator']);
+        $query = $workspace->todos()->with(['category:id,name,color', 'notes.creator']);
         if (isset($validated['from']) && isset($validated['to'])) {
             $query->where('created_at', '<=', $validated['to'] . ' 23:59:59')
                   ->where('deadline_at', '>=', $validated['from'] . ' 00:00:00');
@@ -116,6 +116,7 @@ class TodoPageController extends Controller
                 'title'        => $todo->title,
                 'status'       => $todo->status->value,
                 'category'     => $todo->category?->name,
+                'category_color' => $todo->category?->color,
                 'description'  => $todo->description,
                 'start_date'   => $start->copy()->timezone('Asia/Jakarta')->format('Y-m-d'),
                 'end_date'     => $end->copy()->timezone('Asia/Jakarta')->format('Y-m-d'),

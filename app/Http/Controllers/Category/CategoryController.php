@@ -16,14 +16,14 @@ class CategoryController extends Controller
 {
     public function store(StoreCategoryRequest $request, Workspace $workspace, CreateCategory $action): RedirectResponse
     {
-        $action->handle($workspace, $request->user(), $request->validated('name'));
+        $action->handle($workspace, $request->user(), $request->validated('name'), $request->validated('color'));
 
         return back()->with('success', 'Kategori dibuat.');
     }
 
     public function update(StoreCategoryRequest $request, Category $category, UpdateCategory $action): RedirectResponse
     {
-        $action->handle($category, $request->user(), $request->validated('name'));
+        $action->handle($category, $request->user(), $request->validated('name'), $request->validated('color'));
 
         return back()->with('success', 'Kategori diperbarui.');
     }

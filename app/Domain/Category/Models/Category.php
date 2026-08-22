@@ -11,7 +11,14 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Category extends Model
 {
-    protected $fillable = ['workspace_id', 'created_by', 'name', 'slug', 'is_system'];
+    protected $fillable = [
+        'workspace_id',
+        'created_by',
+        'name',
+        'slug',
+        'color',
+        'is_system',
+    ];
 
     protected function casts(): array
     {

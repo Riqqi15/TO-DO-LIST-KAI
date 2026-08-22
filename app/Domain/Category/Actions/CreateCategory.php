@@ -14,7 +14,7 @@ class CreateCategory
 {
     public function __construct(private RecordActivity $activity) {}
 
-    public function handle(Workspace $workspace, User $actor, string $name): Category
+    public function handle(Workspace $workspace, User $actor, string $name, ?string $color = null): Category
     {
         if (! $workspace->hasMember($actor)) {
             throw new AuthorizationException;
@@ -23,8 +23,15 @@ class CreateCategory
         if (Category::where('workspace_id', $workspace->id)->where('slug', $slug)->exists()) {
             throw ValidationException::withMessages(['name' => 'Kategori dengan nama tersebut sudah ada.']);
         }
-        $category = Category::create(['workspace_id' => $workspace->id, 'created_by' => $actor->id, 'name' => $name, 'slug' => $slug, 'is_system' => false]);
-        $this->activity->handle($workspace, $actor, 'category.created', $category, $category->only(['id', 'name', 'slug']));
+        $category = Category::create([
+            'workspace_id' => $workspace->id,
+            'created_by' => $actor->id,
+            'name' => $name,
+            'slug' => $slug,
+            'color' => $color,
+            'is_system' => false
+        ]);
+        $this->activity->handle($workspace, $actor, 'category.created', $category, $category->only(['id', 'name', 'slug', 'color']));
 
         return $category;
     }

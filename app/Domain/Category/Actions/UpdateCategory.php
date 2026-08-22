@@ -13,7 +13,7 @@ class UpdateCategory
 {
     public function __construct(private RecordActivity $activity) {}
 
-    public function handle(Category $category, User $actor, string $name): Category
+    public function handle(Category $category, User $actor, string $name, ?string $color = null): Category
     {
         if (! $actor->can('update', $category)) {
             throw new AuthorizationException;
@@ -22,9 +22,9 @@ class UpdateCategory
         if (Category::where('workspace_id', $category->workspace_id)->where('slug', $slug)->whereKeyNot($category->id)->exists()) {
             throw ValidationException::withMessages(['name' => 'Kategori dengan nama tersebut sudah ada.']);
         }
-        $old = $category->only(['name', 'slug']);
-        $category->update(['name' => $name, 'slug' => $slug]);
-        $this->activity->handle($category->workspace, $actor, 'category.updated', $category, null, ['old' => $old, 'new' => $category->only(['name', 'slug'])]);
+        $old = $category->only(['name', 'slug', 'color']);
+        $category->update(['name' => $name, 'slug' => $slug, 'color' => $color]);
+        $this->activity->handle($category->workspace, $actor, 'category.updated', $category, null, ['old' => $old, 'new' => $category->only(['name', 'slug', 'color'])]);
 
         return $category;
     }
