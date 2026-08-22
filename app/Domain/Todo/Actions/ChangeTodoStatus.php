@@ -25,6 +25,9 @@ class ChangeTodoStatus
         }
 
         $now = now();
+        if ($status !== TodoStatus::BelumDikerjakan) {
+            $statusAt = $now;
+        }
         if ($status === TodoStatus::BelumDikerjakan && $statusAt->lt($now->copy()->addMinutes(5))) {
             throw ValidationException::withMessages(['status_at' => 'Deadline minimal 5 menit dari sekarang.']);
         }
@@ -55,13 +58,13 @@ class ChangeTodoStatus
                 $this->automatic->handle($todo);
                 $this->reactivateValidManualReminders($todo);
             } elseif ($status === TodoStatus::SedangDikerjakan) {
-                $todo->update(['status' => $status, 'started_at' => $statusAt, 'completed_at' => null, 'result_notes' => null]);
+                $todo->update(['status' => $status, 'started_at' => now(), 'completed_at' => null, 'result_notes' => null]);
                 if ($oldStatus === TodoStatus::Selesai) {
                     $this->automatic->handle($todo);
                     $this->reactivateValidManualReminders($todo);
                 }
             } else {
-                $todo->update(['status' => $status, 'completed_at' => $statusAt, 'result_notes' => $resultNotes]);
+                $todo->update(['status' => $status, 'completed_at' => now(), 'result_notes' => $resultNotes]);
             }
 
             if ($status === TodoStatus::Selesai) {

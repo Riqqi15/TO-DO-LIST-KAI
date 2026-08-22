@@ -11,6 +11,7 @@ const props = defineProps({
     ariaLabel: { type: String, default: null },
     title: { type: String, default: null },
     id: { type: String, default: null },
+    disabled: { type: Boolean, default: false },
     class: { type: [String, Array, Object, Boolean, null], required: false, skipCheck: true },
 });
 const emit = defineEmits(['update:modelValue']);
@@ -102,6 +103,7 @@ const baseInput = "border-input h-full w-full min-w-0 rounded-md border bg-trans
             :aria-invalid="ariaInvalid"
             :aria-label="ariaLabel ? `${ariaLabel} (tanggal)` : undefined"
             :title="title ? `${title} (tanggal)` : undefined"
+            :disabled="disabled"
             :class="cn(baseInput, 'flex-[1.2]')"
         />
 
@@ -115,7 +117,9 @@ const baseInput = "border-input h-full w-full min-w-0 rounded-md border bg-trans
                         'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-3',
                         'hover:bg-accent/50',
                         displayTime === 'Pilih jam' ? 'text-muted-foreground' : '',
+                        disabled ? 'pointer-events-none cursor-not-allowed opacity-50' : '',
                     )"
+                    :disabled="disabled"
                 >
                     <span class="font-mono">{{ displayTime }}</span>
                     <Clock class="size-3.5 shrink-0 text-muted-foreground" />

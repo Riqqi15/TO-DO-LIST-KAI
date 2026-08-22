@@ -85,14 +85,20 @@ class TodoManagementTest extends TestCase
         $todo = app(CreateTodo::class)->handle($team, $owner, $category, ['title' => 'Task bersama', 'deadline_at' => now('Asia/Jakarta')->addDays(14)->format('Y-m-d H:i:s')]);
         $startedAt = now('Asia/Jakarta')->subHour()->startOfMinute();
         $completedAt = now('Asia/Jakarta')->subMinutes(10)->startOfMinute();
+        
+        $this->travelTo($startedAt);
         $this->actingAs($member)->patch(route('todos.status', $todo), [
             'status' => TodoStatus::SedangDikerjakan->value,
             'status_at' => $startedAt->format('Y-m-d H:i:s'),
         ])->assertSessionHasNoErrors();
+        
+        $this->travelTo($completedAt);
         $this->actingAs($member)->patch(route('todos.status', $todo), [
             'status' => TodoStatus::Selesai->value,
             'status_at' => $completedAt->format('Y-m-d H:i:s'),
         ])->assertSessionHasNoErrors();
+        $this->travelBack();
+
         $this->assertSame(TodoStatus::Selesai, $todo->fresh()->status);
         $this->assertTrue($todo->fresh()->started_at->equalTo($startedAt->utc()));
         $this->assertTrue($todo->fresh()->completed_at->equalTo($completedAt->utc()));
@@ -180,27 +186,6 @@ class TodoManagementTest extends TestCase
         $this->assertTrue($todo->reminders()->where('status', ReminderStatus::Scheduled->value)->exists());
     }
 
-    public function test_status_date_can_change_without_changing_status(): void
-    {
-        [$user, $workspace, $category] = $this->personalContext();
-        $todo = app(CreateTodo::class)->handle($workspace, $user, $category, [
-            'title' => 'Koreksi mulai',
-            'deadline_at' => now('Asia/Jakarta')->addDays(14)->format('Y-m-d H:i:s'),
-        ]);
-        $first = now('Asia/Jakarta')->subHours(2)->startOfMinute();
-        $corrected = now('Asia/Jakarta')->subHour()->startOfMinute();
-
-        foreach ([$first, $corrected] as $statusAt) {
-            $this->actingAs($user)->patch(route('todos.status', $todo), [
-                'status' => TodoStatus::SedangDikerjakan->value,
-                'status_at' => $statusAt->format('Y-m-d H:i:s'),
-            ])->assertSessionHasNoErrors();
-        }
-
-        $this->assertTrue($todo->fresh()->started_at->equalTo($corrected->utc()));
-        $this->assertDatabaseHas('activity_logs', ['action' => 'todo.status_changed', 'actor_id' => $user->id]);
-    }
-
     public function test_status_dates_reject_invalid_times(): void
     {
         [$user, $workspace, $category] = $this->personalContext();
@@ -212,20 +197,6 @@ class TodoManagementTest extends TestCase
         $this->actingAs($user)->patch(route('todos.status', $todo), [
             'status' => TodoStatus::BelumDikerjakan->value,
             'status_at' => now('Asia/Jakarta')->addMinute()->format('Y-m-d H:i:s'),
-        ])->assertSessionHasErrors('status_at');
-        $this->actingAs($user)->patch(route('todos.status', $todo), [
-            'status' => TodoStatus::SedangDikerjakan->value,
-            'status_at' => now('Asia/Jakarta')->addDays(15)->format('Y-m-d H:i:s'),
-        ])->assertSessionHasErrors('status_at');
-
-        $startedAt = now('Asia/Jakarta')->subHour();
-        $this->actingAs($user)->patch(route('todos.status', $todo), [
-            'status' => TodoStatus::SedangDikerjakan->value,
-            'status_at' => $startedAt->format('Y-m-d H:i:s'),
-        ])->assertSessionHasNoErrors();
-        $this->actingAs($user)->patch(route('todos.status', $todo), [
-            'status' => TodoStatus::Selesai->value,
-            'status_at' => $startedAt->copy()->subMinute()->format('Y-m-d H:i:s'),
         ])->assertSessionHasErrors('status_at');
     }
 

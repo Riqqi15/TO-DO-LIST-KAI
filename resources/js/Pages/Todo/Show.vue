@@ -64,9 +64,8 @@ const statusDateHelp = computed(() => ({
 }[status.value] ?? 'Pilih tanggal dan waktu status.'));
 
 const statusChanged = computed(() => {
-    if (!todo.value || !statusAt.value) return false;
+    if (!todo.value) return false;
     return status.value !== todo.value.status || 
-           statusAt.value !== statusDateInput(todo.value, status.value) ||
            (status.value === 'selesai' && resultNotes.value !== (todo.value.result_notes || ''));
 });
 
@@ -347,6 +346,7 @@ const switchWorkspace = (id) => {
                                     type="date"
                                     v-model="editableStartDate"
                                     class="h-9 w-full font-mono text-xs"
+                                    :disabled="status !== 'belum_dikerjakan'"
                                 />
                                 <FieldError :message="titleErrors.start_date" />
                             </div>
@@ -357,17 +357,12 @@ const switchWorkspace = (id) => {
                                     v-model="editableDeadline" 
                                     class="h-9 font-mono text-xs" 
                                     :aria-invalid="Boolean(titleErrors.deadline_at)" 
+                                    :disabled="status !== 'belum_dikerjakan'"
                                 />
                                 <FieldError :message="titleErrors.deadline_at" />
                             </div>
                         </div>
 
-                        <div v-if="status !== 'belum_dikerjakan'" class="mt-4 p-3 bg-slate-50/50 rounded-lg border border-slate-100">
-                            <Label for="status-at" class="text-xs font-semibold mb-1.5 block">{{ status === 'selesai' ? 'Waktu Selesai Dikerjakan' : 'Waktu Mulai Dikerjakan' }}</Label>
-                            <DateTimeInput24h id="status-at" v-model="statusAt" class="h-9 font-mono text-xs max-w-xs bg-white" :aria-invalid="Boolean(statusErrors.status_at)" />
-                            <p class="mt-1.5 text-[11px] text-muted-foreground">{{ status === 'selesai' ? 'Waktu ketika task dinyatakan selesai.' : 'Waktu ketika task mulai dikerjakan.' }}</p>
-                            <FieldError :message="statusErrors.status_at" />
-                        </div>
 
                         <div v-if="status === 'selesai'">
                             <Label for="result-notes" class="text-xs font-semibold mb-1.5 block">Hasil kegiatan (opsional)</Label>

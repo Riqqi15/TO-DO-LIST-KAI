@@ -25,11 +25,9 @@ class CreateManualReminder
         if ($todo->status === TodoStatus::Selesai) {
             throw ValidationException::withMessages(['scheduled_at' => 'Task selesai tidak dapat memiliki reminder aktif.']);
         }
-        // Validasi ini di-nonaktifkan sementara untuk keperluan testing.
-        // Aktifkan kembali agar reminder harus setelah sekarang dan sebelum deadline.
-        // if (! $scheduledAt->isFuture() || ! $scheduledAt->lt($todo->deadline_at)) {
-        //     throw ValidationException::withMessages(['scheduled_at' => 'Reminder harus setelah waktu sekarang dan sebelum deadline.']);
-        // }
+        if (! $scheduledAt->isFuture() || ! $scheduledAt->lt($todo->deadline_at)) {
+             throw ValidationException::withMessages(['scheduled_at' => 'Reminder harus setelah waktu sekarang dan sebelum deadline.']);
+        }
         $reminder = $todo->reminders()->create(['kind' => ReminderKind::Manual, 'scheduled_at' => $scheduledAt, 'status' => ReminderStatus::Scheduled]);
         $this->activity->handle($todo->workspace, $actor, 'todo.reminder_created', $reminder, ['scheduled_at' => $scheduledAt->toIso8601String()]);
 

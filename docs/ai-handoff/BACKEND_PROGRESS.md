@@ -42,8 +42,7 @@ berubah setelah snapshot ini.
 - Penghapusan tim membutuhkan teks persis
   `konfirmasi hapus tim <nama tim>` dan menghapus data operasional permanen.
 - Status task hanya `belum_dikerjakan`, `sedang_dikerjakan`, dan `selesai`.
-- Task menyimpan `started_at` dan `completed_at`. Form perubahan status memakai
-  `status_at`, sedangkan `deadline_at` berubah saat task kembali ke
+- Task menyimpan `started_at` dan `completed_at` secara otomatis dengan waktu sistem (`now()`) tanpa form manual. Sedangkan `deadline_at` berubah saat task kembali ke
   `belum_dikerjakan`.
 - Tidak ada priority dan tidak ada tabel calendar event.
 - Kategori sistem: NPD ACC, G63, PR, SPK, RFQ & PO, SES / GR, Meeting, Report Progress, Lainnya. Kategori custom yang
